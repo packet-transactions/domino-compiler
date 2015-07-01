@@ -54,6 +54,12 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
       // For now, error out if there's an if statement without braces (i.e. not CompoundStmt)
       throw std::logic_error("We don't yet handle if statments without braces\n");
     }
+
+    // Print out children in CompoundStmt
+    assert(isa<CompoundStmt>(if_stmt->getThen()));
+    for (const auto & child : if_stmt->getThen()->children()) {
+      std::cout << "child: " << clang_stmt_printer(child) << "\n";
+    }
   }
 
  private:
