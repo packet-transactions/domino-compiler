@@ -39,6 +39,9 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
               << clang_stmt_printer(if_stmt->getThen()) << "\n";
     std::cout << "Else\n"
               << (if_stmt->getElse() != nullptr ? clang_stmt_printer(if_stmt->getElse()) : "empty") << "\n";
+    if (if_stmt->getConditionVariableDeclStmt()) {
+      throw std::logic_error("We don't yet handle declarations within the test portion of an if\n");
+    }
   }
 
  private:
