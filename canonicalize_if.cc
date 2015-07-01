@@ -30,15 +30,15 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
   virtual void run(const MatchFinder::MatchResult & t_result) override {
     const auto * if_stmt = t_result.Nodes.getNodeAs<clang::IfStmt>("ifStmt");
     assert(if_stmt != nullptr);
-    std::cout << "Found if_stmt\n"
-              << clang_stmt_printer(if_stmt) << "\n";
-    std::cout << "Condition\n"
-              << clang_stmt_printer(if_stmt->getCond()) << "\n";
+    std::cout << "Found if_stmt" << std::endl
+              << clang_stmt_printer(if_stmt) << std::endl;
+    std::cout << "Condition" << std::endl
+              << clang_stmt_printer(if_stmt->getCond()) << std::endl;
     assert(if_stmt->getThen() != nullptr);
-    std::cout << "Then\n"
-              << clang_stmt_printer(if_stmt->getThen()) << "\n";
-    std::cout << "Else\n"
-              << (if_stmt->getElse() != nullptr ? clang_stmt_printer(if_stmt->getElse()) : "empty") << "\n";
+    std::cout << "Then" << std::endl
+              << clang_stmt_printer(if_stmt->getThen()) << std::endl;
+    std::cout << "Else" << std::endl
+              << (if_stmt->getElse() != nullptr ? clang_stmt_printer(if_stmt->getElse()) : "empty") << std::endl;
     if (if_stmt->getConditionVariableDeclStmt()) {
       throw std::logic_error("We don't yet handle declarations within the test portion of an if\n");
     }
@@ -46,8 +46,8 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
     // Create temporary variable to hold the if condition
     std::string tmp_var_decl = "";
     auto condition_type_name = if_stmt->getCond()->getType().getAsString();
-    std::cout << "Type name for condition is " << condition_type_name << "\n";
-    std::cout << "Temp. var. declaration\n" << condition_type_name + " tmp__" + std::to_string(var_counter_++) + " = " + clang_stmt_printer(if_stmt->getCond()) << ";\n";
+    std::cout << "Type name for condition is " << condition_type_name << std::endl;
+    std::cout << "Temp. var. declaration is " << condition_type_name + " tmp__" + std::to_string(var_counter_++) + " = " + clang_stmt_printer(if_stmt->getCond()) << ";" << std::endl;
 
     // Convert statements within then block to ternary operators.
     if (not isa<CompoundStmt>(if_stmt->getThen())) {
@@ -58,7 +58,7 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
     // Print out children in CompoundStmt
     assert(isa<CompoundStmt>(if_stmt->getThen()));
     for (const auto & child : if_stmt->getThen()->children()) {
-      std::cout << "child: " << clang_stmt_printer(child) << "\n";
+      std::cout << "child: " << clang_stmt_printer(child) << std::endl;
     }
   }
 
