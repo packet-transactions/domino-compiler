@@ -8,6 +8,7 @@
 #include "clang/Tooling/Tooling.h"
 #include "clang/Tooling/ReplacementsYaml.h"
 #include "llvm/Support/YAMLTraits.h"
+#include "clang_utility_functions.h"
 
 using namespace clang;
 using namespace clang::ast_matchers;
@@ -29,7 +30,8 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
   virtual void run(const MatchFinder::MatchResult & t_result) override {
     const auto * if_stmt = t_result.Nodes.getNodeAs<clang::IfStmt>("ifStmt");
     assert(if_stmt != nullptr);
-    std::cout << "Found if_stmt " << if_stmt << "\n";
+    std::cout << "Found if_stmt\n"
+              << clang_stmt_printer(if_stmt) << "\n";
   }
 
  private:
