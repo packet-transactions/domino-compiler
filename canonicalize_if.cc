@@ -32,6 +32,13 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
     assert(if_stmt != nullptr);
     std::cout << "Found if_stmt\n"
               << clang_stmt_printer(if_stmt) << "\n";
+    std::cout << "Condition\n"
+              << clang_stmt_printer(if_stmt->getCond()) << "\n";
+    assert(if_stmt->getThen() != nullptr);
+    std::cout << "Then\n"
+              << clang_stmt_printer(if_stmt->getThen()) << "\n";
+    std::cout << "Else\n"
+              << (if_stmt->getElse() != nullptr ? clang_stmt_printer(if_stmt->getElse()) : "empty") << "\n";
   }
 
  private:
