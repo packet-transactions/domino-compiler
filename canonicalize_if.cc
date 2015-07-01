@@ -48,6 +48,12 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
     auto condition_type_name = if_stmt->getCond()->getType().getAsString();
     std::cout << "Type name for condition is " << condition_type_name << "\n";
     std::cout << "Temp. var. declaration\n" << condition_type_name + " tmp__" + std::to_string(var_counter_++) + " = " + clang_stmt_printer(if_stmt->getCond()) << ";\n";
+
+    // Convert statements within then block to ternary operators.
+    if (not isa<CompoundStmt>(if_stmt->getThen())) {
+      // For now, error out if there's an if statement without braces (i.e. not CompoundStmt)
+      throw std::logic_error("We don't yet handle if statments without braces\n");
+    }
   }
 
  private:
