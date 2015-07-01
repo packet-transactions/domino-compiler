@@ -1,0 +1,3 @@
+1. sudo apt-get install libclang-dev git
+2. git clone https://github.com/anirudhsk/domino
+3. ./clang_compile.sh file1 file2 ...
