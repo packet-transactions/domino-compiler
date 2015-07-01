@@ -1,3 +1,4 @@
+#include <iostream>
 #include "clang/AST/AST.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -28,6 +29,7 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
   virtual void run(const MatchFinder::MatchResult & t_result) override {
     const auto * if_stmt = t_result.Nodes.getNodeAs<clang::IfStmt>("ifStmt");
     assert(if_stmt != nullptr);
+    std::cout << "Found if_stmt " << if_stmt << "\n";
   }
 
  private:
