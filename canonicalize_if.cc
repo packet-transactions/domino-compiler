@@ -42,10 +42,17 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
     if (if_stmt->getConditionVariableDeclStmt()) {
       throw std::logic_error("We don't yet handle declarations within the test portion of an if\n");
     }
+
+    // Create temporary variable to hold the if condition
+    std::string tmp_var_decl = "";
+    auto condition_type_name = if_stmt->getCond()->getType().getAsString();
+    std::cout << "Type name for condition is " << condition_type_name << "\n";
+    std::cout << "Temp. var. declaration\n" << condition_type_name + " tmp__" + std::to_string(var_counter_++) + " = " + clang_stmt_printer(if_stmt->getCond()) << ";\n";
   }
 
  private:
   Replacements & replace_;
+  uint8_t var_counter_ = 0;
 };
 
 int main(int argc, const char **argv) {
