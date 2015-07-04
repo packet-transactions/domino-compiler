@@ -17,7 +17,7 @@ class IfStmtHandler : public clang::ast_matchers::MatchFinder::MatchCallback {
   virtual void run(const clang::ast_matchers::MatchFinder::MatchResult & t_result) override;
 
  private:
-  void replace_atomic_stmt(const clang::Stmt * stmt) {};
+  void replace_atomic_stmt(const clang::Stmt * stmt);
 
   clang::tooling::Replacements & replace_;
   uint8_t var_counter_ = 0;
