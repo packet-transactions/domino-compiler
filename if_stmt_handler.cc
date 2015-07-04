@@ -8,7 +8,7 @@ using namespace clang::driver;
 using namespace clang::tooling;
 
 void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
-  const auto * if_stmt = t_result.Nodes.getNodeAs<clang::IfStmt>("ifStmt");
+  const auto * if_stmt = t_result.Nodes.getNodeAs<IfStmt>("ifStmt");
   assert(if_stmt != nullptr);
   std::cout << "Found if_stmt" << std::endl
             << clang_stmt_printer(if_stmt) << std::endl;
@@ -58,9 +58,16 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   }
 }
 
-void IfStmtHandler::replace_atomic_stmt(const clang::Stmt * stmt) {
+void IfStmtHandler::replace_atomic_stmt(const Stmt * stmt) {
   assert(isa<BinaryOperator>(stmt));
   assert(dyn_cast<BinaryOperator>(stmt)->isAssignmentOp());
   assert(not dyn_cast<BinaryOperator>(stmt)->isCompoundAssignmentOp());
   std::cout << "Saw a binary operator: " << dyn_cast<BinaryOperator>(stmt)->getOpcodeStr().data() << "\n";
+
+  // Create predicated version of BinaryOperator
+  // LHS remains the same.
+  // RHS expression gets replaced by ConditionalOperator
+  auto replaced_stmt = BinaryOperator(Stmt::EmptyShell());
+  auto cond_op = ConditionalOperator(Stmt::EmptyShell());
+  replaced_stmt.setLHS(dyn_cast<BinaryOperator>(stmt)->getLHS());
 }
