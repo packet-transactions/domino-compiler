@@ -45,8 +45,11 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
       throw std::logic_error("We don't yet handle variable declarations within if statements\n");
     }
 
-    // The "atomic" statements can only be binary operators or conditional operators
-    assert(isa<BinaryOperator>(child) or isa<ConditionalOperator>(child));
+    // The "atomic" statements can only be binary operators
+    // Everything at this level is represented as a BinaryOperator in clang,
+    // Even something like a = x ? 5 : 4; is a BinaryOperator with two operands
+    // a and (x ? 5 : 4).
+    assert(isa<BinaryOperator>(child));
 
     std::cout << "child: " << clang_stmt_printer(child) << std::endl;
 
@@ -56,13 +59,9 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
 }
 
 void IfStmtHandler::replace_atomic_stmt(const clang::Stmt * stmt) {
-  assert(isa<BinaryOperator>(stmt) or
-         isa<ConditionalOperator>(stmt));
+  assert(isa<BinaryOperator>(stmt));
 
   if (isa<BinaryOperator>(stmt)) {
-
-  } else if (isa<ConditionalOperator>(stmt)) {
-
+    std::cout << "Saw a binary operator\n";
   }
-
 }
