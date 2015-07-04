@@ -54,20 +54,18 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
     std::cout << "child: " << clang_stmt_printer(child) << std::endl;
 
     // Replace an atomic statement with a ternary version of itself
-    replace_atomic_stmt(child);
+    replace_atomic_stmt(child, *t_result.SourceManager);
   }
 }
 
-void IfStmtHandler::replace_atomic_stmt(const Stmt * stmt) {
+void IfStmtHandler::replace_atomic_stmt(const Stmt * stmt, SourceManager & source_manager) {
   assert(isa<BinaryOperator>(stmt));
   assert(dyn_cast<BinaryOperator>(stmt)->isAssignmentOp());
   assert(not dyn_cast<BinaryOperator>(stmt)->isCompoundAssignmentOp());
   std::cout << "Saw a binary operator: " << dyn_cast<BinaryOperator>(stmt)->getOpcodeStr().data() << "\n";
 
   // Create predicated version of BinaryOperator
-  // LHS remains the same.
-  // RHS expression gets replaced by ConditionalOperator
-  auto replaced_stmt = BinaryOperator(Stmt::EmptyShell());
-  auto cond_op = ConditionalOperator(Stmt::EmptyShell());
-  replaced_stmt.setLHS(dyn_cast<BinaryOperator>(stmt)->getLHS());
+  const std::string lhs = clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getLHS());
+  const std::string rhs = "(1 ? (" + clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getRHS()) + ") :  (-1))" ;
+  replace_.insert(Replacement(source_manager, stmt, lhs + " = " + rhs));
 }
