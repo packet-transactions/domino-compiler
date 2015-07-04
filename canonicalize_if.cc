@@ -58,6 +58,10 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
     // Print out children in CompoundStmt
     assert(isa<CompoundStmt>(if_stmt->getThen()));
     for (const auto & child : if_stmt->getThen()->children()) {
+      // The "atomic" statements can only be binary operators,
+      // declarations, or conditional operators
+      assert(not isa<CompoundStmt>(child));
+      assert(isa<DeclStmt>(child) or isa<BinaryOperator>(child) or isa<ConditionalOperator>(child));
       std::cout << "child: " << clang_stmt_printer(child) << std::endl;
     }
   }
