@@ -10,24 +10,14 @@ using namespace clang::tooling;
 void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   const auto * if_stmt = t_result.Nodes.getNodeAs<IfStmt>("ifStmt");
   assert(if_stmt != nullptr);
-  std::cout << "Found if_stmt" << std::endl
-            << clang_stmt_printer(if_stmt) << std::endl;
-  std::cout << "Condition" << std::endl
-            << clang_stmt_printer(if_stmt->getCond()) << std::endl;
   assert(if_stmt->getThen() != nullptr);
-  std::cout << "Then" << std::endl
-            << clang_stmt_printer(if_stmt->getThen()) << std::endl;
-  std::cout << "Else" << std::endl
-            << (if_stmt->getElse() != nullptr ? clang_stmt_printer(if_stmt->getElse()) : "empty") << std::endl;
   if (if_stmt->getConditionVariableDeclStmt()) {
     throw std::logic_error("We don't yet handle declarations within the test portion of an if\n");
   }
 
   // Create temporary variable to hold the if condition
-  std::string tmp_var_decl = "";
   auto condition_type_name = if_stmt->getCond()->getType().getAsString();
-  std::cout << "Type name for condition is " << condition_type_name << std::endl;
-  std::cout << "Temp. var. declaration is " << condition_type_name + " tmp__" + std::to_string(var_counter_++) + " = " + clang_stmt_printer(if_stmt->getCond()) << ";" << std::endl;
+  std::string tmp_var_decl = condition_type_name + " tmp__" + std::to_string(var_counter_++) + " = " + clang_stmt_printer(if_stmt->getCond()) + ";\n";
 
   // Convert statements within then block to ternary operators.
   if (not isa<CompoundStmt>(if_stmt->getThen())) {
@@ -35,7 +25,6 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
     throw std::logic_error("We don't yet handle if statments without braces\n");
   }
 
-  // Print out children in CompoundStmt
   assert(isa<CompoundStmt>(if_stmt->getThen()));
   for (const auto & child : if_stmt->getThen()->children()) {
     // When we canonicalize a branch, we assume everything inside is already
@@ -51,8 +40,6 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
     // a and (x ? 5 : 4).
     assert(isa<BinaryOperator>(child));
 
-    std::cout << "child: " << clang_stmt_printer(child) << std::endl;
-
     // Replace an atomic statement with a ternary version of itself
     replace_atomic_stmt(child, *t_result.SourceManager);
   }
@@ -62,7 +49,6 @@ void IfStmtHandler::replace_atomic_stmt(const Stmt * stmt, SourceManager & sourc
   assert(isa<BinaryOperator>(stmt));
   assert(dyn_cast<BinaryOperator>(stmt)->isAssignmentOp());
   assert(not dyn_cast<BinaryOperator>(stmt)->isCompoundAssignmentOp());
-  std::cout << "Saw a binary operator: " << dyn_cast<BinaryOperator>(stmt)->getOpcodeStr().data() << "\n";
 
   // Create predicated version of BinaryOperator
   const std::string lhs = clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getLHS());
