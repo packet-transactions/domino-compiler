@@ -63,10 +63,15 @@ class IfStmtHandler : public MatchFinder::MatchCallback {
       assert(not isa<CompoundStmt>(child));
       assert(isa<DeclStmt>(child) or isa<BinaryOperator>(child) or isa<ConditionalOperator>(child));
       std::cout << "child: " << clang_stmt_printer(child) << std::endl;
+
+      // Replace an atomic statement with a ternary version of itself
+      replace_atomic_stmt(child);
     }
   }
 
  private:
+  void replace_atomic_stmt(const Stmt * stmt) {};
+
   Replacements & replace_;
   uint8_t var_counter_ = 0;
 };
