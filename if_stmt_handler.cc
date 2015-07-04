@@ -60,5 +60,7 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
 
 void IfStmtHandler::replace_atomic_stmt(const clang::Stmt * stmt) {
   assert(isa<BinaryOperator>(stmt));
+  assert(dyn_cast<BinaryOperator>(stmt)->isAssignmentOp());
+  assert(not dyn_cast<BinaryOperator>(stmt)->isCompoundAssignmentOp());
   std::cout << "Saw a binary operator: " << dyn_cast<BinaryOperator>(stmt)->getOpcodeStr().data() << "\n";
 }
