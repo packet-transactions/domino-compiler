@@ -19,7 +19,7 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   // Create temporary variable to hold the if condition
   const auto condition_type_name = if_stmt->getCond()->getType().getAsString();
   const auto cond_variable = "tmp__" + std::to_string(var_counter_++);
-  const auto cond_var_decl = condition_type_name + " " + cond_variable + " = " + clang_stmt_printer(if_stmt->getCond()) + ";\n";
+  const auto cond_var_assignment = cond_variable + " = " + clang_stmt_printer(if_stmt->getCond()) + ";\n";
 
   // Convert statements within then block to ternary operators.
   if (not isa<CompoundStmt>(if_stmt->getThen())) {
@@ -39,7 +39,7 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   CharSourceRange src_range;
   src_range.setBegin(if_stmt->getLocStart());
   src_range.setEnd(if_stmt->getThen()->getLocStart());
-  replace_.insert(Replacement(*t_result.SourceManager, src_range, cond_var_decl));
+  replace_.insert(Replacement(*t_result.SourceManager, src_range, cond_var_assignment));
 
   // Remove the else keyword
   if (if_stmt->getElse() != nullptr) {
@@ -48,6 +48,9 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
     src_range.setEnd(if_stmt->getElse()->getLocStart());
     replace_.insert(Replacement(*t_result.SourceManager, src_range, ""));
   }
+
+  // accumulate a declaration for the condition variable
+  decl_strings_.emplace(condition_type_name + " " + cond_variable + ";\n");
 }
 
 void IfStmtHandler::process_if_branch(const CompoundStmt * compound_stmt, SourceManager & source_manager, const std::string & cond_variable) {
