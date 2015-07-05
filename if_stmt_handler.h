@@ -17,6 +17,8 @@ class IfStmtHandler : public clang::ast_matchers::MatchFinder::MatchCallback {
   virtual void run(const clang::ast_matchers::MatchFinder::MatchResult & t_result) override;
 
  private:
+  void process_if_branch(const clang::CompoundStmt * stmt, clang::SourceManager & source_manager, const std::string & cond_variable);
+
   void replace_atomic_stmt(const clang::Stmt * stmt, clang::SourceManager & source_manager, const std::string & cond_variable);
 
   clang::tooling::Replacements & replace_;

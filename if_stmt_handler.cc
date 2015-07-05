@@ -26,8 +26,23 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
     throw std::logic_error("We don't yet handle if statments without braces\n");
   }
 
+  // process if and else branch
   assert(isa<CompoundStmt>(if_stmt->getThen()));
-  for (const auto & child : if_stmt->getThen()->children()) {
+  process_if_branch(dyn_cast<CompoundStmt>(if_stmt->getThen()), *t_result.SourceManager, cond_variable);
+  if (if_stmt->getElse() != nullptr) {
+    assert(isa<CompoundStmt>(if_stmt->getElse()));
+    process_if_branch(dyn_cast<CompoundStmt>(if_stmt->getElse()), *t_result.SourceManager, "not " + cond_variable);
+  }
+
+  // Replace if statement with condition variable declaration
+  CharSourceRange src_range;
+  src_range.setBegin(if_stmt->getLocStart());
+  src_range.setEnd(if_stmt->getThen()->getLocStart());
+  replace_.insert(Replacement(*t_result.SourceManager, src_range, cond_var_decl));
+}
+
+void IfStmtHandler::process_if_branch(const CompoundStmt * compound_stmt, SourceManager & source_manager, const std::string & cond_variable) {
+  for (const auto & child : compound_stmt->children()) {
     // When we canonicalize a branch, we assume everything inside is already
     // canonicalized and isn't an IfStmt or a CompoundStmt on its own.
     assert(not isa<CompoundStmt>(child));
@@ -42,14 +57,8 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
     assert(isa<BinaryOperator>(child));
 
     // Replace an atomic statement with a ternary version of itself
-    replace_atomic_stmt(child, *t_result.SourceManager, cond_variable);
+    replace_atomic_stmt(child, source_manager, cond_variable);
   }
-
-  // Replace if statement with condition variable declaration
-  CharSourceRange src_range;
-  src_range.setBegin(if_stmt->getLocStart());
-  src_range.setEnd(if_stmt->getThen()->getLocStart());
-  replace_.insert(Replacement(*t_result.SourceManager, src_range, cond_var_decl));
 }
 
 void IfStmtHandler::replace_atomic_stmt(const Stmt * stmt, SourceManager & source_manager, const std::string & cond_variable) {
