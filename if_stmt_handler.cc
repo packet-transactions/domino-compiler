@@ -16,8 +16,9 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   }
 
   // Create temporary variable to hold the if condition
-  auto condition_type_name = if_stmt->getCond()->getType().getAsString();
-  std::string tmp_var_decl = condition_type_name + " tmp__" + std::to_string(var_counter_++) + " = " + clang_stmt_printer(if_stmt->getCond()) + ";\n";
+  const auto condition_type_name = if_stmt->getCond()->getType().getAsString();
+  const auto cond_variable = "tmp__" + std::to_string(var_counter_++);
+  const auto cond_var_decl = condition_type_name + " " + cond_variable + " = " + clang_stmt_printer(if_stmt->getCond()) + ";\n";
 
   // Convert statements within then block to ternary operators.
   if (not isa<CompoundStmt>(if_stmt->getThen())) {
@@ -41,17 +42,17 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
     assert(isa<BinaryOperator>(child));
 
     // Replace an atomic statement with a ternary version of itself
-    replace_atomic_stmt(child, *t_result.SourceManager);
+    replace_atomic_stmt(child, *t_result.SourceManager, cond_variable);
   }
 }
 
-void IfStmtHandler::replace_atomic_stmt(const Stmt * stmt, SourceManager & source_manager) {
+void IfStmtHandler::replace_atomic_stmt(const Stmt * stmt, SourceManager & source_manager, const std::string & cond_variable) {
   assert(isa<BinaryOperator>(stmt));
   assert(dyn_cast<BinaryOperator>(stmt)->isAssignmentOp());
   assert(not dyn_cast<BinaryOperator>(stmt)->isCompoundAssignmentOp());
 
   // Create predicated version of BinaryOperator
   const std::string lhs = clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getLHS());
-  const std::string rhs = "(1 ? (" + clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getRHS()) + ") :  (-1))" ;
+  const std::string rhs = "( " + cond_variable + " ? (" + clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getRHS()) + ") :  (-1))" ;
   replace_.insert(Replacement(source_manager, stmt, lhs + " = " + rhs));
 }
