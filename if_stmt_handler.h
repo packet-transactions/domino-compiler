@@ -20,12 +20,15 @@ class IfStmtHandler : public clang::ast_matchers::MatchFinder::MatchCallback {
   auto get_decls() const { return decl_strings_; }
 
  private:
-  /// Process one half of if or else branch
+  /// Process one half of a branch i.e. either if or else branch
   void process_if_branch(const clang::CompoundStmt * stmt, clang::SourceManager & source_manager, const std::string & cond_variable);
 
   /// Replace an atomic (clang::BinaryOperator) statement
   /// with a conditional version of it
-  void replace_atomic_stmt(const clang::Stmt * stmt, clang::SourceManager & source_manager, const std::string & cond_variable);
+  void replace_atomic_stmt(const clang::BinaryOperator * stmt, clang::SourceManager & source_manager, const std::string & cond_variable);
+
+  /// Check whether if_stmt has any nested ifs inside
+  bool check_for_nesting(const clang::IfStmt * if_stmt) const;
 
   /// Set of all new variable declarations that were created
   std::set<std::string> decl_strings_ = {};

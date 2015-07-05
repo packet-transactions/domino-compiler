@@ -16,6 +16,12 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
     throw std::logic_error("We don't yet handle declarations within the test portion of an if\n");
   }
 
+  // Handle only unnested ifs. Every run processes only unnested ifs.
+  // We keep iterating until clang-apply-replacements hits a fixed point.
+  if (check_for_nesting(if_stmt)) {
+    return;
+  }
+
   // Create temporary variable to hold the if condition
   const auto condition_type_name = if_stmt->getCond()->getType().getAsString();
   const auto cond_variable = "tmp__" + std::to_string(var_counter_++);
@@ -53,6 +59,20 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   decl_strings_.emplace(condition_type_name + " " + cond_variable + ";\n");
 }
 
+bool IfStmtHandler::check_for_nesting(const IfStmt* if_stmt) const {
+  for (const auto & child : if_stmt->getThen()->children()) {
+    if (isa<IfStmt>(child)) return true;
+  }
+
+  if (if_stmt->getElse()) {
+    for (const auto & child : if_stmt->getElse()->children()) {
+      if (isa<IfStmt>(child)) return true;
+    }
+  }
+
+  return false;
+}
+
 void IfStmtHandler::process_if_branch(const CompoundStmt * compound_stmt, SourceManager & source_manager, const std::string & cond_variable) {
   for (const auto & child : compound_stmt->children()) {
     // When we canonicalize a branch, we assume everything inside is already
@@ -69,14 +89,14 @@ void IfStmtHandler::process_if_branch(const CompoundStmt * compound_stmt, Source
     assert(isa<BinaryOperator>(child));
 
     // Replace an atomic statement with a ternary version of itself
-    replace_atomic_stmt(child, source_manager, cond_variable);
+    replace_atomic_stmt(dyn_cast<BinaryOperator>(child), source_manager, cond_variable);
   }
 }
 
-void IfStmtHandler::replace_atomic_stmt(const Stmt * stmt, SourceManager & source_manager, const std::string & cond_variable) {
-  assert(isa<BinaryOperator>(stmt));
-  assert(dyn_cast<BinaryOperator>(stmt)->isAssignmentOp());
-  assert(not dyn_cast<BinaryOperator>(stmt)->isCompoundAssignmentOp());
+void IfStmtHandler::replace_atomic_stmt(const BinaryOperator * stmt, SourceManager & source_manager, const std::string & cond_variable) {
+  assert(stmt);
+  assert(stmt->isAssignmentOp());
+  assert(not stmt->isCompoundAssignmentOp());
 
   // Create predicated version of BinaryOperator
   const std::string lhs = clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getLHS());
