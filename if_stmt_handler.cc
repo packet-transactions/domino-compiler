@@ -1,4 +1,5 @@
 #include <iostream>
+#include "clang/Lex/Lexer.h"
 #include "clang_utility_functions.h"
 #include "if_stmt_handler.h"
 
@@ -31,7 +32,7 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   process_if_branch(dyn_cast<CompoundStmt>(if_stmt->getThen()), *t_result.SourceManager, cond_variable);
   if (if_stmt->getElse() != nullptr) {
     assert(isa<CompoundStmt>(if_stmt->getElse()));
-    process_if_branch(dyn_cast<CompoundStmt>(if_stmt->getElse()), *t_result.SourceManager, "not " + cond_variable);
+    process_if_branch(dyn_cast<CompoundStmt>(if_stmt->getElse()), *t_result.SourceManager, "! " + cond_variable);
   }
 
   // Replace if statement with condition variable declaration
@@ -39,6 +40,14 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   src_range.setBegin(if_stmt->getLocStart());
   src_range.setEnd(if_stmt->getThen()->getLocStart());
   replace_.insert(Replacement(*t_result.SourceManager, src_range, cond_var_decl));
+
+  // Remove the else keyword
+  if (if_stmt->getElse() != nullptr) {
+    const auto begin_else = Lexer::getLocForEndOfToken(if_stmt->getThen()->getLocEnd(), 0, *t_result.SourceManager, t_result.Context->getLangOpts());
+    src_range.setBegin(begin_else);
+    src_range.setEnd(if_stmt->getElse()->getLocStart());
+    replace_.insert(Replacement(*t_result.SourceManager, src_range, ""));
+  }
 }
 
 void IfStmtHandler::process_if_branch(const CompoundStmt * compound_stmt, SourceManager & source_manager, const std::string & cond_variable) {
