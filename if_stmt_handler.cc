@@ -44,6 +44,12 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
     // Replace an atomic statement with a ternary version of itself
     replace_atomic_stmt(child, *t_result.SourceManager, cond_variable);
   }
+
+  // Replace if statement with condition variable declaration
+  CharSourceRange src_range;
+  src_range.setBegin(if_stmt->getLocStart());
+  src_range.setEnd(if_stmt->getThen()->getLocStart());
+  replace_.insert(Replacement(*t_result.SourceManager, src_range, cond_var_decl));
 }
 
 void IfStmtHandler::replace_atomic_stmt(const Stmt * stmt, SourceManager & source_manager, const std::string & cond_variable) {
@@ -53,6 +59,6 @@ void IfStmtHandler::replace_atomic_stmt(const Stmt * stmt, SourceManager & sourc
 
   // Create predicated version of BinaryOperator
   const std::string lhs = clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getLHS());
-  const std::string rhs = "( " + cond_variable + " ? (" + clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getRHS()) + ") :  (-1))" ;
+  const std::string rhs = "(" + cond_variable + " ? (" + clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getRHS()) + ") :  (-1))";
   replace_.insert(Replacement(source_manager, stmt, lhs + " = " + rhs));
 }
