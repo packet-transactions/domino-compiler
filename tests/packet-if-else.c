@@ -15,6 +15,7 @@ void func(Packet p) {
       p.w = 2;
     }
   } else {
-    ;
+    p.x = p.y + 23;
+    p.w = p.x;
   }
 }

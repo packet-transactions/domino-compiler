@@ -9,6 +9,7 @@ Source grammar:
 3. Only assignments, conditional operators, and other binary operators.
 4. Only if/else-if control flow.
 5. No arrays, heaps, switch cases, goto, setjmp, function calls.
+6. No spurious semicolons.
 
 Target grammar:
 ----------------------------
