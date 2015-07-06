@@ -6,8 +6,10 @@ Source grammar:
 2. All local variables are manipulated only through
    packet attributes, which are rewritten into local variables anyway.
    It's our very own form of highly simplified scalar replacement.
-3. Only assignments, conditional operators, and other binary operators.
-4. Only if/else-if control flow.
+3. Only assignments, conditional operators,
+   and other simple binary operators
+   (addition, multiplication, subtraction, comparison, boolean)
+4. Only if/else-if/else control flow.
 5. No arrays, heaps, switch cases, goto, setjmp, function calls.
 6. No spurious semicolons.
 
