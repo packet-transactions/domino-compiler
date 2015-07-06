@@ -119,6 +119,6 @@ void IfStmtHandler::replace_atomic_stmt(const BinaryOperator * stmt, SourceManag
 
   // Create predicated version of BinaryOperator
   const std::string lhs = clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getLHS());
-  const std::string rhs = "(" + cond_variable + " ? (" + clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getRHS()) + ") :  (-1))";
+  const std::string rhs = "(" + cond_variable + " ? (" + clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getRHS()) + ") :  " + lhs + ")";
   replace_.insert(Replacement(source_manager, stmt, lhs + " = " + rhs));
 }
