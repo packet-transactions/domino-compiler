@@ -1,0 +1,15 @@
+Source grammar:
+--------------------------
+
+1. All explicit declarations are outside the function
+   and refer to persistent, stateful variables.
+2. All local variables are manipulated only through
+   packet attributes, which are rewritten into local variables anyway.
+   It's our very own form of highly simplified scalar replacement.
+3. Only assignments, conditional operators, and other binary operators.
+4. Only if/else-if control flow.
+5. No arrays, heaps, switch cases, goto, setjmp, function calls.
+
+Target grammar:
+----------------------------
+1. Canonicalized version of source.
