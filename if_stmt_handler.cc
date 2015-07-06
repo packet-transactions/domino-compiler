@@ -25,7 +25,7 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   // Create temporary variable to hold the if condition
   const auto condition_type_name = if_stmt->getCond()->getType().getAsString();
   const auto cond_variable = "tmp__" + std::to_string(uniform_dist_(prng_)); // TODO: This is sleazy, fix this sometime
-  const auto cond_var_assignment = cond_variable + " = " + clang_stmt_printer(if_stmt->getCond()) + ";\n";
+  const auto cond_var_assignment = cond_variable + " = " + clang_stmt_printer(if_stmt->getCond()) + ";";
 
   // Convert statements within then block to ternary operators.
   if (not isa<CompoundStmt>(if_stmt->getThen())) {
@@ -64,7 +64,7 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   }
 
   // accumulate a declaration for the condition variable
-  decl_strings_.emplace(condition_type_name + " " + cond_variable + ";\n");
+  decl_strings_.emplace(condition_type_name + " " + cond_variable + ";");
 }
 
 void IfStmtHandler::remove_token(const SourceLocation & loc, const MatchFinder::MatchResult & t_result) {

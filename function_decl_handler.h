@@ -31,7 +31,7 @@ class FunctionDeclHandler : public MatchFinder::MatchCallback {
     assert(function_decl_expr != nullptr);
 
     // Concatenate all declarations
-    std::string all_decls = "\n";
+    std::string all_decls = "";
     for (const auto & decl : decl_strings_)
       all_decls += "  " + decl;
 
