@@ -27,6 +27,13 @@ class IfStmtHandler : public clang::ast_matchers::MatchFinder::MatchCallback {
   /// with a conditional version of it
   void replace_atomic_stmt(const clang::BinaryOperator * stmt, clang::SourceManager & source_manager, const std::string & cond_variable);
 
+  /// Remove token at specific SourceLocation
+  void remove_token(const clang::SourceLocation & loc, const clang::ast_matchers::MatchFinder::MatchResult & t_result);
+
+  /// Get CharSourceRange for a given SourceLocation,
+  /// Using GetBeginningOfToken and getLocForEndOfToken
+  clang::CharSourceRange get_src_range_for_loc(const clang::SourceLocation & loc, const clang::ast_matchers::MatchFinder::MatchResult & t_result) const;
+
   /// Check whether if_stmt has any nested ifs inside
   bool check_for_nesting(const clang::IfStmt * if_stmt) const;
 

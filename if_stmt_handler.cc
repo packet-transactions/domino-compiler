@@ -47,16 +47,35 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   src_range.setEnd(if_stmt->getThen()->getLocStart());
   replace_.insert(Replacement(*t_result.SourceManager, src_range, cond_var_assignment));
 
+  // Remove if left and right brace
+  remove_token(if_stmt->getThen()->getLocStart(), t_result);
+  remove_token(if_stmt->getThen()->getLocEnd(), t_result);
+
   // Remove the else keyword
   if (if_stmt->getElse() != nullptr) {
     const auto begin_else = Lexer::getLocForEndOfToken(if_stmt->getThen()->getLocEnd(), 0, *t_result.SourceManager, t_result.Context->getLangOpts());
     src_range.setBegin(begin_else);
     src_range.setEnd(if_stmt->getElse()->getLocStart());
     replace_.insert(Replacement(*t_result.SourceManager, src_range, ""));
+
+    // Remove else left and right brace
+    remove_token(if_stmt->getElse()->getLocStart(), t_result);
+    remove_token(if_stmt->getElse()->getLocEnd(), t_result);
   }
 
   // accumulate a declaration for the condition variable
   decl_strings_.emplace(condition_type_name + " " + cond_variable + ";\n");
+}
+
+void IfStmtHandler::remove_token(const SourceLocation & loc, const MatchFinder::MatchResult & t_result) {
+  replace_.insert(Replacement(*t_result.SourceManager, get_src_range_for_loc(loc, t_result), ""));
+}
+
+CharSourceRange IfStmtHandler::get_src_range_for_loc(const SourceLocation & loc, const MatchFinder::MatchResult & t_result) const {
+  CharSourceRange src_range;
+  src_range.setBegin(Lexer::GetBeginningOfToken(loc, *t_result.SourceManager, t_result.Context->getLangOpts()));
+  src_range.setEnd(Lexer::getLocForEndOfToken(loc, 0, *t_result.SourceManager, t_result.Context->getLangOpts()));
+  return src_range;
 }
 
 bool IfStmtHandler::check_for_nesting(const IfStmt* if_stmt) const {
