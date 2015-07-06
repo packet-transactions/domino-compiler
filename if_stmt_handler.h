@@ -1,6 +1,7 @@
 #ifndef IF_STMT_HANDLER_H_
 #define IF_STMT_HANDLER_H_
 
+#include <random>
 #include "clang/AST/AST.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -43,8 +44,11 @@ class IfStmtHandler : public clang::ast_matchers::MatchFinder::MatchCallback {
   /// Reference to replacements object
   clang::tooling::Replacements & replace_;
 
-  /// Counter to create new temporary variables with unique names
-  uint8_t var_counter_ = 0;
+  /// Random engine to generate random number
+  std::default_random_engine prng_ = std::default_random_engine(std::random_device()());
+
+  /// Uniform distribution to generate random variable numbers
+  std::uniform_int_distribution<int> uniform_dist_ = std::uniform_int_distribution<int>(1, 10000);
 };
 
 #endif  // IF_STMT_HANDLER_H_
