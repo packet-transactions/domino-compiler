@@ -28,6 +28,7 @@ void IfStmtHandler::run(const MatchFinder::MatchResult & t_result) {
   const auto cond_var_assignment = cond_variable + " = " + clang_stmt_printer(if_stmt->getCond()) + ";";
 
   // Convert statements within then block to ternary operators.
+  assert(if_stmt->getThen());
   if (not isa<CompoundStmt>(if_stmt->getThen())) {
     // For now, error out if there's an if statement without braces (i.e. not CompoundStmt)
     throw std::logic_error("We don't yet handle if statments without braces\n");
@@ -79,12 +80,16 @@ CharSourceRange IfStmtHandler::get_src_range_for_loc(const SourceLocation & loc,
 }
 
 bool IfStmtHandler::check_for_nesting(const IfStmt* if_stmt) const {
+  assert(isa<CompoundStmt>(if_stmt->getThen()));
   for (const auto & child : if_stmt->getThen()->children()) {
+    assert(child);
     if (isa<IfStmt>(child)) return true;
   }
 
   if (if_stmt->getElse()) {
+    assert(isa<CompoundStmt>(if_stmt->getElse()));
     for (const auto & child : if_stmt->getElse()->children()) {
+      assert(child);
       if (isa<IfStmt>(child)) return true;
     }
   }
@@ -94,6 +99,7 @@ bool IfStmtHandler::check_for_nesting(const IfStmt* if_stmt) const {
 
 void IfStmtHandler::process_if_branch(const CompoundStmt * compound_stmt, SourceManager & source_manager, const std::string & cond_variable) {
   for (const auto & child : compound_stmt->children()) {
+    assert(child);
     // When we canonicalize a branch, we assume everything inside is already
     // canonicalized and isn't an IfStmt or a CompoundStmt on its own.
     assert(not isa<CompoundStmt>(child));
