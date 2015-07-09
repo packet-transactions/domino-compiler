@@ -11,9 +11,19 @@ void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
   const FunctionDecl *function_decl_expr = t_result.Nodes.getNodeAs<clang::FunctionDecl>("functionDecl");
   assert(function_decl_expr != nullptr);
   assert(isa<CompoundStmt>(function_decl_expr->getBody()));
+  std::vector<const BinaryOperator *> useful_ops;
   for (const auto & child : function_decl_expr->getBody()->children()) {
     assert(child);
     assert(isa<DeclStmt>(child) or isa<BinaryOperator>(child));
-    std::cout << clang_stmt_printer(child) << "\n";
+    if (isa<BinaryOperator>(child)) {
+      useful_ops.push_back(dyn_cast<BinaryOperator>(child));
+    }
+  }
+
+  for (const auto & op1 : useful_ops) {
+    for (const auto & op2 : useful_ops) {
+      assert(op1->isAssignmentOp());
+      assert(op2->isAssignmentOp());
+    }
   }
 }
