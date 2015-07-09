@@ -37,9 +37,9 @@ class PartitioningHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   /// Returns true if op1 MUST precede op 2
   bool depends(const clang::BinaryOperator * op1, const clang::BinaryOperator * op2) const;
 
-  /// Core partitioning logic
+  /// Core partitioning logic to generate a pipeline
   /// Build a dag of dependencies and then schedule using the DAG
-  InstructionSchedule partition(const InstructionVector & inst_vector) const;
+  InstructionSchedule partition_into_pipeline(const InstructionVector & inst_vector) const;
 };
 
 #endif  // PARTITIONING_HANDLER_H_

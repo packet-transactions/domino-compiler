@@ -25,7 +25,7 @@ void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
   }
 
   // Partition into a pipeline
-  auto schedule = partition(useful_ops);
+  auto schedule = partition_into_pipeline(useful_ops);
 
   // Print out schedule
   for (uint32_t i = 0; i < schedule.size(); i++) {
@@ -74,7 +74,7 @@ bool PartitioningHandler::depends(const BinaryOperator * op1, const BinaryOperat
   return false;
 }
 
-PartitioningHandler::InstructionSchedule PartitioningHandler::partition(const InstructionVector & inst_vector) const {
+PartitioningHandler::InstructionSchedule PartitioningHandler::partition_into_pipeline(const InstructionVector & inst_vector) const {
   // Create dag of instruction dependencies.
   std::map<const BinaryOperator *, InstructionVector> succ_graph;
   std::map<const BinaryOperator *, InstructionVector> pred_graph;
