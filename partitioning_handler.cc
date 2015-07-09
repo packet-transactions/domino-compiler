@@ -112,17 +112,18 @@ PartitioningHandler::InstructionSchedule PartitioningHandler::partition_into_pip
     // append to schedule
     schedule.emplace_back(chosen_elements);
 
-    // remove chosen_elements from graph by deleting it
+    // remove chosen_elements from graph by deleting each element
     for (const auto & chosen_element : chosen_elements) {
-      // : from all its successors' pred_graph
-      // : from all its predessors's succ_graph (trivially true, because it has no predessors)
+      // Delete each element from all its successors' pred_graph
+      // Delete each element from all its predessors's succ_graph (trivially true, because it has no predessors)
       for (const auto & successor : succ_graph.at(chosen_element)) {
         // delete chosen_element from pred_graph.at(successor)
         pred_graph.at(successor).erase(std::remove(pred_graph.at(successor).begin(), pred_graph.at(successor).end(), chosen_element));
       }
 
-      // Delete everything from succ_graph.at(chosen_element)
-      succ_graph.at(chosen_element).clear();
+      // Remove chosen_element from pred_graph and succ_graph
+      succ_graph.erase(chosen_element);
+      pred_graph.erase(chosen_element);
     }
 
     // remove chosen_elements from to_schedule
