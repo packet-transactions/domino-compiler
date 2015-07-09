@@ -1,3 +1,4 @@
+#include <map>
 #include <iostream>
 #include "partitioning_handler.h"
 #include "clang_utility_functions.h"
@@ -23,17 +24,21 @@ void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
     }
   }
 
-  std::vector<std::pair<const BinaryOperator *, const BinaryOperator *>> dep_pairs;
+  std::map<const BinaryOperator *, std::vector<const BinaryOperator *>> succ_graph;
+  std::map<const BinaryOperator *, std::vector<const BinaryOperator *>> pred_graph;
+  for (const auto & op : useful_ops) {
+    succ_graph[op] = {};
+    pred_graph[op] = {};
+  }
+
   for (uint32_t i = 0; i < useful_ops.size(); i++) {
     for (uint32_t j = i + 1; j < useful_ops.size(); j++) {
       if (depends(useful_ops.at(i), useful_ops.at(j))) {
-        dep_pairs.emplace_back(std::make_pair(useful_ops.at(i), useful_ops.at(j)));
+        // edge from i ---> j
+        succ_graph.at(useful_ops.at(i)).emplace_back(useful_ops.at(j));
+        pred_graph.at(useful_ops.at(j)).emplace_back(useful_ops.at(i));
       }
     }
-  }
-
-  for (const auto & pair : dep_pairs) {
-    std::cout << clang_stmt_printer(pair.first) << " --> " << clang_stmt_printer(pair.second) << "\n";
   }
 }
 
