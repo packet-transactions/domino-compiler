@@ -13,6 +13,7 @@ void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
   assert(isa<CompoundStmt>(function_decl_expr->getBody()));
   for (const auto & child : function_decl_expr->getBody()->children()) {
     assert(child);
-    std::cout << clang_stmt_printer(child);
+    assert(isa<DeclStmt>(child) or isa<BinaryOperator>(child));
+    std::cout << clang_stmt_printer(child) << "\n";
   }
 }
