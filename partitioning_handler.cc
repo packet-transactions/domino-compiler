@@ -23,10 +23,45 @@ void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
     }
   }
 
-  for (const auto & op1 : useful_ops) {
-    for (const auto & op2 : useful_ops) {
-      assert(op1->isAssignmentOp());
-      assert(op2->isAssignmentOp());
+  std::vector<std::pair<const BinaryOperator *, const BinaryOperator *>> dep_pairs;
+  for (uint32_t i = 0; i < useful_ops.size(); i++) {
+    for (uint32_t j = i + 1; j < useful_ops.size(); j++) {
+      if (depends(useful_ops.at(i), useful_ops.at(j))) {
+        dep_pairs.emplace_back(std::make_pair(useful_ops.at(i), useful_ops.at(j)));
+      }
     }
   }
+
+  for (const auto & pair : dep_pairs) {
+    std::cout << clang_stmt_printer(pair.first) << " --> " << clang_stmt_printer(pair.second) << "\n";
+  }
+}
+
+bool PartitioningHandler::op_reads_var(const BinaryOperator * op, const DeclRefExpr * var) const {
+  // This is an ugly hack using string search (to say the least!)
+  // TODO: Fix this at some later point in time once it is clear how to do it.
+  return (clang_stmt_printer(op).find(clang_stmt_printer(var)) != std::string::npos);
+}
+
+bool PartitioningHandler::depends(const BinaryOperator * op1, const BinaryOperator * op2) const {
+  // happens under two circumstances
+
+  // op1 writes a variable (LHS) that op2 reads.
+  assert(isa<DeclRefExpr>(op1->getLHS()));
+  const auto * op1_write_var = dyn_cast<DeclRefExpr>(op1->getLHS());
+  if (op_reads_var(op2, op1_write_var)) {
+    return true;
+  }
+
+  // op1 writes the same variable that op2 writes
+  // assume and check that op1 precedes op2 in program order
+  // using getLocStart TODO: Check if this is ok
+  assert(op1->getLocStart() < op2->getLocStart());
+  assert(isa<DeclRefExpr>(op1->getLHS()));
+  assert(isa<DeclRefExpr>(op2->getLHS()));
+  if (clang_stmt_printer(op1->getLHS()) == clang_stmt_printer(op2->getLHS())) {
+    return true;
+  }
+
+  return false;
 }
