@@ -16,7 +16,10 @@ void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
     assert(child);
     assert(isa<DeclStmt>(child) or isa<BinaryOperator>(child));
     if (isa<BinaryOperator>(child)) {
-      useful_ops.push_back(dyn_cast<BinaryOperator>(child));
+      const auto * bin_op = dyn_cast<BinaryOperator>(child);
+      assert(bin_op->isAssignmentOp());
+      assert(isa<DeclRefExpr>(bin_op->getLHS()));
+      useful_ops.push_back(bin_op);
     }
   }
 
