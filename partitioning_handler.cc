@@ -50,13 +50,17 @@ bool PartitioningHandler::depends(const BinaryOperator * op1, const BinaryOperat
   assert(isa<DeclRefExpr>(op2->getLHS()));
 
   // op1 writes a variable (LHS) that op2 reads. (Read After Write)
-  const auto * op1_write_var = dyn_cast<DeclRefExpr>(op1->getLHS());
-  if (op_reads_var(op2, op1_write_var)) {
+  if (op_reads_var(op2, dyn_cast<DeclRefExpr>(op1->getLHS()))) {
     return true;
   }
 
   // op1 writes the same variable that op2 writes (Write After Write)
   if (clang_stmt_printer(op1->getLHS()) == clang_stmt_printer(op2->getLHS())) {
+    return true;
+  }
+
+  // op1 reads a variable that op2 writes (Write After Read)
+  if (op_reads_var(op1, dyn_cast<DeclRefExpr>(op2->getLHS()))) {
     return true;
   }
 
