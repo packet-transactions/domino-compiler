@@ -9,10 +9,10 @@
 #include "clang/Tooling/Refactoring.h"
 #include "clang/Tooling/Tooling.h"
 
-class IfStmtHandler : public clang::ast_matchers::MatchFinder::MatchCallback {
+class IfConversionHandler : public clang::ast_matchers::MatchFinder::MatchCallback {
  public:
   /// Constructor: Pass replacements member of a RefactoringTool as an argument
-  IfStmtHandler(clang::tooling::Replacements & t_replace) : replace_(t_replace) {}
+  IfConversionHandler(clang::tooling::Replacements & t_replace) : replace_(t_replace) {}
 
   /// Callback whenever there's a match
   virtual void run(const clang::ast_matchers::MatchFinder::MatchResult & t_result) override;

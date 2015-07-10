@@ -11,7 +11,7 @@ clang-apply-replacements .
 while [ 1 -lt 2 ] ;
 do
   cp $1 old.cc
-  ./canonicalize_if $1 -- > repl.yaml
+  ./if_conversion_prog $1 -- > repl.yaml
   clang-apply-replacements .
   cp $1 new.cc
   if diff old.cc new.cc;

@@ -22,7 +22,7 @@ void func(Packet p) {
   }
 }
 
-// Canonicalized program
+// if-converted program
 
 typedef struct Packet {
   int x;

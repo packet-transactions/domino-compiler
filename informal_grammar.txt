@@ -15,4 +15,4 @@ Source grammar:
 
 Target grammar:
 ----------------------------
-1. Canonicalized version of source.
+1. if-converted version of source.

@@ -10,7 +10,7 @@ using namespace clang::driver;
 using namespace clang::tooling;
 
 static llvm::cl::OptionCategory partitioning_program(""
-"Partition program following if canonicalization");
+"Partition program following if conversion");
 
 int main(int argc, const char **argv) {
   CommonOptionsParser op(argc, argv, partitioning_program);
