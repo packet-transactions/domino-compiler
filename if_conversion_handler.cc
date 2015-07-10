@@ -61,7 +61,7 @@ void IfConversionHandler::if_convert(std::string & current_stream,
     // Just append statement as is, but check that this only happens at the
     // top level i.e. when predicate = "1" or true
     assert(predicate == "1");
-    current_stream += clang_stmt_printer(stmt) + ";";
+    current_stream += clang_stmt_printer(stmt);
     return;
   } else {
     assert(false);
