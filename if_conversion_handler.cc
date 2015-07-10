@@ -13,7 +13,7 @@ void IfConversionHandler::run(const MatchFinder::MatchResult & t_result) {
   std::string current_stream = "";
   // 1 is the C representation for true
   if_convert(current_stream, "1", function_decl->getBody());
-  std::cout << current_stream << "\n";
+  std::cout << "void func() { "current_stream << "}\n";
 }
 
 void IfConversionHandler::if_convert(std::string & current_stream,
