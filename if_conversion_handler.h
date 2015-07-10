@@ -14,6 +14,8 @@ class IfConversionHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   /// Callback whenever there's a match
   virtual void run(const clang::ast_matchers::MatchFinder::MatchResult & t_result) override;
 
+  /// Get output string
+  std::string output() const { return output_; }
  private:
   /// if_convert current clang::Stmt
   /// Takes as input current if-converted program,
@@ -26,6 +28,9 @@ class IfConversionHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   /// with a conditional version of it
   std::string if_convert_atomic_stmt(const clang::BinaryOperator * stmt,
                                      const std::string & predicate) const;
+
+  /// String representing output
+  std::string output_ = "";
 };
 
 #endif  // IF_CONVERSION_HANDLER_H_

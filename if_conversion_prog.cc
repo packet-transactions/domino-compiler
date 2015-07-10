@@ -1,3 +1,4 @@
+#include <iostream>
 #include "clang/Tooling/CommonOptionsParser.h"
 #include "clang/Tooling/ReplacementsYaml.h"
 #include "llvm/Support/YAMLTraits.h"
@@ -24,6 +25,7 @@ int main(int argc, const char **argv) {
   MatchFinder find_all_decls;
   find_all_decls.addMatcher(decl().bind("decl"), & if_conversion_handler);
   refactoring_tool.run(newFrontendActionFactory(& find_all_decls).get());
+  std::cout << if_conversion_handler.output() << "\n";
 
   return 0;
 }

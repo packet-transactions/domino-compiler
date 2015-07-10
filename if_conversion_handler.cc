@@ -16,7 +16,19 @@ void IfConversionHandler::run(const MatchFinder::MatchResult & t_result) {
     std::string current_stream = "";
     // 1 is the C representation for true
     if_convert(current_stream, "1", function_decl->getBody());
-    std::cout << "void func() { " << current_stream << "}\n";
+
+    // Append to output_
+    output_ += ("void func() { " + current_stream + "}\n");
+  } else if (isa<VarDecl>(decl)) {
+    if (decl->isDefinedOutsideFunctionOrMethod()) {
+      // Prepend only global variables to output_, remaining are prepended inside if_convert anyway
+      output_.insert(0, dyn_cast<VarDecl>(decl)->getType().getAsString() + " " + clang_value_decl_printer(dyn_cast<VarDecl>(decl)) + ";");
+    }
+  } else if (isa<RecordDecl>(decl) or isa<TypedefDecl>(decl) or isa<FieldDecl>(decl) or isa<ParmVarDecl>(decl) or isa<TranslationUnitDecl>(decl)) {
+    // Do nothing
+    ;
+  } else {
+    assert(false);
   }
 }
 
