@@ -21,9 +21,9 @@ int main(int argc, const char **argv) {
 
   // Set up AST matcher callbacks for if statements
   IfConversionHandler if_conversion_handler;
-  MatchFinder find_function_decl;
-  find_function_decl.addMatcher(functionDecl().bind("functionDecl"), & if_conversion_handler);
-  refactoring_tool.run(newFrontendActionFactory(& find_function_decl).get());
+  MatchFinder find_all_decls;
+  find_all_decls.addMatcher(decl().bind("decl"), & if_conversion_handler);
+  refactoring_tool.run(newFrontendActionFactory(& find_all_decls).get());
 
   return 0;
 }

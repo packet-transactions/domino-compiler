@@ -1,5 +1,4 @@
 #include <iostream>
-#include "clang/Lex/Lexer.h"
 #include "clang_utility_functions.h"
 #include "if_conversion_handler.h"
 
@@ -7,13 +6,18 @@ using namespace clang;
 using namespace clang::ast_matchers;
 
 void IfConversionHandler::run(const MatchFinder::MatchResult & t_result) {
-  const auto * function_decl = t_result.Nodes.getNodeAs<FunctionDecl>("functionDecl");
-  assert(function_decl != nullptr);
-  assert(function_decl->getBody() != nullptr);
-  std::string current_stream = "";
-  // 1 is the C representation for true
-  if_convert(current_stream, "1", function_decl->getBody());
-  std::cout << "void func() { " << current_stream << "}\n";
+  const auto * decl = t_result.Nodes.getNodeAs<Decl>("decl");
+  assert(decl != nullptr);
+
+  // If it's a function declaration
+  if (isa<FunctionDecl>(decl)) {
+    const auto * function_decl = dyn_cast<FunctionDecl>(decl);
+    assert(function_decl->getBody() != nullptr);
+    std::string current_stream = "";
+    // 1 is the C representation for true
+    if_convert(current_stream, "1", function_decl->getBody());
+    std::cout << "void func() { " << current_stream << "}\n";
+  }
 }
 
 void IfConversionHandler::if_convert(std::string & current_stream,
