@@ -20,27 +20,10 @@ int main(int argc, const char **argv) {
   RefactoringTool refactoring_tool(op.getCompilations(), op.getSourcePathList());
 
   // Set up AST matcher callbacks for if statements
-  IfConversionHandler if_conversion_handler(refactoring_tool.getReplacements());
-  MatchFinder find_if_stmt;
-  find_if_stmt.addMatcher(ifStmt().bind("ifStmt"), & if_conversion_handler);
-  refactoring_tool.run(newFrontendActionFactory(& find_if_stmt).get());
-
-  // Set up AST matcher callbacks for function declaration to add declarations
-  FunctionDeclHandler function_decl_handler(refactoring_tool.getReplacements(), if_conversion_handler.get_decls());
+  IfConversionHandler if_conversion_handler;
   MatchFinder find_function_decl;
-  find_function_decl.addMatcher(functionDecl().bind("functionDecl"), & function_decl_handler);
+  find_function_decl.addMatcher(functionDecl().bind("functionDecl"), & if_conversion_handler);
   refactoring_tool.run(newFrontendActionFactory(& find_function_decl).get());
-
-  // Write into YAML object
-  TranslationUnitReplacements replace_yaml;
-  replace_yaml.MainSourceFile = argv[1];
-  replace_yaml.Context = "no_context";
-  for (const auto &r : refactoring_tool.getReplacements())
-    replace_yaml.Replacements.push_back(r);
-
-  // Serialize to stdout
-  llvm::yaml::Output yaml_stream(llvm::outs());
-  yaml_stream << replace_yaml;
 
   return 0;
 }
