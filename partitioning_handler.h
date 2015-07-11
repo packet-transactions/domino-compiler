@@ -26,9 +26,9 @@ class PartitioningHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   /// language everything is a BinaryOperator
   typedef std::vector<const clang::BinaryOperator*> InstructionVector;
 
-  /// Convenience typedef: A vector of vectors representing instructions scheduled
-  /// at each time slot or clock
-  typedef std::vector<InstructionVector> InstructionSchedule;
+  /// Convenience typedef: A vector of vectors representing instructions
+  /// that go into each pipeline stage
+  typedef std::vector<InstructionVector> InstructionPartitioning;
 
   /// Does operation read variable?
   bool op_reads_var(const clang::BinaryOperator * op, const clang::DeclRefExpr * var) const;
@@ -39,7 +39,7 @@ class PartitioningHandler : public clang::ast_matchers::MatchFinder::MatchCallba
 
   /// Core partitioning logic to generate a pipeline
   /// Build a dag of dependencies and then schedule using the DAG
-  InstructionSchedule partition_into_pipeline(const InstructionVector & inst_vector) const;
+  InstructionPartitioning partition_into_pipeline(const InstructionVector & inst_vector) const;
 };
 
 #endif  // PARTITIONING_HANDLER_H_

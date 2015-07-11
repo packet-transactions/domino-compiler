@@ -25,12 +25,12 @@ void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
   }
 
   // Partition into a pipeline
-  auto schedule = partition_into_pipeline(useful_ops);
+  auto partitioning = partition_into_pipeline(useful_ops);
 
-  // Print out schedule
-  for (uint32_t i = 0; i < schedule.size(); i++) {
+  // Print out partitioning
+  for (uint32_t i = 0; i < partitioning.size(); i++) {
     std::cout << "Clock " << i << " : " << std::endl;
-    for (const auto & op : schedule.at(i)) {
+    for (const auto & op : partitioning.at(i)) {
       std::cout << " { " << clang_stmt_printer(op) << " } " << " ";
     }
     std::cout << std::endl;
@@ -74,7 +74,7 @@ bool PartitioningHandler::depends(const BinaryOperator * op1, const BinaryOperat
   return false;
 }
 
-PartitioningHandler::InstructionSchedule PartitioningHandler::partition_into_pipeline(const InstructionVector & inst_vector) const {
+PartitioningHandler::InstructionPartitioning PartitioningHandler::partition_into_pipeline(const InstructionVector & inst_vector) const {
   // Create dag of instruction dependencies.
   std::map<const BinaryOperator *, InstructionVector> succ_graph;
   std::map<const BinaryOperator *, InstructionVector> pred_graph;
@@ -93,24 +93,24 @@ PartitioningHandler::InstructionSchedule PartitioningHandler::partition_into_pip
     }
   }
 
-  // Keep track of what needs to be scheduled
-  InstructionVector to_schedule = inst_vector;
+  // Keep track of what needs to be partitioned
+  InstructionVector to_partition = inst_vector;
 
-  // The schedule itself
-  InstructionSchedule schedule;
+  // The partitioning itself
+  InstructionPartitioning partitioning;
 
-  while (not to_schedule.empty()) {
+  while (not to_partition.empty()) {
     // Find elements with no predecessors
     std::vector<const BinaryOperator *> chosen_elements;
-    for (const auto & candidate : to_schedule) {
+    for (const auto & candidate : to_partition) {
       if (pred_graph.at(candidate).empty()) {
         chosen_elements.emplace_back(candidate);
       }
     }
     assert(not chosen_elements.empty());
 
-    // append to schedule
-    schedule.emplace_back(chosen_elements);
+    // append to partitioning
+    partitioning.emplace_back(chosen_elements);
 
     // remove chosen_elements from graph by deleting each element
     for (const auto & chosen_element : chosen_elements) {
@@ -126,11 +126,11 @@ PartitioningHandler::InstructionSchedule PartitioningHandler::partition_into_pip
       pred_graph.erase(chosen_element);
     }
 
-    // remove chosen_elements from to_schedule
+    // remove chosen_elements from to_partition
     for (const auto & chosen_element : chosen_elements) {
-      to_schedule.erase(std::remove(to_schedule.begin(), to_schedule.end(), chosen_element));
+      to_partition.erase(std::remove(to_partition.begin(), to_partition.end(), chosen_element));
     }
   }
 
-  return schedule;
+  return partitioning;
 }
