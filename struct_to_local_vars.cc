@@ -54,7 +54,7 @@ class MemberExprHandler : public MatchFinder::MatchCallback {
 
  private:
   Replacements & Replace;
-  std::set<std::string> decl_strings_;
+  std::set<std::string> decl_strings_ = {};
 };
 
 int main(int argc, const char **argv) {
