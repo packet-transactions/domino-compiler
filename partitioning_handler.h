@@ -40,6 +40,12 @@ class PartitioningHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   /// Core partitioning logic to generate a pipeline
   /// Build a dag of dependencies and then schedule using the DAG
   InstructionPartitioning partition_into_pipeline(const InstructionVector & inst_vector) const;
+
+  /// Check for pipeline-wide stateful variables
+  /// Return a vector of strings that represent all
+  /// variables that are pipeline-wide, and _require_ recirculation,
+  /// in the absence of packed-word instructions.
+  std::vector<std::string> check_for_pipeline_vars(const InstructionPartitioning & partitioning) const;
 };
 
 #endif  // PARTITIONING_HANDLER_H_

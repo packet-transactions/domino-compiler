@@ -27,6 +27,9 @@ void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
   // Partition into a pipeline
   auto partitioning = partition_into_pipeline(useful_ops);
 
+  // Check for pipeline-wide variables
+  check_for_pipeline_vars(partitioning);
+
   // Print out partitioning
   for (uint32_t i = 0; i < partitioning.size(); i++) {
     std::cout << "Clock " << i << " : " << std::endl;
@@ -133,4 +136,13 @@ PartitioningHandler::InstructionPartitioning PartitioningHandler::partition_into
   }
 
   return partitioning;
+}
+
+std::vector<std::string> PartitioningHandler::check_for_pipeline_vars(const InstructionPartitioning & partitioning) const {
+  for (const auto & inst_vector : partitioning) {
+    for (const auto & inst : inst_vector) {
+      assert(isa<BinaryOperator>(inst));
+    }
+  }
+  return {};
 }
