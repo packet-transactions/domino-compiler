@@ -142,6 +142,13 @@ std::vector<std::string> PartitioningHandler::check_for_pipeline_vars(const Inst
   for (const auto & inst_vector : partitioning) {
     for (const auto & inst : inst_vector) {
       assert(isa<BinaryOperator>(inst));
+      assert(isa<DeclRefExpr>(inst->getLHS()));
+      // TODO: Fix this. Another string-typing hack: all local vars are assumed to have "__" within them.
+      if (clang_stmt_printer(dyn_cast<DeclRefExpr>(inst->getLHS())).find("__") != std::string::npos) {
+        std::cerr << "check_for_pipeline_vars, ignoring local variable: " << clang_stmt_printer(dyn_cast<DeclRefExpr>(inst->getLHS())) << "\n";
+      } else {
+        // Do something non-trivial here
+      }
     }
   }
   return {};
