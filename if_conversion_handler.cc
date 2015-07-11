@@ -21,8 +21,12 @@ void IfConversionHandler::run(const MatchFinder::MatchResult & t_result) {
     output_ += ("void func() { " + current_stream + "}\n");
   } else if (isa<VarDecl>(decl)) {
     if (decl->isDefinedOutsideFunctionOrMethod()) {
-      // Prepend only global variables to output_, remaining are prepended inside if_convert anyway
+      // Prepend only global variables to output_,
+      // remaining are prepended inside if_convert anyway
+      // (the part of if_convert that handles DeclStmt)
       output_.insert(0, dyn_cast<VarDecl>(decl)->getType().getAsString() + " " + clang_value_decl_printer(dyn_cast<VarDecl>(decl)) + ";");
+    } else {
+      std::cerr << "Ignoring declaration because it is local: " << clang_value_decl_printer(dyn_cast<VarDecl>(decl)) << std::endl;
     }
   } else if (isa<RecordDecl>(decl) or isa<TypedefDecl>(decl) or isa<FieldDecl>(decl) or isa<ParmVarDecl>(decl) or isa<TranslationUnitDecl>(decl)) {
     // Do nothing
