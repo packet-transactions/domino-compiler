@@ -156,7 +156,31 @@ std::set<std::string> PartitioningHandler::get_stateful_writes(const Expr * inst
 std::set<std::string> PartitioningHandler::get_stateful_reads(const Expr * inst_rhs) const {
   // Get all stateful right hand sides of inst
   assert(inst_rhs);
-  if (isa<BinaryOperator>(inst_rhs)) {
+  if (isa<ParenExpr>(inst_rhs)) {
+    return get_stateful_reads(dyn_cast<ParenExpr>(inst_rhs)->getSubExpr());
+  } else if (isa<CastExpr>(inst_rhs)) {
+    return get_stateful_reads(dyn_cast<CastExpr>(inst_rhs)->getSubExpr());
+  } else if (isa<ConditionalOperator>(inst_rhs)) {
+    const auto * cond_op = dyn_cast<ConditionalOperator>(inst_rhs);
+
+    // Get condition, true , and false expressions
+    auto cond_set = get_stateful_reads(cond_op->getCond());
+    auto true_set = get_stateful_reads(cond_op->getTrueExpr());
+    auto false_set = get_stateful_reads(cond_op->getFalseExpr());
+
+    // Union together true and false sets
+    std::set<std::string> value_set;
+    std::set_union(true_set.begin(), true_set.end(),
+                   false_set.begin(), false_set.end(),
+                   std::inserter(value_set, value_set.begin()));
+
+    // Union that with cond_set
+    std::set<std::string> ret;
+    std::set_union(value_set.begin(), value_set.end(),
+                   cond_set.begin(), cond_set.end(),
+                   std::inserter(ret, ret.begin()));
+    return ret;
+  } else if (isa<BinaryOperator>(inst_rhs)) {
     const auto * bin_op = dyn_cast<BinaryOperator>(inst_rhs);
     auto lhs_set = get_stateful_reads(bin_op->getLHS());
     auto rhs_set = get_stateful_reads(bin_op->getRHS());
@@ -172,6 +196,7 @@ std::set<std::string> PartitioningHandler::get_stateful_reads(const Expr * inst_
     }
     return std::set<std::string>();
   } else {
+    assert(isa<IntegerLiteral>(inst_rhs));
     return std::set<std::string>();
   }
 }
@@ -224,9 +249,9 @@ bool PartitioningHandler::check_for_pipeline_vars(const InstructionPartitioning 
         // Find first write stage id iterator such that it is strictly
         // greater than read_stage_id (http://en.cppreference.com/w/cpp/container/set/upper_bound)
         auto first_write_after_read = write_stages.upper_bound(read_stage_id);
-        if (first_write_after_read != read_stages.end()) {
+        if (first_write_after_read != write_stages.end()) {
           // pipeline-wide shared variable
-          std::cout << var_name << "needs pipeline-wide sharing"
+          std::cout << var_name << " needs pipeline-wide sharing"
                     << ", read in " << read_stage_id
                     << ", written in " << *first_write_after_read
                     << std::endl;
