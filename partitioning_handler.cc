@@ -7,8 +7,6 @@
 
 using namespace clang;
 using namespace clang::ast_matchers;
-using namespace clang::driver;
-using namespace clang::tooling;
 
 void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
   const FunctionDecl *function_decl_expr = t_result.Nodes.getNodeAs<clang::FunctionDecl>("functionDecl");
