@@ -176,7 +176,7 @@ std::set<std::string> PartitioningHandler::get_stateful_reads(const Expr * inst_
   }
 }
 
-std::vector<std::string> PartitioningHandler::check_for_pipeline_vars(const InstructionPartitioning & partitioning) const {
+bool PartitioningHandler::check_for_pipeline_vars(const InstructionPartitioning & partitioning) const {
   // State variables occurences.
   // This is a map from the name of the state variable
   // to a set listing the stage ids where this state variable is read/written.
@@ -200,5 +200,40 @@ std::vector<std::string> PartitioningHandler::check_for_pipeline_vars(const Inst
       }
     }
   }
-  return {};
+
+  // Now, go through all state variables that are actually written.
+  // If the state var is never written, there is nothing to worry about,
+  // though it isn't clear why something like that would ever be useful.
+  for (const auto & pair : state_var_writes) {
+    const auto var_name = pair.first;
+
+    // Find all reads for var_name, if they exist at all.
+    // Again, not sure why there would be a variable
+    // with no reads and only writes.
+    if (state_var_reads.find(var_name) != state_var_reads.end()) {
+      // Get sets of all read and write stage ids
+      const auto read_stages = state_var_reads.at(var_name);
+      const auto write_stages = state_var_writes.at(var_name);
+
+      // Check if var_name is ever defined AFTER being used.
+      // i.e. if there exists a pair (read_stage_id, write_stage_id),
+      // where read_stage_id < write_stage_id, and such that var_name
+      // is read in read_stage_id and written in write_stage_id
+      // TODO: Is it < 'or' <=
+      for (const auto & read_stage_id : read_stages) {
+        // Find first write stage id iterator such that it is strictly
+        // greater than read_stage_id (http://en.cppreference.com/w/cpp/container/set/upper_bound)
+        auto first_write_after_read = write_stages.upper_bound(read_stage_id);
+        if (first_write_after_read != read_stages.end()) {
+          // pipeline-wide shared variable
+          std::cout << var_name << "needs pipeline-wide sharing"
+                    << ", read in " << read_stage_id
+                    << ", written in " << *first_write_after_read
+                    << std::endl;
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 }

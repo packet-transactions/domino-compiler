@@ -51,7 +51,7 @@ class PartitioningHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   /// Return a vector of strings that represent all
   /// variables that are pipeline-wide, and _require_ recirculation,
   /// in the absence of packed-word instructions.
-  std::vector<std::string> check_for_pipeline_vars(const InstructionPartitioning & partitioning) const;
+  bool check_for_pipeline_vars(const InstructionPartitioning & partitioning) const;
 };
 
 #endif  // PARTITIONING_HANDLER_H_
