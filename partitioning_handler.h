@@ -42,10 +42,10 @@ class PartitioningHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   InstructionPartitioning partition_into_pipeline(const InstructionVector & inst_vector) const;
 
   /// Get all stateful writes from a BinaryOperator
-  std::vector<std::string> get_stateful_writes(const clang::Expr * inst_lhs) const;
+  std::set<std::string> get_stateful_writes(const clang::Expr * inst_lhs) const;
 
   /// Get all stateful reads from a BinaryOperator
-  std::vector<std::string> get_stateful_reads(const clang::Expr * inst_rhs) const;
+  std::set<std::string> get_stateful_reads(const clang::Expr * inst_rhs) const;
 
   /// Check for pipeline-wide stateful variables
   /// Return a vector of strings that represent all
