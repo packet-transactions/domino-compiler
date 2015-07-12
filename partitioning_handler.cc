@@ -179,24 +179,24 @@ std::set<std::string> PartitioningHandler::get_stateful_reads(const Expr * inst_
 std::vector<std::string> PartitioningHandler::check_for_pipeline_vars(const InstructionPartitioning & partitioning) const {
   // State variables occurences.
   // This is a map from the name of the state variable
-  // to a set listing the partition ids where this state variable is read/written.
+  // to a set listing the stage ids where this state variable is read/written.
   std::map<std::string, std::set<int>> state_var_reads;
   std::map<std::string, std::set<int>> state_var_writes;
 
-  for (uint32_t partition_id = 0; partition_id < partitioning.size(); partition_id++) {
-    for (const auto & inst : partitioning.at(partition_id)) {
+  for (uint32_t stage_id = 0; stage_id < partitioning.size(); stage_id++) {
+    for (const auto & inst : partitioning.at(stage_id)) {
       assert(isa<BinaryOperator>(inst));
       for (const auto & write_var : get_stateful_writes(inst->getLHS())) {
         if (state_var_writes.find(write_var) == state_var_writes.end()) {
           state_var_writes[write_var] = std::set<int>();
         }
-        state_var_writes.at(write_var).emplace(partition_id);
+        state_var_writes.at(write_var).emplace(stage_id);
       }
       for (const auto & read_var : get_stateful_reads(inst->getRHS())) {
         if (state_var_reads.find(read_var) == state_var_reads.end()) {
           state_var_reads[read_var] = std::set<int>();
         }
-        state_var_reads.at(read_var).emplace(partition_id);
+        state_var_reads.at(read_var).emplace(stage_id);
       }
     }
   }
