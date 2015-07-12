@@ -138,11 +138,11 @@ PartitioningHandler::InstructionPartitioning PartitioningHandler::partition_into
   return partitioning;
 }
 
-std::vector<std::string> PartitioningHandler::get_stateful_writes(const BinaryOperator * inst) const {
+std::vector<std::string> PartitioningHandler::get_stateful_writes(const Expr * inst_lhs) const {
   // Get all stateful left hand sides of inst
-  assert(inst);
-  assert(isa<DeclRefExpr>(inst->getLHS()));
-  const auto write_var = clang_stmt_printer(dyn_cast<DeclRefExpr>(inst->getLHS()));
+  assert(inst_lhs);
+  assert(isa<DeclRefExpr>(inst_lhs));
+  const auto write_var = clang_stmt_printer(dyn_cast<DeclRefExpr>(inst_lhs));
 
   // TODO: Fix this. Another string-typing hack: all local vars are assumed to have "__" within them.
   if (write_var.find("__") != std::string::npos) {
@@ -151,9 +151,19 @@ std::vector<std::string> PartitioningHandler::get_stateful_writes(const BinaryOp
   return std::vector<std::string>();
 }
 
-std::vector<std::string> PartitioningHandler::get_stateful_reads(const BinaryOperator * inst __attribute__((unused))) const {
-  // TODO: Fill this up.
-  return std::vector<std::string>();
+std::vector<std::string> PartitioningHandler::get_stateful_reads(const Expr * inst_rhs) const {
+  // Get all stateful right hand sides of inst
+  assert(inst_rhs);
+  if (isa<BinaryOperator>(inst_rhs)) {
+    return get_stateful_reads(inst_rhs->getLHS()) + get_stateful_reads(inst_rhs->getRHS());
+  } else if (isa<DeclRefExpr>(inst_rhs)) {
+    const auto read_var = clang_stmt_printer(dyn_cast<DeclRefExpr>(inst_rhs));
+    if (read_var.find("__") != std::string::npos) {
+      return std::vector<std::string>(1, read_var);
+    }
+  } else {
+    return std::vector<std::string>();
+  }
 }
 
 std::vector<std::string> PartitioningHandler::check_for_pipeline_vars(const InstructionPartitioning & partitioning) const {
@@ -166,13 +176,13 @@ std::vector<std::string> PartitioningHandler::check_for_pipeline_vars(const Inst
   for (uint32_t partition_id = 0; partition_id < partitioning.size(); partition_id++) {
     for (const auto & inst : partitioning.at(partition_id)) {
       assert(isa<BinaryOperator>(inst));
-      for (const auto & write_var : get_stateful_writes(inst)) {
+      for (const auto & write_var : get_stateful_writes(inst->getLHS())) {
         if (state_var_writes.find(write_var) == state_var_writes.end()) {
           state_var_writes[write_var] = std::vector<int>();
         }
         state_var_writes.at(write_var).emplace_back(partition_id);
       }
-      for (const auto & read_var : get_stateful_reads(inst)) {
+      for (const auto & read_var : get_stateful_reads(inst->getRHS())) {
         if (state_var_reads.find(read_var) == state_var_reads.end()) {
           state_var_reads[read_var] = std::vector<int>();
         }
