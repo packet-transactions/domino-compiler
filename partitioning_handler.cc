@@ -231,6 +231,7 @@ bool PartitioningHandler::check_for_pipeline_vars(const InstructionPartitioning 
   // though it isn't clear why something like that would ever be useful.
   for (const auto & pair : state_var_writes) {
     const auto var_name = pair.first;
+    std::cerr << "Checking variable name " << var_name << " for pipeline-wide sharing" << std::endl;
 
     // Find all reads for var_name, if they exist at all.
     // Again, not sure why there would be a variable
