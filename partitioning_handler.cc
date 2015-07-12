@@ -147,7 +147,7 @@ std::set<std::string> PartitioningHandler::get_stateful_writes(const Expr * inst
   const auto write_var = clang_stmt_printer(dyn_cast<DeclRefExpr>(inst_lhs));
 
   // TODO: Fix this. Another string-typing hack: all local vars are assumed to have "__" within them.
-  if (write_var.find("__") != std::string::npos) {
+  if (write_var.find("__") == std::string::npos) {
     return std::set<std::string>({write_var});
   }
   return std::set<std::string>();
@@ -191,7 +191,7 @@ std::set<std::string> PartitioningHandler::get_stateful_reads(const Expr * inst_
     return ret;
   } else if (isa<DeclRefExpr>(inst_rhs)) {
     const auto read_var = clang_stmt_printer(dyn_cast<DeclRefExpr>(inst_rhs));
-    if (read_var.find("__") != std::string::npos) {
+    if (read_var.find("__") == std::string::npos) {
       return std::set<std::string>({read_var});
     }
     return std::set<std::string>();
