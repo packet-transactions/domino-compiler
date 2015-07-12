@@ -1,9 +1,8 @@
 #include <map>
-#include <algorithm>
-#include <iterator>
 #include <iostream>
 #include "partitioning_handler.h"
 #include "clang_utility_functions.h"
+#include "expr_functions.h"
 
 using namespace clang;
 using namespace clang::ast_matchers;
@@ -138,67 +137,6 @@ PartitioningHandler::InstructionPartitioning PartitioningHandler::partition_into
   return partitioning;
 }
 
-std::set<std::string> PartitioningHandler::get_stateful_writes(const Expr * inst_lhs) const {
-  // Get all stateful left hand sides of inst
-  assert(inst_lhs);
-  assert(isa<DeclRefExpr>(inst_lhs));
-  const auto write_var = clang_stmt_printer(dyn_cast<DeclRefExpr>(inst_lhs));
-
-  // TODO: Fix this. Another string-typing hack: all local vars are assumed to have "__" within them.
-  if (write_var.find("__") == std::string::npos) {
-    return std::set<std::string>({write_var});
-  }
-  return std::set<std::string>();
-}
-
-std::set<std::string> PartitioningHandler::get_stateful_reads(const Expr * inst_rhs) const {
-  // Get all stateful right hand sides of inst
-  assert(inst_rhs);
-  if (isa<ParenExpr>(inst_rhs)) {
-    return get_stateful_reads(dyn_cast<ParenExpr>(inst_rhs)->getSubExpr());
-  } else if (isa<CastExpr>(inst_rhs)) {
-    return get_stateful_reads(dyn_cast<CastExpr>(inst_rhs)->getSubExpr());
-  } else if (isa<ConditionalOperator>(inst_rhs)) {
-    const auto * cond_op = dyn_cast<ConditionalOperator>(inst_rhs);
-
-    // Get condition, true , and false expressions
-    auto cond_set = get_stateful_reads(cond_op->getCond());
-    auto true_set = get_stateful_reads(cond_op->getTrueExpr());
-    auto false_set = get_stateful_reads(cond_op->getFalseExpr());
-
-    // Union together true and false sets
-    std::set<std::string> value_set;
-    std::set_union(true_set.begin(), true_set.end(),
-                   false_set.begin(), false_set.end(),
-                   std::inserter(value_set, value_set.begin()));
-
-    // Union that with cond_set
-    std::set<std::string> ret;
-    std::set_union(value_set.begin(), value_set.end(),
-                   cond_set.begin(), cond_set.end(),
-                   std::inserter(ret, ret.begin()));
-    return ret;
-  } else if (isa<BinaryOperator>(inst_rhs)) {
-    const auto * bin_op = dyn_cast<BinaryOperator>(inst_rhs);
-    auto lhs_set = get_stateful_reads(bin_op->getLHS());
-    auto rhs_set = get_stateful_reads(bin_op->getRHS());
-    std::set<std::string> ret;
-    std::set_union(lhs_set.begin(), lhs_set.end(),
-                   rhs_set.begin(), rhs_set.end(),
-                   std::inserter(ret, ret.begin()));
-    return ret;
-  } else if (isa<DeclRefExpr>(inst_rhs)) {
-    const auto read_var = clang_stmt_printer(dyn_cast<DeclRefExpr>(inst_rhs));
-    if (read_var.find("__") == std::string::npos) {
-      return std::set<std::string>({read_var});
-    }
-    return std::set<std::string>();
-  } else {
-    assert(isa<IntegerLiteral>(inst_rhs));
-    return std::set<std::string>();
-  }
-}
-
 bool PartitioningHandler::check_for_pipeline_vars(const InstructionPartitioning & partitioning) const {
   // State variables occurences.
   // This is a map from the name of the state variable
@@ -209,13 +147,13 @@ bool PartitioningHandler::check_for_pipeline_vars(const InstructionPartitioning 
   for (uint32_t stage_id = 0; stage_id < partitioning.size(); stage_id++) {
     for (const auto & inst : partitioning.at(stage_id)) {
       assert(isa<BinaryOperator>(inst));
-      for (const auto & write_var : get_stateful_writes(inst->getLHS())) {
+      for (const auto & write_var : ExprFunctions::get_all_vars(inst->getLHS())) {
         if (state_var_writes.find(write_var) == state_var_writes.end()) {
           state_var_writes[write_var] = std::set<int>();
         }
         state_var_writes.at(write_var).emplace(stage_id);
       }
-      for (const auto & read_var : get_stateful_reads(inst->getRHS())) {
+      for (const auto & read_var : ExprFunctions::get_all_vars(inst->getRHS())) {
         if (state_var_reads.find(read_var) == state_var_reads.end()) {
           state_var_reads[read_var] = std::set<int>();
         }
