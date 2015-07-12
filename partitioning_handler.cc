@@ -138,16 +138,45 @@ PartitioningHandler::InstructionPartitioning PartitioningHandler::partition_into
   return partitioning;
 }
 
+std::vector<std::string> PartitioningHandler::get_stateful_writes(const BinaryOperator * inst) const {
+  // Get all stateful left hand sides of inst
+  assert(inst);
+  assert(isa<DeclRefExpr>(inst->getLHS()));
+  const auto write_var = clang_stmt_printer(dyn_cast<DeclRefExpr>(inst->getLHS()));
+
+  // TODO: Fix this. Another string-typing hack: all local vars are assumed to have "__" within them.
+  if (write_var.find("__") != std::string::npos) {
+    return std::vector<std::string>(1, write_var);
+  }
+  return std::vector<std::string>();
+}
+
+std::vector<std::string> PartitioningHandler::get_stateful_reads(const BinaryOperator * inst __attribute__((unused))) const {
+  // TODO: Fill this up.
+  return std::vector<std::string>();
+}
+
 std::vector<std::string> PartitioningHandler::check_for_pipeline_vars(const InstructionPartitioning & partitioning) const {
-  for (const auto & inst_vector : partitioning) {
-    for (const auto & inst : inst_vector) {
+  // State variables occurences.
+  // This is a map from the name of the state variable
+  // to a vector listing the partition ids where this state variable is read/written.
+  std::map<std::string, std::vector<int>> state_var_reads;
+  std::map<std::string, std::vector<int>> state_var_writes;
+
+  for (uint32_t partition_id = 0; partition_id < partitioning.size(); partition_id++) {
+    for (const auto & inst : partitioning.at(partition_id)) {
       assert(isa<BinaryOperator>(inst));
-      assert(isa<DeclRefExpr>(inst->getLHS()));
-      // TODO: Fix this. Another string-typing hack: all local vars are assumed to have "__" within them.
-      if (clang_stmt_printer(dyn_cast<DeclRefExpr>(inst->getLHS())).find("__") != std::string::npos) {
-        std::cerr << "check_for_pipeline_vars, ignoring local variable: " << clang_stmt_printer(dyn_cast<DeclRefExpr>(inst->getLHS())) << "\n";
-      } else {
-        // Do something non-trivial here
+      for (const auto & write_var : get_stateful_writes(inst)) {
+        if (state_var_writes.find(write_var) == state_var_writes.end()) {
+          state_var_writes[write_var] = std::vector<int>();
+        }
+        state_var_writes.at(write_var).emplace_back(partition_id);
+      }
+      for (const auto & read_var : get_stateful_reads(inst)) {
+        if (state_var_reads.find(read_var) == state_var_reads.end()) {
+          state_var_reads[read_var] = std::vector<int>();
+        }
+        state_var_reads.at(read_var).emplace_back(partition_id);
       }
     }
   }
