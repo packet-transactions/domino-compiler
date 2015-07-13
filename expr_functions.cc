@@ -12,6 +12,8 @@ std::set<std::string> ExprFunctions::get_all_vars(const clang::Expr * expr) {
     return get_all_vars(dyn_cast<ParenExpr>(expr)->getSubExpr());
   } else if (isa<CastExpr>(expr)) {
     return get_all_vars(dyn_cast<CastExpr>(expr)->getSubExpr());
+  } else if (isa<UnaryOperator>(expr)) {
+    return get_all_vars(dyn_cast<UnaryOperator>(expr)->getSubExpr());
   } else if (isa<ConditionalOperator>(expr)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(expr);
 
