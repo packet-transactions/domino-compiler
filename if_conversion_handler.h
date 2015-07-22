@@ -15,12 +15,15 @@ class IfConversionHandler : public clang::ast_matchers::MatchFinder::MatchCallba
 
   /// Get output string
   std::string output() const { return output_; }
+
+  /// Get vector of new variable declarations
+  auto new_decls() const { return new_decls_; }
  private:
   /// if_convert current clang::Stmt
   /// Takes as input current if-converted program,
   /// current predicate, and the stmt itself (the AST)
   void if_convert(std::string & current_stream,
-                  std::string & new_variables,
+                  std::vector<std::string> & current_decls,
                   const std::string & predicate,
                   const clang::Stmt * stmt,
                   const std::string & pkt_name) const;
@@ -32,6 +35,9 @@ class IfConversionHandler : public clang::ast_matchers::MatchFinder::MatchCallba
 
   /// String representing output
   std::string output_ = "";
+
+  /// String representing new variable declarations
+  std::vector<std::string> new_decls_ = {};
 };
 
 #endif  // IF_CONVERSION_HANDLER_H_

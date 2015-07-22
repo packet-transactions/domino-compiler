@@ -8,7 +8,7 @@
 class StateVarDeclHandler : public clang::ast_matchers::MatchFinder::MatchCallback {
  public:
   virtual void run(const clang::ast_matchers::MatchFinder::MatchResult & t_result) override;
-  auto output() { return output_; }
+  auto output() const { return output_; }
  private:
   std::string output_ = "";
 };
