@@ -17,9 +17,6 @@ g++ --std=c++14 -isystem /usr/lib/llvm-3.5/include/ \
 	-lclangASTMatchers \
 	-lclangRewrite \
 	-lclangRewriteFrontend \
-	-lclangStaticAnalyzerFrontend \
-	-lclangStaticAnalyzerCheckers \
-	-lclangStaticAnalyzerCore \
 	-lclangSerialization \
 	-lclangTooling \
 	-Wl,--end-group \
