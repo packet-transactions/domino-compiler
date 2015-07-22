@@ -13,7 +13,6 @@ g++ --std=c++14 -isystem /usr/lib/llvm-3.5/include/ \
 	-lclangLex \
 	-lclangParse \
 	-lclangSema \
-	-lclangEdit \
 	-lclangASTMatchers \
 	-lclangRewrite \
 	-lclangRewriteFrontend \
