@@ -18,9 +18,10 @@ void IfConversionHandler::run(const MatchFinder::MatchResult & t_result) {
         const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
         assert(function_decl->getBody() != nullptr);
         std::string current_stream = "";
+        std::string new_variables  = "";
 
         // 1 is the C representation for true
-        if_convert(current_stream, "1", function_decl->getBody());
+        if_convert(current_stream,  new_variables, "1", function_decl->getBody());
 
         // Append to output_
         output_ += ("void func() { " + current_stream + "}\n");
@@ -30,6 +31,7 @@ void IfConversionHandler::run(const MatchFinder::MatchResult & t_result) {
 }
 
 void IfConversionHandler::if_convert(std::string & current_stream,
+                                     std::string & new_variables,
                                      const std::string & predicate,
                                      const Stmt * stmt) const {
   // For unique renaming
@@ -37,7 +39,7 @@ void IfConversionHandler::if_convert(std::string & current_stream,
 
   if (isa<CompoundStmt>(stmt)) {
     for (const auto & child : stmt->children()) {
-      if_convert(current_stream, predicate, child);
+      if_convert(current_stream, new_variables, predicate, child);
     }
   } else if (isa<IfStmt>(stmt)) {
     const auto * if_stmt = dyn_cast<IfStmt>(stmt);
@@ -52,7 +54,7 @@ void IfConversionHandler::if_convert(std::string & current_stream,
     const auto cond_var_decl       = condition_type_name + " " + cond_variable + ";";
 
     // Add cond var decl to the very beginning, so that all decls accumulate there
-    current_stream.insert(0, cond_var_decl);
+    new_variables += cond_var_decl;
 
     // Add assignment here, predicating it with the current predicate
     current_stream += cond_variable + " = (" + predicate + " ? (" + clang_stmt_printer(if_stmt->getCond()) + ") :  " + cond_variable + ");";
@@ -62,11 +64,11 @@ void IfConversionHandler::if_convert(std::string & current_stream,
     auto pred_within_else_block = "(" + predicate + " && !" + cond_variable + ")";
 
     // If convert statements within getThen block to ternary operators.
-    if_convert(current_stream, pred_within_if_block, if_stmt->getThen());
+    if_convert(current_stream, new_variables, pred_within_if_block, if_stmt->getThen());
 
     // If there is a getElse block, handle it recursively again
     if (if_stmt->getElse() != nullptr) {
-      if_convert(current_stream, pred_within_else_block, if_stmt->getElse());
+      if_convert(current_stream, new_variables, pred_within_else_block, if_stmt->getElse());
     }
   } else if (isa<BinaryOperator>(stmt)) {
     current_stream += if_convert_atomic_stmt(dyn_cast<BinaryOperator>(stmt), predicate);

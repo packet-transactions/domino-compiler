@@ -20,6 +20,7 @@ class IfConversionHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   /// Takes as input current if-converted program,
   /// current predicate, and the stmt itself (the AST)
   void if_convert(std::string & current_stream,
+                  std::string & new_variables,
                   const std::string & predicate,
                   const clang::Stmt * stmt) const;
 
