@@ -9,30 +9,23 @@ void IfConversionHandler::run(const MatchFinder::MatchResult & t_result) {
   const auto * decl = t_result.Nodes.getNodeAs<Decl>("decl");
   assert(decl != nullptr);
 
-  // If it's a function declaration
-  if (isa<FunctionDecl>(decl)) {
-    const auto * function_decl = dyn_cast<FunctionDecl>(decl);
-    assert(function_decl->getBody() != nullptr);
-    std::string current_stream = "";
-    // 1 is the C representation for true
-    if_convert(current_stream, "1", function_decl->getBody());
+  // Handle only translation unit decls
+  if (isa<TranslationUnitDecl>(decl)) {
+    // Get all decls by dyn casting decl into a DeclContext
+    for (const auto * child_decl : dyn_cast<DeclContext>(decl)->decls()) {
+      assert(child_decl);
+      if (isa<FunctionDecl>(child_decl)) {
+        const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
+        assert(function_decl->getBody() != nullptr);
+        std::string current_stream = "";
 
-    // Append to output_
-    output_ += ("void func() { " + current_stream + "}\n");
-  } else if (isa<VarDecl>(decl)) {
-    if (decl->isDefinedOutsideFunctionOrMethod()) {
-      // Prepend only global variables to output_,
-      // remaining are prepended inside if_convert anyway
-      // (the part of if_convert that handles DeclStmt)
-      output_.insert(0, dyn_cast<VarDecl>(decl)->getType().getAsString() + " " + clang_value_decl_printer(dyn_cast<VarDecl>(decl)) + ";");
-    } else {
-      std::cerr << "Ignoring declaration because it is local: " << clang_value_decl_printer(dyn_cast<VarDecl>(decl)) << std::endl;
+        // 1 is the C representation for true
+        if_convert(current_stream, "1", function_decl->getBody());
+
+        // Append to output_
+        output_ += ("void func() { " + current_stream + "}\n");
+      }
     }
-  } else if (isa<RecordDecl>(decl) or isa<TypedefDecl>(decl) or isa<FieldDecl>(decl) or isa<ParmVarDecl>(decl) or isa<TranslationUnitDecl>(decl)) {
-    // Do nothing
-    ;
-  } else {
-    assert(false);
   }
 }
 
