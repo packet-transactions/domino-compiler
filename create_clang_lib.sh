@@ -61,4 +61,6 @@ cd all_objs
 ar qc libclangall.a *.o
 mv libclangall.a ..
 
-rm -rf all_objs obj_files
+cd ..
+rm -rf all_objs
+rm -rf obj_files
