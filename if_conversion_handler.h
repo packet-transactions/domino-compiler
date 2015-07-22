@@ -22,7 +22,8 @@ class IfConversionHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   void if_convert(std::string & current_stream,
                   std::string & new_variables,
                   const std::string & predicate,
-                  const clang::Stmt * stmt) const;
+                  const clang::Stmt * stmt,
+                  const std::string & pkt_name) const;
 
   /// If-convert an atomic (clang::BinaryOperator) statement
   /// with a conditional version of it

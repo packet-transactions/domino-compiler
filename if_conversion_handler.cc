@@ -16,12 +16,18 @@ void IfConversionHandler::run(const MatchFinder::MatchResult & t_result) {
       assert(child_decl);
       if (isa<FunctionDecl>(child_decl)) {
         const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
+
+        // Get name of packet variable
+        assert(function_decl->getNumParams() == 1);
+        const auto * pkt_param = function_decl->getParamDecl(0);
+        const auto pkt_name = clang_value_decl_printer(pkt_param);
+
         assert(function_decl->getBody() != nullptr);
         std::string current_stream = "";
         std::string new_variables  = "";
 
         // 1 is the C representation for true
-        if_convert(current_stream,  new_variables, "1", function_decl->getBody());
+        if_convert(current_stream,  new_variables, "1", function_decl->getBody(), pkt_name);
 
         // Append to output_
         output_ += ("void func() { " + current_stream + "}\n");
@@ -33,13 +39,14 @@ void IfConversionHandler::run(const MatchFinder::MatchResult & t_result) {
 void IfConversionHandler::if_convert(std::string & current_stream,
                                      std::string & new_variables,
                                      const std::string & predicate,
-                                     const Stmt * stmt) const {
+                                     const Stmt * stmt,
+                                     const std::string & pkt_name) const {
   // For unique renaming
   static uint8_t var_counter = 0;
 
   if (isa<CompoundStmt>(stmt)) {
     for (const auto & child : stmt->children()) {
-      if_convert(current_stream, new_variables, predicate, child);
+      if_convert(current_stream, new_variables, predicate, child, pkt_name);
     }
   } else if (isa<IfStmt>(stmt)) {
     const auto * if_stmt = dyn_cast<IfStmt>(stmt);
@@ -50,25 +57,28 @@ void IfConversionHandler::if_convert(std::string & current_stream,
 
     // Create temporary variable to hold the if condition
     const auto condition_type_name = if_stmt->getCond()->getType().getAsString();
-    const auto cond_variable       = "tmp__" + std::to_string(var_counter++); // TODO: This is sleazy, fix this sometime
+    const auto cond_variable       = "tmp" + std::to_string(var_counter++);
     const auto cond_var_decl       = condition_type_name + " " + cond_variable + ";";
 
-    // Add cond var decl to the very beginning, so that all decls accumulate there
+    // Add cond var decl to the packet structure, so that all decls accumulate there
     new_variables += cond_var_decl;
 
-    // Add assignment here, predicating it with the current predicate
-    current_stream += cond_variable + " = (" + predicate + " ? (" + clang_stmt_printer(if_stmt->getCond()) + ") :  " + cond_variable + ");";
+    // Add assignment to new packet temporary here,
+    // predicating it with the current predicate
+    const auto pkt_cond_variable = pkt_name + "." + cond_variable;
+    current_stream += pkt_cond_variable + " = (" + predicate + " ? (" + clang_stmt_printer(if_stmt->getCond()) + ") :  "
+                                        + pkt_cond_variable + ");";
 
     // Create predicates for if and else block
-    auto pred_within_if_block = "(" + predicate + " && " + cond_variable + ")";
-    auto pred_within_else_block = "(" + predicate + " && !" + cond_variable + ")";
+    auto pred_within_if_block = "(" + predicate + " && " + pkt_cond_variable + ")";
+    auto pred_within_else_block = "(" + predicate + " && !" + pkt_cond_variable + ")";
 
     // If convert statements within getThen block to ternary operators.
-    if_convert(current_stream, new_variables, pred_within_if_block, if_stmt->getThen());
+    if_convert(current_stream, new_variables, pred_within_if_block, if_stmt->getThen(), pkt_name);
 
     // If there is a getElse block, handle it recursively again
     if (if_stmt->getElse() != nullptr) {
-      if_convert(current_stream, new_variables, pred_within_else_block, if_stmt->getElse());
+      if_convert(current_stream, new_variables, pred_within_else_block, if_stmt->getElse(), pkt_name);
     }
   } else if (isa<BinaryOperator>(stmt)) {
     current_stream += if_convert_atomic_stmt(dyn_cast<BinaryOperator>(stmt), predicate);
