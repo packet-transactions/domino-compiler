@@ -12,7 +12,7 @@
 /// Later, we could probably use it for expression flattening
 class ExprFunctions {
  public:
-  static std::set<std::string> get_all_vars(const clang::Expr * expr);
+  static std::set<std::string> get_all_state_vars(const clang::Expr * expr);
 };
 
 #endif // EXPR_FUNCTIONS_H_

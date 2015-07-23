@@ -24,7 +24,7 @@ class PartitioningHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   typedef std::vector<InstructionVector> InstructionPartitioning;
 
   /// Does operation read variable?
-  bool op_reads_var(const clang::BinaryOperator * op, const clang::DeclRefExpr * var) const;
+  bool op_reads_var(const clang::BinaryOperator * op, const clang::Expr * var) const;
 
   /// Is there a dependence _from_ BinaryOperator op1 _to_ BinaryOperator op2?
   /// Returns true if op1 MUST precede op 2
@@ -39,6 +39,12 @@ class PartitioningHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   /// variables that are pipeline-wide, and _require_ recirculation,
   /// in the absence of packed-word instructions.
   bool check_for_pipeline_vars(const InstructionPartitioning & partitioning) const;
+
+  /// Convenience function to check if the expr
+  /// is either a DeclRefExpr (state variable) or a
+  /// a MemberExpr (packet variable)
+  auto check_expr_type(const clang::Expr * expr) const { return clang::isa<clang::MemberExpr>(expr)
+                                                                or clang::isa<clang::DeclRefExpr>(expr); }
 };
 
 #endif  // PARTITIONING_HANDLER_H_
