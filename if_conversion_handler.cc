@@ -27,7 +27,7 @@ void IfConversionHandler::run(const MatchFinder::MatchResult & t_result) {
         if_convert(output_,  new_decls_, "1", function_decl->getBody(), pkt_name);
 
         // Rewrite output_
-        output_ = "void func() { " + output_ + "}\n";
+        output_ = "void func(Packet " + pkt_name + ") { " + output_ + "}\n";
       }
     }
   }
