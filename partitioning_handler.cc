@@ -24,18 +24,14 @@ void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
   }
 
   // Partition into a pipeline
-  auto partitioning = partition_into_pipeline(useful_ops);
+  const auto partitioning = partition_into_pipeline(useful_ops);
 
   // Check for pipeline-wide variables
   check_for_pipeline_vars(partitioning);
 
   // Print out partitioning
-  for (uint32_t i = 0; i < partitioning.size(); i++) {
-    std::cout << "Clock " << i << " : " << std::endl;
-    for (const auto & op : partitioning.at(i)) {
-      std::cout << " { " << clang_stmt_printer(op) << " } " << " ";
-    }
-    std::cout << std::endl;
+  for (const auto & pair : partitioning) {
+    std::cout << " { " << clang_stmt_printer(pair.first) << " } " << " " << pair.second << std::endl;
   }
 }
 
@@ -81,10 +77,9 @@ bool PartitioningHandler::depends(const BinaryOperator * op1, const BinaryOperat
 
 PartitioningHandler::InstructionPartitioning PartitioningHandler::partition_into_pipeline(const InstructionVector & inst_vector) const {
   // Create dag of instruction dependencies.
-  std::map<const BinaryOperator *, InstructionVector> succ_graph;
   std::map<const BinaryOperator *, InstructionVector> pred_graph;
+  std::map<std::pair<const BinaryOperator *, const BinaryOperator *>, uint32_t> edge_graph;
   for (const auto & op : inst_vector) {
-    succ_graph[op] = {};
     pred_graph[op] = {};
   }
 
@@ -92,8 +87,8 @@ PartitioningHandler::InstructionPartitioning PartitioningHandler::partition_into
     for (uint32_t j = i + 1; j < inst_vector.size(); j++) {
       if (depends(inst_vector.at(i), inst_vector.at(j))) {
         // edge from i ---> j
-        succ_graph.at(inst_vector.at(i)).emplace_back(inst_vector.at(j));
         pred_graph.at(inst_vector.at(j)).emplace_back(inst_vector.at(i));
+        edge_graph[std::make_pair(inst_vector.at(i), inst_vector.at(j))] = 1;
       }
     }
   }
@@ -101,40 +96,33 @@ PartitioningHandler::InstructionPartitioning PartitioningHandler::partition_into
   // Keep track of what needs to be partitioned
   InstructionVector to_partition = inst_vector;
 
-  // The partitioning itself
+  // The partitioning itself, map from const BinaryOperator * to timestamp
   InstructionPartitioning partitioning;
 
   while (not to_partition.empty()) {
-    // Find elements with no predecessors
-    std::vector<const BinaryOperator *> chosen_elements;
+    // Find next instruction
+    const BinaryOperator * next_inst = nullptr;
     for (const auto & candidate : to_partition) {
-      if (pred_graph.at(candidate).empty()) {
-        chosen_elements.emplace_back(candidate);
+      if (std::accumulate(pred_graph.at(candidate).begin(), pred_graph.at(candidate).end(),
+                          true,
+                          [&to_partition] (const auto & acc, const auto & x)
+                          { return acc and (std::find(to_partition.begin(), to_partition.end(), x) == to_partition.end());})) {
+        next_inst = candidate;
+        break;
       }
     }
-    assert(not chosen_elements.empty());
+    assert(next_inst);
 
-    // append to partitioning
-    partitioning.emplace_back(chosen_elements);
+    // Find time for next_inst
+    const uint32_t next_inst_time = std::accumulate(pred_graph.at(next_inst).begin(),
+                                                    pred_graph.at(next_inst).end(),
+                                                    static_cast<uint32_t>(0),
+                                                    [&partitioning, &edge_graph, &next_inst] (const auto & acc, const auto & x)
+                                                    { return std::max(acc, partitioning.at(x) + edge_graph.at(std::make_pair(x, next_inst)));});
 
-    // remove chosen_elements from graph by deleting each element
-    for (const auto & chosen_element : chosen_elements) {
-      // Delete each element from all its successors' pred_graph
-      // Delete each element from all its predessors's succ_graph (trivially true, because it has no predessors)
-      for (const auto & successor : succ_graph.at(chosen_element)) {
-        // delete chosen_element from pred_graph.at(successor)
-        pred_graph.at(successor).erase(std::remove(pred_graph.at(successor).begin(), pred_graph.at(successor).end(), chosen_element));
-      }
-
-      // Remove chosen_element from pred_graph and succ_graph
-      succ_graph.erase(chosen_element);
-      pred_graph.erase(chosen_element);
-    }
-
-    // remove chosen_elements from to_partition
-    for (const auto & chosen_element : chosen_elements) {
-      to_partition.erase(std::remove(to_partition.begin(), to_partition.end(), chosen_element));
-    }
+    // append to partitioning, remove from to_partition
+    partitioning[next_inst] = next_inst_time;
+    to_partition.erase(std::remove(to_partition.begin(), to_partition.end(), next_inst));
   }
 
   return partitioning;
@@ -147,21 +135,20 @@ bool PartitioningHandler::check_for_pipeline_vars(const InstructionPartitioning 
   std::map<std::string, std::set<int>> state_var_reads;
   std::map<std::string, std::set<int>> state_var_writes;
 
-  for (uint32_t stage_id = 0; stage_id < partitioning.size(); stage_id++) {
-    for (const auto & inst : partitioning.at(stage_id)) {
-      assert(isa<BinaryOperator>(inst));
-      for (const auto & write_var : ExprFunctions::get_all_state_vars(inst->getLHS())) {
-        if (state_var_writes.find(write_var) == state_var_writes.end()) {
-          state_var_writes[write_var] = std::set<int>();
-        }
-        state_var_writes.at(write_var).emplace(stage_id);
+  for (const auto & pair : partitioning) {
+    const auto inst = pair.first;
+    assert(isa<BinaryOperator>(inst));
+    for (const auto & write_var : ExprFunctions::get_all_state_vars(inst->getLHS())) {
+      if (state_var_writes.find(write_var) == state_var_writes.end()) {
+        state_var_writes[write_var] = std::set<int>();
       }
-      for (const auto & read_var : ExprFunctions::get_all_state_vars(inst->getRHS())) {
-        if (state_var_reads.find(read_var) == state_var_reads.end()) {
-          state_var_reads[read_var] = std::set<int>();
-        }
-        state_var_reads.at(read_var).emplace(stage_id);
+      state_var_writes.at(write_var).emplace(pair.second);
+    }
+    for (const auto & read_var : ExprFunctions::get_all_state_vars(inst->getRHS())) {
+      if (state_var_reads.find(read_var) == state_var_reads.end()) {
+        state_var_reads[read_var] = std::set<int>();
       }
+      state_var_reads.at(read_var).emplace(pair.second);
     }
   }
 

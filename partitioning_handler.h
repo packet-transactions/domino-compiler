@@ -19,9 +19,9 @@ class PartitioningHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   /// language everything is a BinaryOperator
   typedef std::vector<const clang::BinaryOperator*> InstructionVector;
 
-  /// Convenience typedef: A vector of vectors representing instructions
-  /// that go into each pipeline stage
-  typedef std::vector<InstructionVector> InstructionPartitioning;
+  /// Convenience typedef: A map from BinaryOperator* to timestamp
+  /// telling us when each BinaryOperator * is scheduled
+  typedef std::map<const clang::BinaryOperator*, uint32_t> InstructionPartitioning;
 
   /// Does operation read variable?
   bool op_reads_var(const clang::BinaryOperator * op, const clang::Expr * var) const;
