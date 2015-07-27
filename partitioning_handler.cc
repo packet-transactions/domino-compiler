@@ -29,10 +29,11 @@ void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
   // Check for pipeline-wide variables
   check_for_pipeline_vars(partitioning);
 
-  // Print out partitioning
-  for (const auto & pair : partitioning) {
-    std::cout << " { " << clang_stmt_printer(pair.first) << " } " << " " << pair.second << std::endl;
-  }
+  // Print out partitioning, sorted by timestamp
+  std::vector<std::pair<const BinaryOperator *, uint32_t>> sorted_pairs;
+  std::for_each(partitioning.begin(), partitioning.end(), [&sorted_pairs] (const auto & pair) {sorted_pairs.push_back(pair);});
+  std::sort(sorted_pairs.begin(), sorted_pairs.end(), [] (const auto & x, const auto & y) { return x.second < y.second; });
+  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [] (const auto & pair) { std::cout << " { " << clang_stmt_printer(pair.first) << " } " << " " << pair.second << std::endl; });
 }
 
 bool PartitioningHandler::op_reads_var(const BinaryOperator * op, const Expr * var) const {
