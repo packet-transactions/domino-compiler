@@ -27,8 +27,8 @@ class PartitioningHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   bool op_reads_var(const clang::BinaryOperator * op, const clang::Expr * var) const;
 
   /// Is there a dependence _from_ BinaryOperator op1 _to_ BinaryOperator op2?
-  /// Returns true if op1 MUST precede op 2
-  bool depends(const clang::BinaryOperator * op1, const clang::BinaryOperator * op2) const;
+  /// Returns distance between op1 and op2, -1 implying no dependency
+  int32_t depends(const clang::BinaryOperator * op1, const clang::BinaryOperator * op2) const;
 
   /// Core partitioning logic to generate a pipeline
   /// Build a dag of dependencies and then schedule using the DAG

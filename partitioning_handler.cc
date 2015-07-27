@@ -44,7 +44,7 @@ bool PartitioningHandler::op_reads_var(const BinaryOperator * op, const Expr * v
   return (clang_stmt_printer(op).find(clang_stmt_printer(var)) != std::string::npos);
 }
 
-bool PartitioningHandler::depends(const BinaryOperator * op1, const BinaryOperator * op2) const {
+int32_t PartitioningHandler::depends(const BinaryOperator * op1, const BinaryOperator * op2) const {
   // We are being a little conservative here and flagging all 
   // three "textbook" dependencies:
   // Read After Write,
@@ -59,20 +59,20 @@ bool PartitioningHandler::depends(const BinaryOperator * op1, const BinaryOperat
 
   // op1 writes a variable (LHS) that op2 reads. (Read After Write)
   if (op_reads_var(op2, op1->getLHS())) {
-    return true;
+    return 1;
   }
 
   // op1 writes the same variable that op2 writes (Write After Write)
   if (clang_stmt_printer(op1->getLHS()) == clang_stmt_printer(op2->getLHS())) {
-    return true;
+    return 1;
   }
 
   // op1 reads a variable that op2 writes (Write After Read)
   if (op_reads_var(op1, op2->getLHS())) {
-    return true;
+    return 0;
   }
 
-  return false;
+  return -1;
 }
 
 PartitioningHandler::InstructionPartitioning PartitioningHandler::partition_into_pipeline(const InstructionVector & inst_vector) const {
@@ -85,10 +85,11 @@ PartitioningHandler::InstructionPartitioning PartitioningHandler::partition_into
 
   for (uint32_t i = 0; i < inst_vector.size(); i++) {
     for (uint32_t j = i + 1; j < inst_vector.size(); j++) {
-      if (depends(inst_vector.at(i), inst_vector.at(j))) {
+      const int32_t dep_length = depends(inst_vector.at(i), inst_vector.at(j));
+      if (dep_length >= 0) {
         // edge from i ---> j
         pred_graph.at(inst_vector.at(j)).emplace_back(inst_vector.at(i));
-        edge_graph[std::make_pair(inst_vector.at(i), inst_vector.at(j))] = 1;
+        edge_graph[std::make_pair(inst_vector.at(i), inst_vector.at(j))] = static_cast<uint32_t>(dep_length);
       }
     }
   }
