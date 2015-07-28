@@ -2,20 +2,17 @@
 #define IF_CONVERSION_HANDLER_H_
 
 #include <utility>
+#include <string>
+#include <vector>
 #include "clang/AST/AST.h"
-#include "clang/ASTMatchers/ASTMatchers.h"
-#include "clang/ASTMatchers/ASTMatchFinder.h"
 
-class IfConversionHandler : public clang::ast_matchers::MatchFinder::MatchCallback {
+class IfConversionHandler {
  public:
   /// Constructor
   IfConversionHandler() {}
 
-  /// Callback whenever there's a match
-  virtual void run(const clang::ast_matchers::MatchFinder::MatchResult & t_result) override;
-
-  /// Get output string
-  auto output() const { return std::make_pair(output_, new_decls_); }
+  /// Transform function
+  std::pair<std::string, std::vector<std::string>> transform(const clang::Stmt * function_body, const std::string & pkt_name) const;
 
  private:
   /// if_convert current clang::Stmt
@@ -31,12 +28,6 @@ class IfConversionHandler : public clang::ast_matchers::MatchFinder::MatchCallba
   /// with a conditional version of it
   std::string if_convert_atomic_stmt(const clang::BinaryOperator * stmt,
                                      const std::string & predicate) const;
-
-  /// String representing output
-  std::string output_ = "";
-
-  /// String representing new variable declarations
-  std::vector<std::string> new_decls_ = {};
 };
 
 #endif  // IF_CONVERSION_HANDLER_H_

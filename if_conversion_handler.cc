@@ -3,34 +3,16 @@
 #include "if_conversion_handler.h"
 
 using namespace clang;
-using namespace clang::ast_matchers;
 
-void IfConversionHandler::run(const MatchFinder::MatchResult & t_result) {
-  const auto * decl = t_result.Nodes.getNodeAs<Decl>("decl");
-  assert(decl != nullptr);
+std::pair<std::string, std::vector<std::string>> IfConversionHandler::transform(const Stmt * function_body, const std::string & pkt_name) const {
+  assert(function_body);
 
-  // Handle only translation unit decls
-  if (isa<TranslationUnitDecl>(decl)) {
-    // Get all decls by dyn casting decl into a DeclContext
-    for (const auto * child_decl : dyn_cast<DeclContext>(decl)->decls()) {
-      assert(child_decl);
-      if (isa<FunctionDecl>(child_decl)) {
-        const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
+  std::string output_ = "";
+  std::vector<std::string> new_decls_ = {};
 
-        // Get name of packet variable
-        assert(function_decl->getNumParams() == 1);
-        const auto * pkt_param = function_decl->getParamDecl(0);
-        const auto pkt_name = clang_value_decl_printer(pkt_param);
-
-        assert(function_decl->getBody() != nullptr);
-        // 1 is the C representation for true
-        if_convert(output_,  new_decls_, "1", function_decl->getBody(), pkt_name);
-
-        // Rewrite output_
-        output_ = "void func(Packet " + pkt_name + ") { " + output_ + "}\n";
-      }
-    }
-  }
+  // 1 is the C representation for true
+  if_convert(output_,  new_decls_, "1", function_body, pkt_name);
+  return make_pair(output_, new_decls_);
 }
 
 void IfConversionHandler::if_convert(std::string & current_stream,

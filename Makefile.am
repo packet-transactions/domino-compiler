@@ -6,4 +6,4 @@ common_source = clang_utility_functions.cc  expr_functions.cc clang_utility_func
 
 bin_PROGRAMS = partitioning_prog if_conversion_prog
 partitioning_prog_SOURCES = $(common_source) partitioning_handler.cc  partitioning_prog.cc partitioning_handler.h
-if_conversion_prog_SOURCES = $(common_source) if_conversion_prog.cc if_conversion_handler.cc if_conversion_handler.h state_var_decl_handler.h state_var_decl_handler.cc packet_decl_handler.h packet_decl_handler.cc run_pass.h
+if_conversion_prog_SOURCES = $(common_source) if_conversion_prog.cc if_conversion_handler.cc if_conversion_handler.h state_var_decl_handler.h state_var_decl_handler.cc packet_decl_handler.h packet_decl_handler.cc run_pass.h func_transform_handler.h func_transform_handler.cc
