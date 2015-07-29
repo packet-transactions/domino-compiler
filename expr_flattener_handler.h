@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include "clang/AST/AST.h"
+#include "unique_var_generator.h"
 #include <ctime>
 #include <cstdlib>
 
@@ -18,7 +19,7 @@ struct FlattenResult {
 class ExprFlattenerHandler {
  public:
   /// Constructor
-  ExprFlattenerHandler(const std::set<std::string> & t_var_set) : var_set_(t_var_set) {}
+  ExprFlattenerHandler(const std::set<std::string> & t_var_set) : unique_var_gen_(t_var_set) {}
 
   /// Transform function
   std::pair<std::string, std::vector<std::string>> transform(const clang::Stmt * function_body, const std::string & pkt_name) const;
@@ -53,15 +54,8 @@ class ExprFlattenerHandler {
   /// on the left and right halves
   FlattenResult flatten_bin_op(const clang::BinaryOperator * bin_op, const std::string & pkt_name) const;
 
-  /// Get unique variable names for temporaries
-  std::string get_unique_var() const;
-
-  /// Set of packet variables names,
-  /// passed to the function in constructor
-  mutable std::set<std::string> var_set_ = {};
-
-  /// Last unique variable suffix handed out,
-  mutable int var_suffix_ = -1;
+  /// Unique variable generator
+  UniqueVarGenerator unique_var_gen_;
 };
 
 #endif  // EXPR_FLATTENER_HANDLER_H_
