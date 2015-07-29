@@ -30,7 +30,7 @@ int main(int argc, const char **argv) {
                                       std::set<std::string>>
                                       (op, clang::ast_matchers::decl().bind("decl"));
 
-  const auto prog_decl_pair = run_pass<FuncTransformHandler<IfConversionHandler, std::set<std::string>>,
+  const auto prog_decl_pair = run_pass<FuncTransformHandler<IfConversionHandler>,
                                       std::pair<std::string, std::vector<std::string>>>
                                       (op, clang::ast_matchers::functionDecl().bind("functionDecl"),
                                       packet_var_set);

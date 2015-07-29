@@ -24,3 +24,4 @@ partitioning_prog
 stamp-h1
 struct_to_local_vars
 *.Tpo
+expr_flattener_prog
