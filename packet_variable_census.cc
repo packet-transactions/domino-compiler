@@ -1,10 +1,10 @@
 #include "clang_utility_functions.h"
-#include "packet_variable_creator.h"
+#include "packet_variable_census.h"
 
 using namespace clang;
 using namespace clang::ast_matchers;
 
-void PacketVariableCreator::run(const MatchFinder::MatchResult & t_result) {
+void PacketVariableCensus::run(const MatchFinder::MatchResult & t_result) {
   const auto * decl = t_result.Nodes.getNodeAs<Decl>("decl");
   assert(decl != nullptr);
 

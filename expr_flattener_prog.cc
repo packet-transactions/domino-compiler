@@ -6,9 +6,9 @@
 #include "run_pass.h"
 #include "func_transform_handler.cc"
 #include "state_var_decl_handler.h"
-#include "packet_decl_handler.h"
+#include "packet_decl_creator.h"
 #include "expr_flattener_handler.h"
-#include "packet_variable_creator.h"
+#include "packet_variable_census.h"
 
 using namespace clang::tooling;
 
@@ -25,7 +25,7 @@ int main(int argc, const char **argv) {
                                             std::string>
                                             (op, clang::ast_matchers::decl().bind("decl"));
 
-  const auto packet_var_set       = run_pass<PacketVariableCreator,
+  const auto packet_var_set       = run_pass<PacketVariableCensus,
                                             std::set<std::string>>
                                             (op, clang::ast_matchers::decl().bind("decl"));
 
@@ -34,7 +34,7 @@ int main(int argc, const char **argv) {
                                             (op, clang::ast_matchers::functionDecl().bind("functionDecl"),
                                             packet_var_set);
 
-  const auto final_packet_decls   = run_pass<PacketDeclHandler,
+  const auto final_packet_decls   = run_pass<PacketDeclCreator,
                                             std::string>
                                             (op, clang::ast_matchers::decl().bind("decl"),
                                             prog_decl_pair.second);

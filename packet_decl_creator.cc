@@ -1,10 +1,10 @@
 #include "clang_utility_functions.h"
-#include "packet_decl_handler.h"
+#include "packet_decl_creator.h"
 
 using namespace clang;
 using namespace clang::ast_matchers;
 
-void PacketDeclHandler::run(const MatchFinder::MatchResult & t_result) {
+void PacketDeclCreator::run(const MatchFinder::MatchResult & t_result) {
   const auto * decl = t_result.Nodes.getNodeAs<Decl>("decl");
   assert(decl != nullptr);
 
