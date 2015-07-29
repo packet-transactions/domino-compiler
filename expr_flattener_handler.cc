@@ -27,7 +27,7 @@ ExprFlattenerHandler::transform(const Stmt * function_body, const std::string & 
     output += clang_stmt_printer(bin_op->getLHS()) + " = " + ret.flat_expr + ";";
 
     // Then append new pkt var declarations
-    new_decls.insert(new_decls.begin(), ret.new_decls.begin(), ret.new_decls.end());
+    new_decls.insert(new_decls.end(), ret.new_decls.begin(), ret.new_decls.end());
   }
 
   return make_pair(output, new_decls);
