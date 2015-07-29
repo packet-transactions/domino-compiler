@@ -4,12 +4,14 @@
 #include <utility>
 #include <string>
 #include <vector>
+#include <set>
 #include "clang/AST/AST.h"
+#include "unique_var_generator.h"
 
 class IfConversionHandler {
  public:
   /// Constructor
-  IfConversionHandler() {}
+  IfConversionHandler(const std::set<std::string> & init_set) : unique_var_gen_(init_set) {}
 
   /// Transform function
   std::pair<std::string, std::vector<std::string>> transform(const clang::Stmt * function_body, const std::string & pkt_name) const;
@@ -28,6 +30,9 @@ class IfConversionHandler {
   /// with a conditional version of it
   std::string if_convert_atomic_stmt(const clang::BinaryOperator * stmt,
                                      const std::string & predicate) const;
+
+  /// Unique variable generator
+  UniqueVarGenerator unique_var_gen_;
 };
 
 #endif  // IF_CONVERSION_HANDLER_H_

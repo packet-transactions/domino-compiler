@@ -20,9 +20,6 @@ void IfConversionHandler::if_convert(std::string & current_stream,
                                      const std::string & predicate,
                                      const Stmt * stmt,
                                      const std::string & pkt_name) const {
-  // For unique renaming
-  static uint8_t var_counter = 0;
-
   if (isa<CompoundStmt>(stmt)) {
     for (const auto & child : stmt->children()) {
       if_convert(current_stream, current_decls, predicate, child, pkt_name);
@@ -36,7 +33,7 @@ void IfConversionHandler::if_convert(std::string & current_stream,
 
     // Create temporary variable to hold the if condition
     const auto condition_type_name = if_stmt->getCond()->getType().getAsString();
-    const auto cond_variable       = "tmp" + std::to_string(var_counter++);
+    const auto cond_variable       = unique_var_gen_.get_unique_var();
     const auto cond_var_decl       = condition_type_name + " " + cond_variable + ";";
 
     // Add cond var decl to the packet structure, so that all decls accumulate there

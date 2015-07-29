@@ -1,4 +1,5 @@
 #include <iostream>
+#include <set>
 #include <string>
 #include "clang/Tooling/Refactoring.h"
 #include "clang/Tooling/CommonOptionsParser.h"
