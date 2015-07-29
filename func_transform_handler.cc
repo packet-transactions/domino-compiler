@@ -8,8 +8,8 @@
 using namespace clang;
 using namespace clang::ast_matchers;
 
-template <class TransformType>
-void FuncTransformHandler<TransformType>::run(const MatchFinder::MatchResult & t_result) {
+template <class TransformType, typename ...Fargs>
+void FuncTransformHandler<TransformType, Fargs...>::run(const MatchFinder::MatchResult & t_result) {
   const auto * function_decl = t_result.Nodes.getNodeAs<FunctionDecl>("functionDecl");
   assert(function_decl != nullptr);
 

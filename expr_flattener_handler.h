@@ -4,6 +4,7 @@
 #include <utility>
 #include <string>
 #include <vector>
+#include <set>
 #include "clang/AST/AST.h"
 #include <ctime>
 #include <cstdlib>
@@ -17,7 +18,7 @@ struct FlattenResult {
 class ExprFlattenerHandler {
  public:
   /// Constructor
-  ExprFlattenerHandler() {std::srand(static_cast<unsigned int>(std::time(0)));}
+  ExprFlattenerHandler(const std::set<std::string> & t_var_set) : var_set_(t_var_set) {}
 
   /// Transform function
   std::pair<std::string, std::vector<std::string>> transform(const clang::Stmt * function_body, const std::string & pkt_name) const;
@@ -51,6 +52,16 @@ class ExprFlattenerHandler {
   /// Flatten binary op by calling flatten_to_atom
   /// on the left and right halves
   FlattenResult flatten_bin_op(const clang::BinaryOperator * bin_op, const std::string & pkt_name) const;
+
+  /// Get unique variable names for temporaries
+  std::string get_unique_var() const;
+
+  /// Set of packet variables names,
+  /// passed to the function in constructor
+  mutable std::set<std::string> var_set_ = {};
+
+  /// Last unique variable suffix handed out,
+  mutable int var_suffix_ = -1;
 };
 
 #endif  // EXPR_FLATTENER_HANDLER_H_

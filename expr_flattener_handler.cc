@@ -107,10 +107,25 @@ FlattenResult ExprFlattenerHandler::flatten_to_atom(const Expr * expr, const std
   if (is_atom(expr)) {
     return {clang_stmt_printer(expr), "", {}};
   } else {
-    const auto flat_var_member     = "flat" + std::to_string(rand());
+    const auto flat_var_member     = get_unique_var();
     const auto flat_var_decl       = "int " + flat_var_member + ";";
     const auto pkt_flat_variable   = pkt_name + "." + flat_var_member;
     const auto pkt_flat_var_def    = pkt_flat_variable + " = " + clang_stmt_printer(expr) + ";";
     return {pkt_flat_variable, pkt_flat_var_def, {flat_var_decl}};
   }
+}
+
+std::string ExprFlattenerHandler::get_unique_var() const {
+  // Propose tmp_x, where x starts at var_suffix_ + 1
+  // and keeps incrementing until at least some tmp_x
+  // is unique and does not belong to var_set_
+  var_suffix_ = var_suffix_ + 1;
+  std::string candidate = "tmp" + std::to_string(var_suffix_);
+  while (var_set_.find(candidate) != var_set_.end()) {
+    var_suffix_++;
+    candidate = "tmp" + std::to_string(var_suffix_);
+  }
+  assert(var_set_.find(candidate) == var_set_.end());
+  var_set_.emplace(candidate);
+  return candidate;
 }

@@ -5,11 +5,11 @@
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 
-template <class TransformType>
+template <class TransformType, typename ...Fargs>
 class FuncTransformHandler : public clang::ast_matchers::MatchFinder::MatchCallback {
  public:
   /// Constructor
-  FuncTransformHandler() {}
+  FuncTransformHandler(Fargs... args) : transformer_(args...) {}
 
   /// Callback whenever there's a match
   virtual void run(const clang::ast_matchers::MatchFinder::MatchResult & t_result) override;
