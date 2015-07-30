@@ -9,7 +9,13 @@ using namespace clang::ast_matchers;
 
 void PartitioningHandler::run(const MatchFinder::MatchResult & t_result) {
   const FunctionDecl *function_decl_expr = t_result.Nodes.getNodeAs<clang::FunctionDecl>("functionDecl");
-  assert(function_decl_expr != nullptr);
+  assert(function_decl_expr);
+
+  if (not is_packet_func(function_decl_expr)) {
+    return;
+  }
+
+  assert(function_decl_expr->getBody());
   assert(isa<CompoundStmt>(function_decl_expr->getBody()));
   InstructionVector useful_ops;
   for (const auto & child : function_decl_expr->getBody()->children()) {
