@@ -1,5 +1,5 @@
-#ifndef FUNC_TRANSFORM_HANDLER_C_
-#define FUNC_TRANSFORM_HANDLER_C_
+#ifndef FUNC_TRANSFORM_HANDLER_CC_
+#define FUNC_TRANSFORM_HANDLER_CC_
 
 #include <iostream>
 #include "clang_utility_functions.h"
@@ -13,8 +13,11 @@ void FuncTransformHandler<TransformType>::run(const MatchFinder::MatchResult & t
   const auto * function_decl = t_result.Nodes.getNodeAs<FunctionDecl>("functionDecl");
   assert(function_decl != nullptr);
 
-  // Get name of packet variable
-  assert(function_decl->getNumParams() == 1);
+  if (not is_packet_func(function_decl))
+    return;
+
+  // TODO: What happens when there is no packet variable available?
+  assert(is_packet_func(function_decl));
   const auto * pkt_param = function_decl->getParamDecl(0);
   const auto pkt_type  = function_decl->getParamDecl(0)->getType().getAsString();
   const auto pkt_name = clang_value_decl_printer(pkt_param);
@@ -27,4 +30,14 @@ void FuncTransformHandler<TransformType>::run(const MatchFinder::MatchResult & t
   new_decls_ = ret.second;
 }
 
-#endif  // FUNC_TRANSFORM_HANDLER_C_
+template <class TransformType>
+bool FuncTransformHandler<TransformType>::is_packet_func(const FunctionDecl * func_decl) const {
+  // Not sure what we would get out of functions with zero args
+  assert(func_decl->getNumParams() >= 1);
+  std::cerr << "First parameter: " << func_decl->getParamDecl(0)->getType().getAsString() << std::endl;
+
+  return func_decl->getNumParams() == 1
+         and func_decl->getParamDecl(0)->getType().getAsString() == "Packet";
+}
+
+#endif  // FUNC_TRANSFORM_HANDLER_CC_
