@@ -35,7 +35,7 @@ ExprFlattenerHandler::transform(const Stmt * function_body, const std::string & 
 
 bool ExprFlattenerHandler::is_atom(const clang::Expr * expr) const {
   expr = expr->IgnoreParenImpCasts();
-  return isa<DeclRefExpr>(expr) or isa<IntegerLiteral>(expr) or isa<MemberExpr>(expr);
+  return isa<DeclRefExpr>(expr) or isa<IntegerLiteral>(expr) or isa<MemberExpr>(expr) or isa<CallExpr>(expr);
 }
 
 bool ExprFlattenerHandler::is_flat(const clang::Expr * expr) const {
