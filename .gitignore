@@ -15,13 +15,13 @@ config.status
 config.sub
 configure
 depcomp
-if_conversion_prog
 install-sh
 libtool
 ltmain.sh
 missing
-partitioning_prog
 stamp-h1
-struct_to_local_vars
 *.Tpo
-expr_flattener_prog
+partitioner
+if_converter
+expr_flattener
+strength_reducer

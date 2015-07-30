@@ -1,7 +1,7 @@
 AC_PREREQ([2.61])
 AC_INIT([domino], [0.1], [anirudh@csail.mit.edu])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
-AC_CONFIG_SRCDIR([if_conversion_prog.cc])
+AC_CONFIG_SRCDIR([partitioner.cc])
 AC_CONFIG_HEADERS([config.h])
 LT_INIT
 
