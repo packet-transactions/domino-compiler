@@ -11,4 +11,6 @@ std::string clang_stmt_printer(const clang::Stmt * stmt);
 
 std::string clang_value_decl_printer(const clang::ValueDecl * value_decl);
 
+std::string clang_decl_printer(const clang::Decl * decl);
+
 #endif  // CLANG_UTILITY_FUNCTIONS_H_

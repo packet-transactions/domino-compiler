@@ -23,3 +23,15 @@ std::string clang_value_decl_printer(const clang::ValueDecl * value_decl) {
   value_decl->printName(rso);
   return str;
 }
+
+std::string clang_decl_printer(const clang::Decl * decl) {
+  // Required for pretty printing
+  clang::LangOptions LangOpts;
+  LangOpts.CPlusPlus = true;
+  clang::PrintingPolicy Policy(LangOpts);
+
+  std::string str;
+  llvm::raw_string_ostream rso(str);
+  decl->print(rso);
+  return str;
+}
