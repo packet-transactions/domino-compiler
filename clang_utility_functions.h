@@ -13,4 +13,7 @@ std::string clang_value_decl_printer(const clang::ValueDecl * value_decl);
 
 std::string clang_decl_printer(const clang::Decl * decl);
 
+bool is_packet_func(const clang::FunctionDecl * func_decl);
+
+
 #endif  // CLANG_UTILITY_FUNCTIONS_H_

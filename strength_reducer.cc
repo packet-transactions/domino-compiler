@@ -8,6 +8,7 @@
 #include "packet_decl_creator.h"
 #include "state_var_decl_handler.h"
 #include "strength_reduction_handler.h"
+#include "func_decl_pass_through.h"
 
 using namespace clang::tooling;
 
@@ -24,6 +25,10 @@ int main(int argc, const char **argv) {
                                       std::string>
                                       (op, clang::ast_matchers::decl().bind("decl"));
 
+  const auto func_decls     = run_pass<FuncDeclPassThrough,
+                                      std::string>
+                                      (op, clang::ast_matchers::decl().bind("decl"));
+
   const auto packet_decls   = run_pass<PacketDeclCreator,
                                       std::string>
                                       (op, clang::ast_matchers::decl().bind("decl"),
@@ -33,8 +38,9 @@ int main(int argc, const char **argv) {
                                       std::pair<std::string, std::vector<std::string>>>
                                       (op, clang::ast_matchers::functionDecl().bind("functionDecl"));
   // Print out outputs in sequence
-  std::cout << state_vars << std::endl
+  std::cout << state_vars   << std::endl
             << packet_decls << std::endl
+            << func_decls   << std::endl
             << strength_redux.first << std::endl;
 
   return 0;

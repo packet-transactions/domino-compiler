@@ -9,6 +9,7 @@
 #include "state_var_decl_handler.h"
 #include "packet_decl_creator.h"
 #include "if_conversion_handler.h"
+#include "func_decl_pass_through.h"
 
 using namespace clang::tooling;
 
@@ -23,6 +24,10 @@ int main(int argc, const char **argv) {
 
   // Run passes, chaining results if required
   const auto state_vars     = run_pass<StateVarDeclHandler,
+                                      std::string>
+                                      (op, clang::ast_matchers::decl().bind("decl"));
+
+  const auto func_decls     = run_pass<FuncDeclPassThrough,
                                       std::string>
                                       (op, clang::ast_matchers::decl().bind("decl"));
 
@@ -43,6 +48,7 @@ int main(int argc, const char **argv) {
   // Print out outputs in sequence
   std::cout << state_vars << std::endl
             << packet_decls << std::endl
+            << func_decls << std::endl
             << prog_decl_pair.first << std::endl;
 
   return 0;

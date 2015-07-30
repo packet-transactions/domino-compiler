@@ -19,9 +19,6 @@ class FuncTransformHandler : public clang::ast_matchers::MatchFinder::MatchCallb
   auto output() const { return std::make_pair(out_str_, new_decls_); }
 
  private:
-  /// Check if it's a packet function
-  bool is_packet_func(const clang::FunctionDecl * func_decl) const;
-
   /// The transformer itself
   TransformType transformer_ = {};
 

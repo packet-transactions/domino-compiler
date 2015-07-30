@@ -30,14 +30,4 @@ void FuncTransformHandler<TransformType>::run(const MatchFinder::MatchResult & t
   new_decls_ = ret.second;
 }
 
-template <class TransformType>
-bool FuncTransformHandler<TransformType>::is_packet_func(const FunctionDecl * func_decl) const {
-  // Not sure what we would get out of functions with zero args
-  assert(func_decl->getNumParams() >= 1);
-  std::cerr << "First parameter: " << func_decl->getParamDecl(0)->getType().getAsString() << std::endl;
-
-  return func_decl->getNumParams() == 1
-         and func_decl->getParamDecl(0)->getType().getAsString() == "Packet";
-}
-
 #endif  // FUNC_TRANSFORM_HANDLER_CC_
