@@ -50,6 +50,16 @@ std::set<std::string> ExprFunctions::get_all_state_vars(const clang::Expr * expr
   } else if (isa<MemberExpr>(expr)) {
     // All MemberExpr are packet variables
     return std::set<std::string>();
+  } else if (isa<CallExpr>(expr)) {
+    const auto * call_expr = dyn_cast<CallExpr>(expr);
+    std::set<std::string> ret;
+    for (const auto * child : call_expr->arguments()) {
+      const auto child_uses = get_all_state_vars(child);
+      std::set_union(child_uses.begin(), child_uses.end(),
+                     ret.begin(), ret.end(),
+                     std::inserter(ret, ret.begin()));
+    }
+    return ret;
   } else {
     assert(isa<IntegerLiteral>(expr));
     return std::set<std::string>();
