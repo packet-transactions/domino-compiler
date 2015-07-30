@@ -20,8 +20,11 @@ do
   fi
 done
 
-# Run partitioner on /tmp/flat.c
-./partitioner /tmp/flat.c -- > /tmp/partition.txt
+# Propagate expressions to their uses
+./expr_propagater /tmp/flat.c -- > /tmp/prop.c
+
+# Run partitioner on /tmp/prop.c
+./partitioner /tmp/prop.c -- > /tmp/partition.txt
 
 echo "Original: "
 cat $1

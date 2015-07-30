@@ -20,8 +20,8 @@ std::pair<std::string, std::vector<std::string>> StrengthReductionHandler::trans
     // Strip off parenthesis and casts for RHS
     const auto * rhs = bin_op->getRHS()->IgnoreParenImpCasts();
 
-    // If it isn't a conditional operator, pass it through
     if(not isa<ConditionalOperator>(rhs)) {
+      // If it isn't a conditional operator, pass it through
       output += clang_stmt_printer(bin_op) + ";";
     } else {
       const auto * cond_op = dyn_cast<ConditionalOperator>(rhs);
@@ -46,6 +46,7 @@ std::pair<std::string, std::vector<std::string>> StrengthReductionHandler::trans
         assert (not (isa<IntegerLiteral>(left_bool_op) and isa<IntegerLiteral>(right_bool_op)));
 
         // If either of the two is an IntegerLiteral, return the other
+        // TODO: Check that it's actually 1.
         const Expr * simplified_pred = nullptr;
         if (isa<IntegerLiteral>(left_bool_op)) {
           simplified_pred = right_bool_op;
@@ -58,6 +59,9 @@ std::pair<std::string, std::vector<std::string>> StrengthReductionHandler::trans
         output += clang_stmt_printer(bin_op->getLHS()) + " = " + clang_stmt_printer(simplified_pred)
                                                        + " ? " + clang_stmt_printer(cond_op->getTrueExpr())
                                                        + " : " + clang_stmt_printer(cond_op->getFalseExpr()) + ";";
+      } else if (isa<DeclRefExpr>(cond) or isa<MemberExpr>(cond)) {
+        // pass it through, nothing to simplify here
+        output += clang_stmt_printer(bin_op) + ";";
       } else {
         assert(false);
       }
