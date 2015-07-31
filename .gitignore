@@ -26,3 +26,4 @@ if_converter
 expr_flattener
 strength_reducer
 expr_propagater
+echo
