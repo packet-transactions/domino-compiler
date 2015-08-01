@@ -4,19 +4,17 @@
 #include "clang/Tooling/Refactoring.h"
 #include "clang/Tooling/CommonOptionsParser.h"
 #include "clang_utility_functions.h"
+#include "pkt_func_transform.h"
 #include "single_pass.h"
 
 using namespace clang;
 using namespace clang::tooling;
 
 /// The actual strength reduction
-static std::string strength_reduce_helper(const FunctionDecl* function_decl) {
-  assert(function_decl);
-
+static std::string strength_reducer(const CompoundStmt * function_body) {
   // Rewrite function body
+  assert(function_body);
   std::string transformed_body = "";
-  const auto * function_body = function_decl->getBody();
-  assert(isa<CompoundStmt>(function_body));
   for (const auto & child : function_body->children()) {
     assert(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
@@ -72,38 +70,8 @@ static std::string strength_reduce_helper(const FunctionDecl* function_decl) {
       }
     }
   }
-
-  // Append function body to signature
-  assert(function_decl->getNumParams() >= 1);
-  const auto * pkt_param = function_decl->getParamDecl(0);
-  const auto pkt_type  = function_decl->getParamDecl(0)->getType().getAsString();
-  const auto pkt_name = clang_value_decl_printer(pkt_param);
-
-  // Get transformed_body string
-  return function_decl->getReturnType().getAsString() + " " +
-         function_decl->getNameInfo().getName().getAsString() +
-         "( " + pkt_type + " " +  pkt_name + ") { " +
-         transformed_body + "}\n";
+  return transformed_body;
 }
-
-/// Strength Reduction transformation
-static std::string strength_reducer_transform(const TranslationUnitDecl * tu_decl) {
-  std::string ret;
-  // Loop through all declarations within the translation unit decl
-  for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
-    assert(child_decl);
-    if (isa<VarDecl>(child_decl) or
-        isa<RecordDecl>(child_decl) or
-        (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl))))) {
-      ret += clang_decl_printer(child_decl) + ";";
-    } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
-      ret += strength_reduce_helper(dyn_cast<FunctionDecl>(child_decl));
-    }
-  }
-  return ret;
-}
-
-
 
 static llvm::cl::OptionCategory strength_redux(""
 "Simple strength reduction: rewrite if (1) ? x : y to x."
@@ -114,7 +82,7 @@ int main(int argc, const char **argv) {
   CommonOptionsParser op(argc, argv, strength_redux);
 
   // Parse file once and output it
-  std::cout << SinglePass(op, strength_reducer_transform).output();
+  std::cout << SinglePass(op, std::bind(pkt_func_transform, std::placeholders::_1, strength_reducer)).output();
 
   return 0;
 }
