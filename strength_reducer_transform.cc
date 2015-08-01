@@ -1,16 +1,29 @@
-#include <iostream>
-#include "clang_utility_functions.h"
-#include "strength_reduction_handler.h"
+#include "strength_reducer_transform.h"
 
 using namespace clang;
 
-std::pair<std::string, std::vector<std::string>> StrengthReductionHandler::transform(const Stmt * function_body, const std::string & pkt_name __attribute__((unused))) const {
-  assert(function_body);
+std::string strength_reducer_transform(const TranslationUnitDecl * tu_decl) {
+  std::string ret;
+  // Loop through all declarations within the translation unit decl
+  for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
+    assert(child_decl);
+    if (isa<VarDecl>(child_decl) or
+        isa<RecordDecl>(child_decl) or
+        (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl))))) {
+      ret += clang_decl_printer(child_decl) + ";";
+    } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
+      ret += strength_reduce_helper(dyn_cast<FunctionDecl>(child_decl));
+    }
+  }
+  return ret;
+}
 
-  std::string output = "";
-  std::vector<std::string> new_decls = {};
+std::string strength_reduce_helper(const FunctionDecl* function_decl) {
+  assert(function_decl);
 
-  // iterate through function body
+  // Rewrite function body
+  std::string transformed_body = "";
+  const auto * function_body = function_decl->getBody();
   assert(isa<CompoundStmt>(function_body));
   for (const auto & child : function_body->children()) {
     assert(isa<BinaryOperator>(child));
@@ -22,7 +35,7 @@ std::pair<std::string, std::vector<std::string>> StrengthReductionHandler::trans
 
     if(not isa<ConditionalOperator>(rhs)) {
       // If it isn't a conditional operator, pass it through
-      output += clang_stmt_printer(bin_op) + ";";
+      transformed_body += clang_stmt_printer(bin_op) + ";";
     } else {
       const auto * cond_op = dyn_cast<ConditionalOperator>(rhs);
 
@@ -32,7 +45,7 @@ std::pair<std::string, std::vector<std::string>> StrengthReductionHandler::trans
       if(isa<IntegerLiteral>(cond)) {
         // TODO: Check that it's the integer literal one
         // replace with straight-up assignment
-        output += clang_stmt_printer(bin_op->getLHS()) + " = " + clang_stmt_printer(cond_op->getTrueExpr()) + ";"; 
+        transformed_body += clang_stmt_printer(bin_op->getLHS()) + " = " + clang_stmt_printer(cond_op->getTrueExpr()) + ";"; 
       } else if (isa<BinaryOperator>(cond)) {
         // Has to be an &&, otherwise assert
         const auto * cond_predicate = dyn_cast<BinaryOperator>(cond);
@@ -56,17 +69,27 @@ std::pair<std::string, std::vector<std::string>> StrengthReductionHandler::trans
           simplified_pred = cond_predicate;
         }
 
-        output += clang_stmt_printer(bin_op->getLHS()) + " = " + clang_stmt_printer(simplified_pred)
+        transformed_body += clang_stmt_printer(bin_op->getLHS()) + " = " + clang_stmt_printer(simplified_pred)
                                                        + " ? " + clang_stmt_printer(cond_op->getTrueExpr())
                                                        + " : " + clang_stmt_printer(cond_op->getFalseExpr()) + ";";
       } else if (isa<DeclRefExpr>(cond) or isa<MemberExpr>(cond)) {
         // pass it through, nothing to simplify here
-        output += clang_stmt_printer(bin_op) + ";";
+        transformed_body += clang_stmt_printer(bin_op) + ";";
       } else {
         assert(false);
       }
     }
   }
 
-  return make_pair(output, new_decls);
+  // Append function body to signature
+  assert(function_decl->getNumParams() >= 1);
+  const auto * pkt_param = function_decl->getParamDecl(0);
+  const auto pkt_type  = function_decl->getParamDecl(0)->getType().getAsString();
+  const auto pkt_name = clang_value_decl_printer(pkt_param);
+
+  // Get transformed_body string
+  return function_decl->getReturnType().getAsString() + " " +
+         function_decl->getNameInfo().getName().getAsString() +
+         "( " + pkt_type + " " +  pkt_name + ") { " +
+         transformed_body + "}\n";
 }

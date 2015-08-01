@@ -9,6 +9,6 @@ bin_PROGRAMS = partitioner if_converter expr_flattener strength_reducer expr_pro
 partitioner_SOURCES = $(common_source) partitioning_handler.cc  partitioner.cc partitioning_handler.h
 if_converter_SOURCES = $(common_source) if_converter.cc if_conversion_handler.cc if_conversion_handler.h
 expr_flattener_SOURCES = $(common_source) expr_flattener.cc expr_flattener_handler.cc expr_flattener_handler.h
-strength_reducer_SOURCES = $(common_source) strength_reducer.cc strength_reduction_handler.h strength_reduction_handler.cc
+strength_reducer_SOURCES = $(common_source) strength_reducer.cc strength_reducer_transform.h strength_reducer_transform.cc
 expr_propagater_SOURCES = $(common_source) expr_propagater.cc expr_propagation_handler.h expr_propagation_handler.cc
 echo_SOURCES = $(common_source) echo.cc
