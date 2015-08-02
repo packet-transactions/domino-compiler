@@ -3,7 +3,7 @@
 
 using namespace clang;
 
-std::string pkt_func_transform(const TranslationUnitDecl * tu_decl, const std::function<std::string(const CompoundStmt *)> & func_body_transform) {
+std::string pkt_func_transform(const TranslationUnitDecl * tu_decl, const std::function<std::pair<std::string, std::vector<std::string>>(const CompoundStmt *)> & func_body_transform) {
   std::string ret;
   // Loop through all declarations within the translation unit decl
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
@@ -15,7 +15,7 @@ std::string pkt_func_transform(const TranslationUnitDecl * tu_decl, const std::f
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
 
-      const auto transformed_body = func_body_transform(dyn_cast<CompoundStmt>(function_decl->getBody()));
+      const auto transformed_body = func_body_transform(dyn_cast<CompoundStmt>(function_decl->getBody())).first;
 
       // Append function body to signature
       assert(function_decl->getNumParams() >= 1);

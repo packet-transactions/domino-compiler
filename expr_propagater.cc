@@ -11,7 +11,7 @@ using namespace clang;
 using namespace clang::tooling;
 
 /// The actual expression propagation
-static std::string expr_prop(const CompoundStmt * function_body) {
+static std::pair<std::string, std::vector<std::string>> expr_prop(const CompoundStmt * function_body) {
   // Maintain map from variable name (packet or state variable)
   // to a string representing its expression, for expression propagation.
   std::map<std::string, std::string> var_to_expr;
@@ -39,7 +39,7 @@ static std::string expr_prop(const CompoundStmt * function_body) {
       transformed_body += clang_stmt_printer(lhs) + "=" + clang_stmt_printer(rhs) + ";";
     }
   }
-  return transformed_body;
+  return std::make_pair(transformed_body, std::vector<std::string>());
 }
 
 static llvm::cl::OptionCategory expr_prop_help(""
