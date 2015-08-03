@@ -28,7 +28,7 @@ int main(int argc, const char **argv) {
   IfConversionHandler if_conversion_handler(packet_var_set);
   // Parse file once and output it
   const FuncBodyTransform if_converter = std::bind(& IfConversionHandler::transform, if_conversion_handler, std::placeholders::_1, std::placeholders::_2);
-  std::cout << SinglePass(op, std::bind(pkt_func_transform, std::placeholders::_1, if_converter)).output();
+  std::cout << SinglePass<std::string>(op, std::bind(pkt_func_transform, std::placeholders::_1, if_converter)).output();
 
   return 0;
 }

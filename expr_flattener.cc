@@ -27,7 +27,7 @@ int main(int argc, const char **argv) {
   ExprFlattenerHandler expr_flattener_handler(packet_var_set);
   // Parse file once and output it
   const FuncBodyTransform expr_flattener = std::bind(& ExprFlattenerHandler::transform, expr_flattener_handler, std::placeholders::_1, std::placeholders::_2);
-  std::cout << SinglePass(op, std::bind(pkt_func_transform, std::placeholders::_1, expr_flattener)).output();
+  std::cout << SinglePass<std::string>(op, std::bind(pkt_func_transform, std::placeholders::_1, expr_flattener)).output();
 
   return 0;
 }

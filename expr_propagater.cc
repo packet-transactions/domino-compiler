@@ -55,7 +55,7 @@ int main(int argc, const char **argv) {
   CommonOptionsParser op(argc, argv, expr_prop_help);
 
   // Parse file once and output it
-  std::cout << SinglePass(op, std::bind(pkt_func_transform, std::placeholders::_1, expr_prop)).output();
+  std::cout << SinglePass<std::string>(op, std::bind(pkt_func_transform, std::placeholders::_1, expr_prop)).output();
 
   return 0;
 }

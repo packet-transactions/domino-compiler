@@ -15,5 +15,5 @@ int main(int argc, const char **argv) {
   CommonOptionsParser op(argc, argv, echo_pass);
 
   // Parse file once and output it
-  std::cout << SinglePass(op, echo_transform).output();
+  std::cout << SinglePass<std::string>(op, echo_transform).output();
 }

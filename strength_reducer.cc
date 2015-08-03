@@ -82,7 +82,7 @@ int main(int argc, const char **argv) {
   CommonOptionsParser op(argc, argv, strength_redux);
 
   // Parse file once and output it
-  std::cout << SinglePass(op, std::bind(pkt_func_transform, std::placeholders::_1, strength_reducer)).output();
+  std::cout << SinglePass<std::string>(op, std::bind(pkt_func_transform, std::placeholders::_1, strength_reducer)).output();
 
   return 0;
 }
