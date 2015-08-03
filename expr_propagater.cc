@@ -28,8 +28,11 @@ static std::pair<std::string, std::vector<std::string>> expr_prop(const Compound
     const auto * rhs = bin_op->getRHS()->IgnoreParenImpCasts();
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
 
-    // Populate var_to_expr
-    var_to_expr[clang_stmt_printer(lhs)] = clang_stmt_printer(rhs);
+    // Populate var_to_expr, so long as the lhs variable doesn't
+    // appear within the rhs expression
+    if (clang_stmt_printer(rhs).find(clang_stmt_printer(lhs)) == std::string::npos) {
+      var_to_expr[clang_stmt_printer(lhs)] = clang_stmt_printer(rhs);
+    }
 
     if ((isa<DeclRefExpr>(rhs) or isa<MemberExpr>(rhs)) and (var_to_expr.find(clang_stmt_printer(rhs)) != var_to_expr.end())) {
       // If rhs is a packet/state variable, replace it with its current expr
