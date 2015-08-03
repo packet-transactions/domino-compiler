@@ -31,6 +31,7 @@ std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
   std::string scalar_func_str = "";
   std::string pkt_func_str = "";
   std::string record_decl_str = "";
+  std::vector<std::string> new_decls;
   for (const auto * child_decl : all_decls) {
     assert(child_decl);
     if (isa<VarDecl>(child_decl)) {
@@ -47,7 +48,9 @@ std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
       const auto pkt_name = clang_value_decl_printer(pkt_param);
 
       // Transform function body
-      const auto transformed_body = func_body_transform(dyn_cast<CompoundStmt>(function_decl->getBody()), pkt_name).first;
+      const auto transform_pair = func_body_transform(dyn_cast<CompoundStmt>(function_decl->getBody()), pkt_name);
+      const auto transformed_body = transform_pair.first;
+      new_decls = transform_pair.second;
 
       // Rewrite function with new body
       pkt_func_str += function_decl->getReturnType().getAsString() + " " +
@@ -55,7 +58,20 @@ std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
                       "( " + pkt_type + " " +  pkt_name + ") { " +
                       transformed_body + "}\n";
     } else if (isa<RecordDecl>(child_decl)) {
-      record_decl_str += clang_decl_printer(child_decl) + ";";
+      // Open struct definition
+      assert(dyn_cast<RecordDecl>(child_decl)->isStruct());
+      record_decl_str += "struct " + dyn_cast<RecordDecl>(child_decl)->getNameAsString() + "{\n";
+
+      // acummulate current fields in struct
+      for (const auto * field_decl : dyn_cast<DeclContext>(child_decl)->decls())
+        record_decl_str += dyn_cast<ValueDecl>(field_decl)->getType().getAsString() + " " + clang_value_decl_printer(dyn_cast<ValueDecl>(field_decl)) + ";";
+
+      // Add newly created fields
+      for (const auto & new_decl : new_decls)
+        record_decl_str += new_decl;
+
+      // Close struct definition
+      record_decl_str += "};";
     }
   }
   return state_var_str + scalar_func_str + record_decl_str + pkt_func_str;
