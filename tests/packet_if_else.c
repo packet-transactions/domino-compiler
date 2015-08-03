@@ -1,11 +1,11 @@
-typedef struct Packet {
+struct Packet {
   int x;
   int y;
   int z;
   int w;
-} Packet;
+};
 
-void func(Packet p) {
+void func(struct Packet p) {
   p.x = 1;
   p.y = 2;
   if (p.x == 3) {

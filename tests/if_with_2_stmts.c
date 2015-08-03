@@ -1,7 +1,10 @@
-void foo() {
+struct Packet {
   int a;
+};
+
+void foo(struct Packet pkt) {
   if (1) {
-    a = 5 ? a : 1;
-    a = 0;
+    pkt.a = 5 ? pkt.a : 1;
+    pkt.a = 0;
   }
 }

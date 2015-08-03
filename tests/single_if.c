@@ -1,6 +1,9 @@
-void foo() {
+struct Packet {
   int a;
+};
+
+void foo(struct Packet pkt) {
   if (1) {
-    a = 0;
+    pkt.a = 0;
   }
 }

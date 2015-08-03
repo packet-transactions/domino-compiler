@@ -1,8 +1,12 @@
-void foo() {
-  int a = 0;
+struct Packet {
+ int a;
+};
+
+void foo(struct Packet pkt) {
+  pkt.a = 0;
   if (1) {
-    a = 0;
+    pkt.a = 0;
   } else {
-    a = 1;
+    pkt.a = 1;
   }
 }

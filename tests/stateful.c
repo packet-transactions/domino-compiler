@@ -1,12 +1,12 @@
 int x;
 
-typedef struct Packet {
+struct Packet {
   int a;
   int b;
   int c;
-} Packet;
+};
 
-void foo(Packet p) {
+void foo(struct Packet p) {
   if (x) {
     x = x + 1;
   }

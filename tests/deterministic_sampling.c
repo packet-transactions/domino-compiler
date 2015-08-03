@@ -1,13 +1,13 @@
 // Sample every 100th packet in a flow
 #define N 100
 
-typedef struct Packet {
+struct Packet {
   int sample;
-} Packet;
+};
 
 int count = 0;
 
-void func(Packet pkt) {
+void func(struct Packet pkt) {
   if (count == N - 1) {
     pkt.sample = 1;
     count = 0;
