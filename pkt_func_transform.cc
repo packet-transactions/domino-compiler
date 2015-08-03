@@ -14,7 +14,7 @@ int get_order(const Decl * decl) {
 }
 
 std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
-                               const std::function<std::pair<std::string, std::vector<std::string>>(const CompoundStmt *, const std::string &)> & func_body_transform) {
+                               const FuncBodyTransform & func_body_transform) {
   // Accumulate all declarations
   std::vector<const Decl*> all_decls;
   for (const auto * decl : dyn_cast<DeclContext>(tu_decl)->decls())
