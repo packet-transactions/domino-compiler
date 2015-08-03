@@ -81,7 +81,7 @@ int main(int argc, const char **argv) {
   // Set up parser options for refactoring tool
   CommonOptionsParser op(argc, argv, strength_redux);
 
-  // Parse file once and output it
+  // Parse file once and output it after simple strength reduction
   std::cout << SinglePass<std::string>(op, std::bind(pkt_func_transform, std::placeholders::_1, strength_reducer)).output();
 
   return 0;

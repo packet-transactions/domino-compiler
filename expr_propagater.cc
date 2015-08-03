@@ -54,7 +54,7 @@ int main(int argc, const char **argv) {
   // Set up parser options for refactoring tool
   CommonOptionsParser op(argc, argv, expr_prop_help);
 
-  // Parse file once and output it
+  // Parse file once and output it after propagating expressions
   std::cout << SinglePass<std::string>(op, std::bind(pkt_func_transform, std::placeholders::_1, expr_prop)).output();
 
   return 0;

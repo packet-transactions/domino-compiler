@@ -3,7 +3,6 @@
 #include <string>
 #include "clang/Tooling/Refactoring.h"
 #include "clang/Tooling/CommonOptionsParser.h"
-#include "run_pass.h"
 #include "expr_flattener_handler.h"
 #include "packet_variable_census.h"
 #include "pkt_func_transform.h"
