@@ -11,7 +11,7 @@ using namespace clang;
 using namespace clang::tooling;
 
 /// The actual strength reduction
-static std::pair<std::string, std::vector<std::string>> strength_reducer(const CompoundStmt * function_body) {
+static std::pair<std::string, std::vector<std::string>> strength_reducer(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
   // Rewrite function body
   assert(function_body);
   std::string transformed_body = "";

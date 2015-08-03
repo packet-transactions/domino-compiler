@@ -14,7 +14,7 @@ int get_order(const Decl * decl) {
 }
 
 std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
-                               const std::function<std::pair<std::string, std::vector<std::string>>(const CompoundStmt *)> & func_body_transform) {
+                               const std::function<std::pair<std::string, std::vector<std::string>>(const CompoundStmt *, const std::string &)> & func_body_transform) {
   // Accumulate all declarations
   std::vector<const Decl*> all_decls;
   for (const auto * decl : dyn_cast<DeclContext>(tu_decl)->decls())
@@ -39,15 +39,17 @@ std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
       scalar_func_str += clang_decl_printer(child_decl) + ";";
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
-      const auto transformed_body = func_body_transform(dyn_cast<CompoundStmt>(function_decl->getBody())).first;
 
-      // Append function body to signature
+      // Extract function signature
       assert(function_decl->getNumParams() >= 1);
       const auto * pkt_param = function_decl->getParamDecl(0);
       const auto pkt_type  = function_decl->getParamDecl(0)->getType().getAsString();
       const auto pkt_name = clang_value_decl_printer(pkt_param);
 
-      // Get transformed_body string
+      // Transform function body
+      const auto transformed_body = func_body_transform(dyn_cast<CompoundStmt>(function_decl->getBody()), pkt_name).first;
+
+      // Rewrite function with new body
       pkt_func_str += function_decl->getReturnType().getAsString() + " " +
                       function_decl->getNameInfo().getName().getAsString() +
                       "( " + pkt_type + " " +  pkt_name + ") { " +
