@@ -20,10 +20,8 @@ int main(int argc, const char **argv) {
   // Set up parser options for refactoring tool
   CommonOptionsParser op(argc, argv, if_conversion);
 
-  // Run passes, chaining results if required
-  const auto packet_var_set = run_pass<PacketVariableCensus,
-                                      std::set<std::string>>
-                                      (op, clang::ast_matchers::decl().bind("decl"));
+  // Parse file once and generate set of all packet variables
+  const auto packet_var_set   = SinglePass<std::set<std::string>>(op, packet_variable_census).output();
 
   IfConversionHandler if_conversion_handler(packet_var_set);
   // Parse file once and output it
