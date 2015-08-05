@@ -60,8 +60,8 @@ static std::pair<std::string, std::vector<std::string>> stateful_flank_transform
      const auto * bin_op = dyn_cast<BinaryOperator>(child);
      assert(bin_op->isAssignmentOp());
 
-     function_body_str +=   ExprFunctions::replace_state_vars(bin_op->getLHS(), state_var_table) + " = "
-                          + ExprFunctions::replace_state_vars(bin_op->getRHS(), state_var_table) + ";";
+     function_body_str +=   ExprFunctions::replace_vars(bin_op->getLHS(), state_var_table) + " = "
+                          + ExprFunctions::replace_vars(bin_op->getRHS(), state_var_table) + ";";
   }
 
   return std::make_pair(read_prologue + "\n\n" +  function_body_str + "\n\n" + write_epilogue, new_decls);

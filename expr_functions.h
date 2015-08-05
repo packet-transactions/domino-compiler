@@ -16,7 +16,7 @@ class ExprFunctions {
   static std::set<std::string> get_all_state_vars(const clang::Expr * expr);
 
   /// Replace a specific DeclRefExpr* with a new string within expr
-  static std::string replace_state_vars(const clang::Expr * expr, const std::map<std::string, std::string> & repl_map);
+  static std::string replace_vars(const clang::Expr * expr, const std::map<std::string, std::string> & repl_map);
 
 };
 
