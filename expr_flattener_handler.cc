@@ -108,7 +108,7 @@ FlattenResult ExprFlattenerHandler::flatten_to_atom(const Expr * expr, const std
     return {clang_stmt_printer(expr), "", {}};
   } else {
     const auto flat_var_member     = unique_var_gen_.get_unique_var();
-    const auto flat_var_decl       = "int " + flat_var_member + ";";
+    const auto flat_var_decl       = expr->getType().getAsString() + " " + flat_var_member + ";";
     const auto pkt_flat_variable   = pkt_name + "." + flat_var_member;
     const auto pkt_flat_var_def    = pkt_flat_variable + " = " + clang_stmt_printer(expr) + ";";
     return {pkt_flat_variable, pkt_flat_var_def, {flat_var_decl}};
