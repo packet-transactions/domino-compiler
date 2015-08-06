@@ -87,6 +87,11 @@ class Graph {
 
   /// Node printer function
   std::function<std::string(const NodeType &)> node_printer_;
+
+  /// Hash string into unique ID
+  std::string hash_string (const std::string & str) const {
+    return std::to_string(std::hash<std::string>()(str));
+  }
 };
 
 template <class NodeType>
@@ -95,13 +100,13 @@ std::string Graph<NodeType>::dot_output() const {
 
   std::string output = "digraph graph_output {node [shape = box];\n";
   for (const auto & node : node_set_) {
-    output += "<" + node_printer_(node) + "> [label = <" + node_printer_(node) +"> ];\n";
+    output += hash_string(node_printer_(node)) + " [label = \"" + node_printer_(node) +"\" ];\n";
   }
 
   for (const auto & node_pair : succ_map_)
     for (const auto & neighbor : node_pair.second)
-      output += "<" + node_printer_(node_pair.first) + "> -> " +
-                "<" + node_printer_(neighbor)        + ">;\n";
+      output += hash_string(node_printer_(node_pair.first)) + " -> " +
+                hash_string(node_printer_(neighbor)       ) + " ;\n";
   output += "}";
 
   return output;
