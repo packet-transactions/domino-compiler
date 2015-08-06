@@ -2,7 +2,7 @@ AM_CXXFLAGS = $(PICKY_CXXFLAGS)
 AM_CPPFLAGS = -isystem /usr/lib/llvm-3.5/include/
 AM_LDFLAGS = $(LLVM_LDFLAGS)
 LDADD = libclangall.a $(LLVM_LIBS) $(LLVM_SYSLIBS)
-common_source = clang_utility_functions.cc  expr_functions.cc clang_utility_functions.h expr_functions.h packet_variable_census.cc packet_variable_census.h unique_var_generator.h unique_var_generator.cc single_pass.h pkt_func_transform.h pkt_func_transform.cc
+common_source = clang_utility_functions.cc  expr_functions.cc clang_utility_functions.h expr_functions.h packet_variable_census.cc packet_variable_census.h unique_var_generator.h unique_var_generator.cc single_pass.h pkt_func_transform.h pkt_func_transform.cc graph.h graph.cc
 
 bin_PROGRAMS = partitioner if_converter expr_flattener strength_reducer expr_propagater echo stateful_flanks ssa
 
