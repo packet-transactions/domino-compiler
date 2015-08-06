@@ -1,6 +1,7 @@
 #include <iostream>
 #include "clang/AST/AST.h"
 #include "clang/Tooling/CommonOptionsParser.h"
+#include "expr_functions.h"
 #include "graph.h"
 #include "clang_utility_functions.h"
 #include "pkt_func_transform.h"
@@ -32,6 +33,41 @@ static Graph<const BinaryOperator *> handle_state_vars(const std::vector<const B
   return ret;
 }
 
+/// Does a particular operation read a variable
+static bool op_reads_var(const BinaryOperator * op, const Expr * var) {
+  assert(op);
+  assert(var);
+
+  // All reads happen only on the RHS
+  const auto read_vars = ExprFunctions::get_vars(op->getRHS());
+
+  return (std::find(read_vars.begin(), read_vars.end(), clang_stmt_printer(var)) != read_vars.end());
+}
+
+/// Does Operation 1 depend on Operation 2?
+static bool depends(const BinaryOperator * op1, const BinaryOperator * op2) {
+  // assume and check that op1 precedes op2 in program order
+  assert(op1->getLocStart() < op2->getLocStart());
+
+  // op1 writes the same variable that op2 writes (Write After Write)
+  if (clang_stmt_printer(op1->getLHS()) == clang_stmt_printer(op2->getLHS())) {
+    throw std::logic_error("Cannot have Write-After-Write dependencies in SSA form from " + clang_stmt_printer(op1) + " to " + clang_stmt_printer(op2) + "\n");
+  }
+
+  // op1 reads a variable that op2 writes (Write After Read)
+  if (op_reads_var(op1, op2->getLHS())) {
+    // Make an exception for state variables. There is no way around this.
+    // There is no need to add this edge, because handle_state_vars() does
+    // this already.
+    if (isa<DeclRefExpr>(op2->getLHS())) {
+      return false;
+    } else {
+      throw std::logic_error("Cannot have Write-After-Read dependencies in SSA form from " + clang_stmt_printer(op1) +  " to " + clang_stmt_printer(op2) + "\n");
+    }
+  }
+
+  // op1 writes a variable (LHS) that op2 reads. (Read After Write)
+  return (op_reads_var(op2, op1->getLHS()));
 }
 
 /// Print out dependency graph
@@ -65,6 +101,13 @@ static std::pair<std::string, std::vector<std::string>> dep_graph_transform(cons
   // Handle state variables specially
   dep_graph = handle_state_vars(stmt_vector, dep_graph);
 
+  // Now add all Read After Write Dependencies, comparing a statement only with
+  // a successor statement
+  for (uint32_t i = 0; i < stmt_vector.size(); i++) {
+    for (uint32_t j = i + 1; j < stmt_vector.size(); j++) {
+      if (depends(stmt_vector.at(i), stmt_vector.at(j))) {
+        dep_graph.add_edge(stmt_vector.at(i), stmt_vector.at(j));
+      }
     }
   }
   std::cerr << dep_graph.dot_output() << std::endl;
