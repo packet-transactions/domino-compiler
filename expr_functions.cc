@@ -5,22 +5,22 @@
 
 using namespace clang;
 
-std::set<std::string> ExprFunctions::get_all_state_vars(const clang::Expr * expr) {
+std::set<std::string> ExprFunctions::get_vars(const clang::Expr * expr) {
   // Get all stateful right hand sides of inst
   assert(expr);
   if (isa<ParenExpr>(expr)) {
-    return get_all_state_vars(dyn_cast<ParenExpr>(expr)->getSubExpr());
+    return get_vars(dyn_cast<ParenExpr>(expr)->getSubExpr());
   } else if (isa<CastExpr>(expr)) {
-    return get_all_state_vars(dyn_cast<CastExpr>(expr)->getSubExpr());
+    return get_vars(dyn_cast<CastExpr>(expr)->getSubExpr());
   } else if (isa<UnaryOperator>(expr)) {
-    return get_all_state_vars(dyn_cast<UnaryOperator>(expr)->getSubExpr());
+    return get_vars(dyn_cast<UnaryOperator>(expr)->getSubExpr());
   } else if (isa<ConditionalOperator>(expr)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(expr);
 
     // Get condition, true , and false expressions
-    auto cond_set = get_all_state_vars(cond_op->getCond());
-    auto true_set = get_all_state_vars(cond_op->getTrueExpr());
-    auto false_set = get_all_state_vars(cond_op->getFalseExpr());
+    auto cond_set = get_vars(cond_op->getCond());
+    auto true_set = get_vars(cond_op->getTrueExpr());
+    auto false_set = get_vars(cond_op->getFalseExpr());
 
     // Union together true and false sets
     std::set<std::string> value_set;
@@ -36,8 +36,8 @@ std::set<std::string> ExprFunctions::get_all_state_vars(const clang::Expr * expr
     return ret;
   } else if (isa<BinaryOperator>(expr)) {
     const auto * bin_op = dyn_cast<BinaryOperator>(expr);
-    auto lhs_set = get_all_state_vars(bin_op->getLHS());
-    auto rhs_set = get_all_state_vars(bin_op->getRHS());
+    auto lhs_set = get_vars(bin_op->getLHS());
+    auto rhs_set = get_vars(bin_op->getRHS());
     std::set<std::string> ret;
     std::set_union(lhs_set.begin(), lhs_set.end(),
                    rhs_set.begin(), rhs_set.end(),
@@ -49,12 +49,12 @@ std::set<std::string> ExprFunctions::get_all_state_vars(const clang::Expr * expr
     return std::set<std::string>({read_var});
   } else if (isa<MemberExpr>(expr)) {
     // All MemberExpr are packet variables
-    return std::set<std::string>();
+    return std::set<std::string>({clang_stmt_printer(dyn_cast<MemberExpr>(expr))});
   } else if (isa<CallExpr>(expr)) {
     const auto * call_expr = dyn_cast<CallExpr>(expr);
     std::set<std::string> ret;
     for (const auto * child : call_expr->arguments()) {
-      const auto child_uses = get_all_state_vars(child);
+      const auto child_uses = get_vars(child);
       std::set_union(child_uses.begin(), child_uses.end(),
                      ret.begin(), ret.end(),
                      std::inserter(ret, ret.begin()));
