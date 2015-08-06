@@ -44,10 +44,14 @@ static bool op_reads_var(const BinaryOperator * op, const Expr * var) {
   return (std::find(read_vars.begin(), read_vars.end(), clang_stmt_printer(var)) != read_vars.end());
 }
 
-/// Does Operation 1 depend on Operation 2?
+/// Is there a dependence from op1 to op2?
+/// Requiring op1 to be executed before op2?
 static bool depends(const BinaryOperator * op1, const BinaryOperator * op2) {
-  // assume and check that op1 precedes op2 in program order
-  assert(op1->getLocStart() < op2->getLocStart());
+  // If op1 succeeds op2 in program order,
+  // return false right away
+  if (not (op1->getLocStart() < op2->getLocStart())) {
+    return false;
+  }
 
   // op1 writes the same variable that op2 writes (Write After Write)
   if (clang_stmt_printer(op1->getLHS()) == clang_stmt_printer(op2->getLHS())) {
@@ -70,7 +74,19 @@ static bool depends(const BinaryOperator * op1, const BinaryOperator * op2) {
   return (op_reads_var(op2, op1->getLHS()));
 }
 
+/// Is there a dependence from scc1 to scc2 (because of their constituent operations?)
+static bool scc_depends(const std::vector<const BinaryOperator*> & scc1, const std::vector<const BinaryOperator*> & scc2) {
+  for (const auto & op1 : scc1) {
+    for (const auto & op2 : scc2) {
+      if (depends(op1, op2)) return true;
+    }
+  }
+  return false;
+}
+
 /// Print out dependency graph
+/// And condensed graph onces Stongly Connected Components
+/// have been condensed together
 static std::pair<std::string, std::vector<std::string>> dep_graph_transform(const CompoundStmt * function_body, const std::string & pkt_name __attribute__ ((unused))) {
   // Newly created packet temporaries
   std::vector<std::string> new_decls = {};
@@ -111,6 +127,38 @@ static std::pair<std::string, std::vector<std::string>> dep_graph_transform(cons
     }
   }
   std::cerr << dep_graph << std::endl;
+
+  // Extract sccs
+  auto sccs = dep_graph.scc();
+  for (auto & scc : sccs) {
+    // Put statements within an SCC in program order
+    std::sort(scc.begin(), scc.end(), [] (const auto * op1, const auto * op2) {return op1->getLocStart() < op2->getLocStart();});
+  }
+
+  // Graph condensation: Add SCCs as nodes
+  Graph<std::vector<const BinaryOperator*>> condensed_graph(
+      [] (const auto & x)
+      { std::string ret = "";
+        for (auto & op : x) {
+          ret += clang_stmt_printer(op) + ";\n";
+        }
+        return ret;
+      });
+
+  for (uint32_t i = 0; i < sccs.size(); i++) {
+    condensed_graph.add_node(sccs.at(i));
+  }
+
+  // Graph condensation: Add edges between SCCs
+  for (uint32_t i = 0; i < sccs.size(); i++) {
+    for (uint32_t j = 0; j < sccs.size(); j++) {
+      if (scc_depends(sccs.at(i), sccs.at(j)) and (i != j)) {
+        condensed_graph.add_edge(sccs.at(i), sccs.at(j));
+      }
+    }
+  }
+
+  std::cerr << condensed_graph << std::endl;
 
   return std::make_pair(clang_stmt_printer(function_body), new_decls);
 }
