@@ -15,7 +15,10 @@ static std::pair<std::string, std::vector<std::string>> dep_graph_transform(cons
   std::vector<std::string> new_decls = {};
 
   // Verify that it's in SSA
+  // and append to a vector of const BinaryOperator *
+  // in order of statement occurence.
   std::set<std::string> assigned_vars;
+  std::vector<const BinaryOperator *> stmt_vector;
   for (const auto * child : function_body->children()) {
     assert(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
@@ -25,28 +28,26 @@ static std::pair<std::string, std::vector<std::string>> dep_graph_transform(cons
     if (pair.second == false) {
       throw std::logic_error("Program not in SSA form\n");
     }
+    stmt_vector.emplace_back(bin_op);
   }
 
   // Dependency graph creation
   Graph<const BinaryOperator *> dep_graph(clang_stmt_printer);
-  for (const auto * child : function_body->children()) {
-    assert(isa<BinaryOperator>(child));
-    dep_graph.add_node(dyn_cast<BinaryOperator>(child));
+  for (const auto * stmt : stmt_vector) {
+    dep_graph.add_node(stmt);
   }
 
   // Identify statements that read from and write to state
   // And create edges between them
   std::map<std::string, const BinaryOperator *> state_reads;
   std::map<std::string, const BinaryOperator *> state_writes;
-  for (const auto * child : function_body->children()) {
-    assert(isa<BinaryOperator>(child));
-    const auto * bin_op = dyn_cast<BinaryOperator>(child);
-    const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
-    const auto * rhs = bin_op->getRHS()->IgnoreParenImpCasts();
+  for (const auto * stmt : stmt_vector) {
+    const auto * lhs = stmt->getLHS()->IgnoreParenImpCasts();
+    const auto * rhs = stmt->getRHS()->IgnoreParenImpCasts();
     if (isa<DeclRefExpr>(rhs)) {
-      state_reads[clang_stmt_printer(rhs)] = bin_op;
+      state_reads[clang_stmt_printer(rhs)] = stmt;
     } else if (isa<DeclRefExpr>(lhs)) {
-      state_writes[clang_stmt_printer(lhs)] = bin_op;
+      state_writes[clang_stmt_printer(lhs)] = stmt;
       const auto state_var = clang_stmt_printer(lhs);
       dep_graph.add_edge(state_reads.at(state_var), state_writes.at(state_var));
       dep_graph.add_edge(state_writes.at(state_var), state_reads.at(state_var));
