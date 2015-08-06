@@ -40,8 +40,6 @@ std::string clang_decl_printer(const clang::Decl * decl) {
 bool is_packet_func(const clang::FunctionDecl * func_decl) {
   // Not sure what we would get out of functions with zero args
   assert(func_decl->getNumParams() >= 1);
-  std::cerr << "First parameter of type: " << func_decl->getParamDecl(0)->getType().getAsString() << std::endl;
-
   return func_decl->getNumParams() == 1
          and func_decl->getParamDecl(0)->getType().getAsString() == "struct Packet";
 }
