@@ -9,7 +9,32 @@
 using namespace clang;
 using namespace clang::tooling;
 
-// Print out dependency graph
+/// Identify statements that read from and write to state
+/// And create a back edge from the write back to the read.
+/// This is really the crux of the compiler:
+/// back edges from stateful writes to the next stateful read.
+static Graph<const BinaryOperator *> handle_state_vars(const std::vector<const BinaryOperator *> & stmt_vector, const Graph<const BinaryOperator*> & dep_graph) {
+  Graph<const BinaryOperator*> ret = dep_graph;
+  std::map<std::string, const BinaryOperator *> state_reads;
+  std::map<std::string, const BinaryOperator *> state_writes;
+  for (const auto * stmt : stmt_vector) {
+    const auto * lhs = stmt->getLHS()->IgnoreParenImpCasts();
+    const auto * rhs = stmt->getRHS()->IgnoreParenImpCasts();
+    if (isa<DeclRefExpr>(rhs)) {
+      state_reads[clang_stmt_printer(rhs)] = stmt;
+    } else if (isa<DeclRefExpr>(lhs)) {
+      state_writes[clang_stmt_printer(lhs)] = stmt;
+      const auto state_var = clang_stmt_printer(lhs);
+      ret.add_edge(state_reads.at(state_var), state_writes.at(state_var));
+      ret.add_edge(state_writes.at(state_var), state_reads.at(state_var));
+    }
+  }
+  return ret;
+}
+
+}
+
+/// Print out dependency graph
 static std::pair<std::string, std::vector<std::string>> dep_graph_transform(const CompoundStmt * function_body, const std::string & pkt_name __attribute__ ((unused))) {
   // Newly created packet temporaries
   std::vector<std::string> new_decls = {};
@@ -37,20 +62,9 @@ static std::pair<std::string, std::vector<std::string>> dep_graph_transform(cons
     dep_graph.add_node(stmt);
   }
 
-  // Identify statements that read from and write to state
-  // And create edges between them
-  std::map<std::string, const BinaryOperator *> state_reads;
-  std::map<std::string, const BinaryOperator *> state_writes;
-  for (const auto * stmt : stmt_vector) {
-    const auto * lhs = stmt->getLHS()->IgnoreParenImpCasts();
-    const auto * rhs = stmt->getRHS()->IgnoreParenImpCasts();
-    if (isa<DeclRefExpr>(rhs)) {
-      state_reads[clang_stmt_printer(rhs)] = stmt;
-    } else if (isa<DeclRefExpr>(lhs)) {
-      state_writes[clang_stmt_printer(lhs)] = stmt;
-      const auto state_var = clang_stmt_printer(lhs);
-      dep_graph.add_edge(state_reads.at(state_var), state_writes.at(state_var));
-      dep_graph.add_edge(state_writes.at(state_var), state_reads.at(state_var));
+  // Handle state variables specially
+  dep_graph = handle_state_vars(stmt_vector, dep_graph);
+
     }
   }
   std::cerr << dep_graph.dot_output() << std::endl;
