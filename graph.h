@@ -36,21 +36,21 @@ class Graph {
   /// Copy over graph and clear out all edges
   Graph<NodeType> copy_and_clear() const;
 
-  /// Print graph to stream
+  /// Print graph to stream using Graphviz's dot format
   friend std::ostream & operator<< (std::ostream & out, const Graph<NodeType> & graph) {
-    for (const auto & node : graph.succ_map_) {
-      if (graph.node_printer_) out << graph.node_printer_(node.first);
-      else out << node.first;
+    assert (graph.node_printer_);
 
-      out << " ---> ";
-      for (const auto & neighbor : node.second) {
-        out << " { ";
-        if (graph.node_printer_) out << graph.node_printer_(neighbor);
-        else out << neighbor;
-        out << " } ";
-      }
-      out << "\n";
+    out << "digraph graph_output {node [shape = box];\n";
+    for (const auto & node : graph.node_set_) {
+      out << hash_string(graph.node_printer_(node)) << " [label = \"" << graph.node_printer_(node)  << "\" ];\n";
     }
+
+    for (const auto & node_pair : graph.succ_map_)
+      for (const auto & neighbor : node_pair.second)
+        out << hash_string(graph.node_printer_(node_pair.first)) << " -> "
+            << hash_string(graph.node_printer_(neighbor)       ) << " ;\n";
+    out << "}";
+
     return out;
   }
 
@@ -72,8 +72,6 @@ class Graph {
             std::find(pred_map_.at(b).begin(), pred_map_.at(b).end(), a) != pred_map_.at(b).end());
   }
 
-  // Output for visualizing in graph viz using dot files
-  std::string dot_output() const;
 
  private:
   /// Set of all nodes in the graph
@@ -89,28 +87,8 @@ class Graph {
   std::function<std::string(const NodeType &)> node_printer_;
 
   /// Hash string into unique ID
-  std::string hash_string (const std::string & str) const {
-    return std::to_string(std::hash<std::string>()(str));
-  }
+  static std::string hash_string (const std::string & str) { return std::to_string(std::hash<std::string>()(str)); }
 };
-
-template <class NodeType>
-std::string Graph<NodeType>::dot_output() const {
-  assert (node_printer_);
-
-  std::string output = "digraph graph_output {node [shape = box];\n";
-  for (const auto & node : node_set_) {
-    output += hash_string(node_printer_(node)) + " [label = \"" + node_printer_(node) +"\" ];\n";
-  }
-
-  for (const auto & node_pair : succ_map_)
-    for (const auto & neighbor : node_pair.second)
-      output += hash_string(node_printer_(node_pair.first)) + " -> " +
-                hash_string(node_printer_(neighbor)       ) + " ;\n";
-  output += "}";
-
-  return output;
-}
 
 template <class NodeType>
 void Graph<NodeType>::add_node(const NodeType & node) {

@@ -110,7 +110,7 @@ static std::pair<std::string, std::vector<std::string>> dep_graph_transform(cons
       }
     }
   }
-  std::cerr << dep_graph.dot_output() << std::endl;
+  std::cerr << dep_graph << std::endl;
 
   return std::make_pair(clang_stmt_printer(function_body), new_decls);
 }
