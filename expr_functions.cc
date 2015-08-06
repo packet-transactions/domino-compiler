@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <iterator>
 #include "clang_utility_functions.h"
+#include "set_idioms.h"
 #include "expr_functions.h"
 
 using namespace clang;
@@ -16,33 +17,10 @@ std::set<std::string> ExprFunctions::get_vars(const clang::Expr * expr) {
     return get_vars(dyn_cast<UnaryOperator>(expr)->getSubExpr());
   } else if (isa<ConditionalOperator>(expr)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(expr);
-
-    // Get condition, true , and false expressions
-    auto cond_set = get_vars(cond_op->getCond());
-    auto true_set = get_vars(cond_op->getTrueExpr());
-    auto false_set = get_vars(cond_op->getFalseExpr());
-
-    // Union together true and false sets
-    std::set<std::string> value_set;
-    std::set_union(true_set.begin(), true_set.end(),
-                   false_set.begin(), false_set.end(),
-                   std::inserter(value_set, value_set.begin()));
-
-    // Union that with cond_set
-    std::set<std::string> ret;
-    std::set_union(value_set.begin(), value_set.end(),
-                   cond_set.begin(), cond_set.end(),
-                   std::inserter(ret, ret.begin()));
-    return ret;
+    return get_vars(cond_op->getCond()) + get_vars(cond_op->getTrueExpr()) + get_vars(cond_op->getFalseExpr());
   } else if (isa<BinaryOperator>(expr)) {
     const auto * bin_op = dyn_cast<BinaryOperator>(expr);
-    auto lhs_set = get_vars(bin_op->getLHS());
-    auto rhs_set = get_vars(bin_op->getRHS());
-    std::set<std::string> ret;
-    std::set_union(lhs_set.begin(), lhs_set.end(),
-                   rhs_set.begin(), rhs_set.end(),
-                   std::inserter(ret, ret.begin()));
-    return ret;
+    return get_vars(bin_op->getLHS()) + get_vars(bin_op->getRHS());
   } else if (isa<DeclRefExpr>(expr)) {
     // All DeclRefExpr are stateful variables
     const auto read_var = clang_stmt_printer(dyn_cast<DeclRefExpr>(expr));
@@ -55,9 +33,7 @@ std::set<std::string> ExprFunctions::get_vars(const clang::Expr * expr) {
     std::set<std::string> ret;
     for (const auto * child : call_expr->arguments()) {
       const auto child_uses = get_vars(child);
-      std::set_union(child_uses.begin(), child_uses.end(),
-                     ret.begin(), ret.end(),
-                     std::inserter(ret, ret.begin()));
+      ret = ret + child_uses;
     }
     return ret;
   } else {
