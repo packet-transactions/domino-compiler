@@ -52,7 +52,7 @@ static std::pair<std::string, std::vector<std::string>> dep_graph_transform(cons
       dep_graph.add_edge(state_writes.at(state_var), state_reads.at(state_var));
     }
   }
-  std::cerr << dep_graph << std::endl;
+  std::cerr << dep_graph.dot_output() << std::endl;
 
   return std::make_pair(clang_stmt_printer(function_body), new_decls);
 }

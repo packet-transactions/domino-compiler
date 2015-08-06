@@ -18,7 +18,7 @@ template <class NodeType>
 class Graph {
  public:
   /// Graph constructor, taking node printer as optional argument
-  Graph<NodeType>(const std::function<std::string(const NodeType)> & node_printer = {})
+  Graph<NodeType>(const std::function<std::string(const NodeType)> & node_printer)
     : node_printer_(node_printer) {};
 
   /// Add node alone to existing graph, check that node doesn't already exist
@@ -72,6 +72,9 @@ class Graph {
             std::find(pred_map_.at(b).begin(), pred_map_.at(b).end(), a) != pred_map_.at(b).end());
   }
 
+  // Output for visualizing in graph viz using dot files
+  std::string dot_output() const;
+
  private:
   /// Set of all nodes in the graph
   std::set<NodeType> node_set_ = {};
@@ -85,6 +88,24 @@ class Graph {
   /// Node printer function
   std::function<std::string(const NodeType &)> node_printer_;
 };
+
+template <class NodeType>
+std::string Graph<NodeType>::dot_output() const {
+  assert (node_printer_);
+
+  std::string output = "digraph graph_output {node [shape = box];\n";
+  for (const auto & node : node_set_) {
+    output += "<" + node_printer_(node) + "> [label = <" + node_printer_(node) +"> ];\n";
+  }
+
+  for (const auto & node_pair : succ_map_)
+    for (const auto & neighbor : node_pair.second)
+      output += "<" + node_printer_(node_pair.first) + "> -> " +
+                "<" + node_printer_(neighbor)        + ">;\n";
+  output += "}";
+
+  return output;
+}
 
 template <class NodeType>
 void Graph<NodeType>::add_node(const NodeType & node) {
