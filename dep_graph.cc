@@ -1,6 +1,7 @@
 #include <iostream>
 #include "clang/AST/AST.h"
 #include "clang/Tooling/CommonOptionsParser.h"
+#include "graph.h"
 #include "clang_utility_functions.h"
 #include "pkt_func_transform.h"
 #include "single_pass.h"
@@ -25,6 +26,33 @@ static std::pair<std::string, std::vector<std::string>> dep_graph_transform(cons
       throw std::logic_error("Program not in SSA form\n");
     }
   }
+
+  // Dependency graph creation
+  Graph<const BinaryOperator *> dep_graph(clang_stmt_printer);
+  for (const auto * child : function_body->children()) {
+    assert(isa<BinaryOperator>(child));
+    dep_graph.add_node(dyn_cast<BinaryOperator>(child));
+  }
+
+  // Identify statements that read from and write to state
+  // And create edges between them
+  std::map<std::string, const BinaryOperator *> state_reads;
+  std::map<std::string, const BinaryOperator *> state_writes;
+  for (const auto * child : function_body->children()) {
+    assert(isa<BinaryOperator>(child));
+    const auto * bin_op = dyn_cast<BinaryOperator>(child);
+    const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
+    const auto * rhs = bin_op->getRHS()->IgnoreParenImpCasts();
+    if (isa<DeclRefExpr>(rhs)) {
+      state_reads[clang_stmt_printer(rhs)] = bin_op;
+    } else if (isa<DeclRefExpr>(lhs)) {
+      state_writes[clang_stmt_printer(lhs)] = bin_op;
+      const auto state_var = clang_stmt_printer(lhs);
+      dep_graph.add_edge(state_reads.at(state_var), state_writes.at(state_var));
+      dep_graph.add_edge(state_writes.at(state_var), state_reads.at(state_var));
+    }
+  }
+  std::cerr << dep_graph << std::endl;
 
   return std::make_pair(clang_stmt_printer(function_body), new_decls);
 }
