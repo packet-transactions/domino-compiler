@@ -2,9 +2,7 @@
 #include <string>
 #include <iostream>
 
-#include "clang/Tooling/Refactoring.h"
-#include "clang/Tooling/CommonOptionsParser.h"
-
+#include "util.h"
 #include "clang_utility_functions.h"
 #include "expr_functions.h"
 #include "single_pass.h"
@@ -13,7 +11,6 @@
 #include "pkt_func_transform.h"
 
 using namespace clang;
-using namespace clang::tooling;
 
 static std::pair<std::string, std::vector<std::string>> ssa_transform(const CompoundStmt * function_body, const std::string & pkt_name, const std::set<std::string> & packet_var_set) {
   // Vector of newly created packet temporaries
@@ -82,20 +79,17 @@ static std::pair<std::string, std::vector<std::string>> ssa_transform(const Comp
   return std::make_pair(function_body_str, new_decls);
 }
 
-static llvm::cl::OptionCategory ssa(""
+static std::string help_string(""
 "Static Single-Assignment form for function body, excluding the final write"
 "in the write epilogue to state variables. This guarantees that each packet"
 "variable is assigned exactly once. If it is assigned more than once, perform"
 "simple renaming. SSA is easier for us because we have no branches and no phi nodes.");
 
 int main(int argc, const char **argv) {
-  // Set up parser options
-  CommonOptionsParser op(argc, argv, ssa);
-
   // Generate the set of all packet variables by parsing file once
-  const auto packet_var_set = SinglePass<std::set<std::string>>(op, packet_variable_census).output();
+  const auto packet_var_set = SinglePass<std::set<std::string>>(get_file_name(argc, argv, help_string), help_string, packet_variable_census).output();
 
   // Parse file once and output ssa form
   const FuncBodyTransform ssa_converter = std::bind(ssa_transform, std::placeholders::_1, std::placeholders::_2, packet_var_set);
-  std::cout << SinglePass<std::string>(op, std::bind(pkt_func_transform, std::placeholders::_1, ssa_converter)).output();
+  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), help_string, std::bind(pkt_func_transform, std::placeholders::_1, ssa_converter)).output();
 }

@@ -1,7 +1,6 @@
 #include <iostream>
 
-#include "clang/Tooling/CommonOptionsParser.h"
-
+#include "util.h"
 #include "expr_functions.h"
 #include "graph.h"
 #include "clang_utility_functions.h"
@@ -9,7 +8,6 @@
 #include "single_pass.h"
 
 using namespace clang;
-using namespace clang::tooling;
 
 /// Identify statements that read from and write to state
 /// And create a back edge from the write back to the read.
@@ -164,13 +162,10 @@ static std::pair<std::string, std::vector<std::string>> dep_graph_transform(cons
   return std::make_pair(clang_stmt_printer(function_body), new_decls);
 }
 
-static llvm::cl::OptionCategory dep_graph(""
+static std::string help_string(""
 "Print out dependency graph of the program as a dot file");
 
 int main(int argc, const char ** argv) {
-  // Parser options
-  CommonOptionsParser op(argc, argv, dep_graph);
-
   // Parse file once and output dot file
-  std::cout << SinglePass<std::string>(op, std::bind(pkt_func_transform, std::placeholders::_1, dep_graph_transform)).output();
+  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), help_string, std::bind(pkt_func_transform, std::placeholders::_1, dep_graph_transform)).output();
 }

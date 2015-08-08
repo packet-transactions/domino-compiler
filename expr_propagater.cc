@@ -2,15 +2,13 @@
 #include <string>
 
 #include "clang/AST/AST.h"
-#include "clang/Tooling/Refactoring.h"
-#include "clang/Tooling/CommonOptionsParser.h"
 
+#include "util.h"
 #include "clang_utility_functions.h"
 #include "pkt_func_transform.h"
 #include "single_pass.h"
 
 using namespace clang;
-using namespace clang::tooling;
 
 /// The actual expression propagation
 static std::pair<std::string, std::vector<std::string>> expr_prop(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
@@ -47,17 +45,14 @@ static std::pair<std::string, std::vector<std::string>> expr_prop(const Compound
   return std::make_pair(transformed_body, std::vector<std::string>());
 }
 
-static llvm::cl::OptionCategory expr_prop_help(""
+static std::string help_string(""
 "Expr propagation: replace y = b + c; a = y;"
 "with y=b+c; a=b+c; In some sense we are inverting"
 "the process of common subexpression elimination");
 
 int main(int argc, const char **argv) {
-  // Set up parser options for refactoring tool
-  CommonOptionsParser op(argc, argv, expr_prop_help);
-
   // Parse file once and output it after propagating expressions
-  std::cout << SinglePass<std::string>(op, std::bind(pkt_func_transform, std::placeholders::_1, expr_prop)).output();
+  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), help_string, std::bind(pkt_func_transform, std::placeholders::_1, expr_prop)).output();
 
   return 0;
 }

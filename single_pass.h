@@ -8,6 +8,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "cstr_array.h"
 
 /// Single pass over a translation unit.
 /// By default, just parse the translation unit, and print it out as such.
@@ -15,14 +16,25 @@
 template <class OutputType>
 class SinglePass {
  public:
-  /// Run a single pass over a given CommonOptionsParser object
+  /// Run a single pass over a given filename
   /// Using the given transformer object
-  SinglePass(clang::tooling::CommonOptionsParser & op,
+  SinglePass(const std::string & file_name,
+             const std::string & help_msg,
              const std::function<OutputType(const clang::TranslationUnitDecl *)> & t_transformer);
 
   /// Output from SinglePass
   auto output() const { return output_; }
  private:
+  /// OptionCategory from LLVM, used for help messages,
+  /// We have it only because the CommonOptionsParser constructor needs it
+  llvm::cl::OptionCategory option_category_;
+
+  /// CstrArray to turn vector of strings into const char **
+  CstrArray cstr_array_;
+
+  /// Options to be passed to clang parser
+  clang::tooling::CommonOptionsParser options_parser_;
+
   /// Refactoring tool
   clang::tooling::RefactoringTool refactoring_tool_;
 
@@ -47,9 +59,13 @@ class SinglePass {
 };
 
 template <class OutputType>
-SinglePass<OutputType>::SinglePass(clang::tooling::CommonOptionsParser & op,
-                       const std::function<OutputType(const clang::TranslationUnitDecl *)> & t_transformer)
-    : refactoring_tool_(op.getCompilations(), op.getSourcePathList()),
+SinglePass<OutputType>::SinglePass(const std::string & file_name,
+                                   const std::string & help_msg,
+                                   const std::function<OutputType(const clang::TranslationUnitDecl *)> & t_transformer)
+    : option_category_(help_msg.c_str()),
+      cstr_array_({"foo", file_name, "--"}),
+      options_parser_(cstr_array_.size(), cstr_array_.get(), option_category_),
+      refactoring_tool_(options_parser_.getCompilations(), options_parser_.getSourcePathList()),
       transform_handler_(t_transformer) {
   find_ast_fragment_.addMatcher(clang::ast_matchers::decl().bind("decl"), & transform_handler_);
   refactoring_tool_.run(clang::tooling::newFrontendActionFactory(& find_ast_fragment_).get());

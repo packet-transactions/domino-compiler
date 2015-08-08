@@ -2,15 +2,13 @@
 #include <string>
 
 #include "clang/AST/AST.h"
-#include "clang/Tooling/Refactoring.h"
-#include "clang/Tooling/CommonOptionsParser.h"
 
+#include "util.h"
 #include "clang_utility_functions.h"
 #include "pkt_func_transform.h"
 #include "single_pass.h"
 
 using namespace clang;
-using namespace clang::tooling;
 
 /// The actual strength reduction
 static std::pair<std::string, std::vector<std::string>> strength_reducer(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
@@ -75,16 +73,13 @@ static std::pair<std::string, std::vector<std::string>> strength_reducer(const C
   return std::make_pair(transformed_body, std::vector<std::string>());
 }
 
-static llvm::cl::OptionCategory strength_redux(""
+static std::string help_string(""
 "Simple strength reduction: rewrite if (1) ? x : y to x."
 "Simplify 1 && x to x");
 
 int main(int argc, const char **argv) {
-  // Set up parser options for refactoring tool
-  CommonOptionsParser op(argc, argv, strength_redux);
-
   // Parse file once and output it after simple strength reduction
-  std::cout << SinglePass<std::string>(op, std::bind(pkt_func_transform, std::placeholders::_1, strength_reducer)).output();
+  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), help_string, std::bind(pkt_func_transform, std::placeholders::_1, strength_reducer)).output();
 
   return 0;
 }

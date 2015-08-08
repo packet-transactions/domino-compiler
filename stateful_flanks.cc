@@ -3,9 +3,7 @@
 #include <string>
 #include <utility>
 
-#include "clang/Tooling/Refactoring.h"
-#include "clang/Tooling/CommonOptionsParser.h"
-
+#include "util.h"
 #include "clang_utility_functions.h"
 #include "packet_variable_census.h"
 #include "pkt_func_transform.h"
@@ -14,7 +12,6 @@
 #include "expr_functions.h"
 
 using namespace clang;
-using namespace clang::tooling;
 
 static std::pair<std::string, std::vector<std::string>> stateful_flank_transform(const CompoundStmt * function_body, const std::string & pkt_name, const std::set<std::string> & packet_var_set) {
   // Vector of newly created packet temporaries
@@ -69,7 +66,7 @@ static std::pair<std::string, std::vector<std::string>> stateful_flank_transform
   return std::make_pair(read_prologue + "\n\n" +  function_body_str + "\n\n" + write_epilogue, new_decls);
 }
 
-static llvm::cl::OptionCategory stateful_flanks(""
+static std::string help_string(""
 "Intermediate representation where we have a read prologue in which"
 "all state variables are read into temporary variables. Then the rest"
 "of the program operates on these temporary variables. We close the program"
@@ -77,14 +74,11 @@ static llvm::cl::OptionCategory stateful_flanks(""
 "variables again");
 
 int main(int argc, const char **argv) {
-  // Set up parser options for refactoring tool
-  CommonOptionsParser op(argc, argv, stateful_flanks);
-
   // Parse file once and generate set of all packet variables
-  const auto packet_var_set = SinglePass<std::set<std::string>>(op, packet_variable_census).output();
+  const auto packet_var_set = SinglePass<std::set<std::string>>(get_file_name(argc, argv, help_string), help_string, packet_variable_census).output();
 
   // Parse file once and output stateful flanks (read prologues, write epilogues)
   const FuncBodyTransform stateful_flank_converter = std::bind(stateful_flank_transform, std::placeholders::_1, std::placeholders::_2, packet_var_set);
 
-  std::cout << SinglePass<std::string>(op, std::bind(pkt_func_transform, std::placeholders::_1, stateful_flank_converter)).output();
+  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), help_string, std::bind(pkt_func_transform, std::placeholders::_1, stateful_flank_converter)).output();
 }
