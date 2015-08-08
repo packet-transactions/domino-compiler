@@ -15,4 +15,4 @@ echo_SOURCES = $(common_source) echo.cc
 stateful_flanks_SOURCES = $(common_source) stateful_flanks.cc
 ssa_SOURCES = $(common_source) ssa.cc
 dep_graph_SOURCES = $(common_source) dep_graph.cc
-rewritersample_SOURCES = rewritersample.cc
+rewritersample_SOURCES = $(common_source) rewritersample.cc
