@@ -56,9 +56,7 @@ int main(int argc, char *argv[]) {
   // managing the various objects needed to run the compiler.
   CompilerInstance TheCompInst;
   TheCompInst.createDiagnostics();
-
-  LangOptions &lo = TheCompInst.getLangOpts();
-  lo.CPlusPlus = 1;
+  TheCompInst.getLangOpts().CPlusPlus = 0;
 
   // Initialize target info with the default triple for our platform.
   auto TO = std::make_shared<TargetOptions>();
