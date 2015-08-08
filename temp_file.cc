@@ -21,9 +21,9 @@ vector<char> to_mutable( const string & str )
     return ret;
 }
 
-UniqueFile::UniqueFile( const string & filename_template )
-    : mutable_temp_filename_( to_mutable( filename_template + ".XXXXXX" ) ),
-      fd_( SystemCall( "mkstemp", mkstemp( &mutable_temp_filename_[ 0 ] ) ) ),
+UniqueFile::UniqueFile( const string & filename_template, const string & suffix )
+    : mutable_temp_filename_( to_mutable( filename_template + "XXXXXX" + suffix ) ),
+      fd_( SystemCall( "mkstemps", mkstemps( &mutable_temp_filename_[ 0 ], static_cast<int>(suffix.size()) ) ) ),
       moved_away_( false )
 {
 }

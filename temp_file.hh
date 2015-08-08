@@ -18,7 +18,7 @@ protected:
     bool moved_away_;
 
 public:
-    UniqueFile( const std::string & filename_template );
+    UniqueFile( const std::string & filename_template, const std::string & suffix );
     virtual ~UniqueFile() {}
 
     std::string name( void ) const;
