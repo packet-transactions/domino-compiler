@@ -57,7 +57,7 @@ string::const_iterator FileDescriptor::write( const string::const_iterator & beg
         throw runtime_error( "nothing to write" );
     }
 
-    ssize_t bytes_written = SystemCall( "write", ::write( fd_, &*begin, end - begin ) );
+    ssize_t bytes_written = SystemCall( "write", ::write( fd_, &*begin, static_cast<size_t>(end - begin) ) );
     if ( bytes_written == 0 ) {
         throw runtime_error( "write returned 0" );
     }
@@ -79,7 +79,7 @@ string FileDescriptor::read( const size_t limit )
 
     register_read();
 
-    return string( buffer, bytes_read );
+    return string( buffer, static_cast<std::basic_string<char>::size_type>(bytes_read) );
 }
 
 /* write method */

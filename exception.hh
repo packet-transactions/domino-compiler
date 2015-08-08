@@ -3,6 +3,7 @@
 #ifndef EXCEPTION_HH
 #define EXCEPTION_HH
 
+#include <type_traits>
 #include <system_error>
 #include <iostream>
 #include <typeinfo>
@@ -43,8 +44,10 @@ inline void print_exception( const std::exception & e, std::ostream & output = s
 }
 
 /* error-checking wrapper for most syscalls */
-inline int SystemCall( const std::string & s_attempt, const int return_value )
+template <typename ReturnType>
+inline ReturnType SystemCall( const std::string & s_attempt, const ReturnType return_value )
 {
+  static_assert(std::is_integral<ReturnType>::value, "Integer type required.");
   if ( return_value >= 0 ) {
     return return_value;
   }
