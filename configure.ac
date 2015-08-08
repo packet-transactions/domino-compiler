@@ -13,13 +13,9 @@ CPPFLAGS="-std=c++14 -pthread"
 PICKY_CXXFLAGS="-pedantic -Wconversion -Wsign-conversion -Wall -Wextra -Weffc++ -Werror -fno-default-inline"
 AC_SUBST([PICKY_CXXFLAGS])
 
-# Add llvm ldflags and libs
+# Add llvm ldflags
 LLVM_LDFLAGS=`llvm-config --ldflags`
-LLVM_LIBS=`llvm-config --libs`
-LLVM_SYSLIBS=`llvm-config --system-libs`
 AC_SUBST([LLVM_LDFLAGS])
-AC_SUBST([LLVM_LIBS])
-AC_SUBST([LLVM_SYSLIBS])
 
 # Checks for header files.
 AC_LANG_PUSH(C++)
