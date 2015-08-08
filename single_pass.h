@@ -2,12 +2,12 @@
 #define SINGLE_PASS_H_
 
 #include <functional>
+
 #include "clang/Tooling/CommonOptionsParser.h"
 #include "clang/Tooling/Refactoring.h"
-#include "clang/AST/AST.h"
+#include "clang/AST/Decl.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang_utility_functions.h"
 
 /// Single pass over a translation unit.
 /// By default, just parse the translation unit, and print it out as such.

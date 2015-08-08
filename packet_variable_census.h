@@ -2,7 +2,8 @@
 #define PACKET_VARIABLE_CENSUS_H_
 
 #include <set>
-#include "clang/AST/AST.h"
+
+#include "clang/AST/Decl.h"
 
 /// Return the current set of packet variables
 /// so that we can generate unique names afterwards

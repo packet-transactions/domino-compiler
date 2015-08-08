@@ -2,8 +2,7 @@
 #define CLANG_UTILITY_FUNCTIONS_H_
 
 #include <string>
-#include "llvm/Support/raw_ostream.h"
-#include "clang/AST/AST.h"
+
 #include "clang/AST/Decl.h"
 #include "clang/AST/Stmt.h"
 

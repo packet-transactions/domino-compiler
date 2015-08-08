@@ -1,5 +1,6 @@
-#include "clang_utility_functions.h"
 #include "packet_variable_census.h"
+
+#include "clang_utility_functions.h"
 
 using namespace clang;
 

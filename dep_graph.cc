@@ -1,6 +1,7 @@
 #include <iostream>
-#include "clang/AST/AST.h"
+
 #include "clang/Tooling/CommonOptionsParser.h"
+
 #include "expr_functions.h"
 #include "graph.h"
 #include "clang_utility_functions.h"

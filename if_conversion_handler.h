@@ -5,7 +5,10 @@
 #include <string>
 #include <vector>
 #include <set>
-#include "clang/AST/AST.h"
+
+#include "clang/AST/Stmt.h"
+#include "clang/AST/Expr.h"
+
 #include "unique_var_generator.h"
 
 class IfConversionHandler {

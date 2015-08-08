@@ -1,14 +1,18 @@
 #ifndef EXPR_FLATTENER_HANDLER_H_
 #define EXPR_FLATTENER_HANDLER_H_
 
+#include <ctime>
+#include <cstdlib>
+
 #include <utility>
 #include <string>
 #include <vector>
 #include <set>
-#include "clang/AST/AST.h"
+
+#include "clang/AST/Stmt.h"
+#include "clang/AST/Expr.h"
+
 #include "unique_var_generator.h"
-#include <ctime>
-#include <cstdlib>
 
 struct FlattenResult {
   std::string flat_expr;

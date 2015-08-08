@@ -3,8 +3,9 @@
 
 #include <string>
 #include <set>
-#include "clang/AST/AST.h"
-#include "clang/ASTMatchers/ASTMatchers.h"
+#include <map>
+
+#include "clang/AST/Expr.h"
 
 /// Utility functions that operate on clang::Expr ASTs
 /// For now, it analyzes a clang::Expr to determine the
@@ -15,7 +16,7 @@ class ExprFunctions {
   /// Get all variables (state and packet) referenced within expr
   static std::set<std::string> get_vars(const clang::Expr * expr);
 
-  /// Replace a specific DeclRefExpr* with a new string within expr
+  /// Replace a specific string with a new string within expr
   static std::string replace_vars(const clang::Expr * expr, const std::map<std::string, std::string> & repl_map);
 
 };

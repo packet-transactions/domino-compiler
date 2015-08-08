@@ -1,5 +1,10 @@
-#include <iostream>
 #include "clang_utility_functions.h"
+
+#include <iostream>
+
+#include "llvm/Support/raw_ostream.h"
+#include "clang/Basic/LangOptions.h"
+#include "clang/AST/PrettyPrinter.h"
 
 std::string clang_stmt_printer(const clang::Stmt * stmt) {
   // Required for pretty printing

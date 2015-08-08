@@ -1,14 +1,16 @@
 #include <set>
 #include <string>
 #include <iostream>
+
+#include "clang/Tooling/Refactoring.h"
+#include "clang/Tooling/CommonOptionsParser.h"
+
 #include "clang_utility_functions.h"
 #include "expr_functions.h"
 #include "single_pass.h"
 #include "packet_variable_census.h"
 #include "unique_var_generator.h"
 #include "pkt_func_transform.h"
-#include "clang/Tooling/Refactoring.h"
-#include "clang/Tooling/CommonOptionsParser.h"
 
 using namespace clang;
 using namespace clang::tooling;

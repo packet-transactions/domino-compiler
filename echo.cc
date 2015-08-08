@@ -1,6 +1,8 @@
 #include <iostream>
+
 #include "clang/AST/AST.h"
 #include "clang/Tooling/CommonOptionsParser.h"
+
 #include "single_pass.h"
 #include "clang_utility_functions.h"
 

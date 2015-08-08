@@ -5,8 +5,14 @@
 #include <string>
 #include <vector>
 #include <functional>
-#include "clang/AST/AST.h"
 
+#include "clang/AST/Decl.h"
+#include "clang/AST/Stmt.h"
+
+/// Order of parsing declarations (state, packets, state functions, packet functions)
+int get_order(const clang::Decl * decl);
+
+/// Convenience typedef for a function that transforms a function body
 typedef std::function<std::pair<std::string, std::vector<std::string>>(const clang::CompoundStmt *, const std::string & pkt_name)> FuncBodyTransform;
 
 /// Tranform a translation unit by modifying packet functions

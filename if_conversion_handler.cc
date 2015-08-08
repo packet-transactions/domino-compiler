@@ -1,6 +1,8 @@
-#include <iostream>
-#include "clang_utility_functions.h"
 #include "if_conversion_handler.h"
+
+#include <iostream>
+
+#include "clang_utility_functions.h"
 
 using namespace clang;
 

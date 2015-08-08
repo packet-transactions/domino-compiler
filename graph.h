@@ -11,7 +11,6 @@
 #include <tuple>
 #include <cassert>
 #include <stdexcept>
-#include "set_idioms.h"
 
 /// Adjacency list representation of graph
 /// Store both out and in edges for every node

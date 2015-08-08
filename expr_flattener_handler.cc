@@ -1,7 +1,8 @@
-#include <iostream>
-#include "clang/AST/Expr.h"
-#include "clang_utility_functions.h"
 #include "expr_flattener_handler.h"
+
+#include <iostream>
+
+#include "clang_utility_functions.h"
 
 using namespace clang;
 

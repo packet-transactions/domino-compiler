@@ -1,8 +1,10 @@
+#include "expr_functions.h"
+
 #include <algorithm>
 #include <iterator>
+
 #include "clang_utility_functions.h"
 #include "set_idioms.h"
-#include "expr_functions.h"
 
 using namespace clang;
 

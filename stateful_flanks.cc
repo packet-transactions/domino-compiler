@@ -2,8 +2,10 @@
 #include <set>
 #include <string>
 #include <utility>
+
 #include "clang/Tooling/Refactoring.h"
 #include "clang/Tooling/CommonOptionsParser.h"
+
 #include "clang_utility_functions.h"
 #include "packet_variable_census.h"
 #include "pkt_func_transform.h"

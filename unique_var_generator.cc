@@ -1,5 +1,6 @@
-#include <cassert>
 #include "unique_var_generator.h"
+
+#include <cassert>
 
 std::string UniqueVarGenerator::get_unique_var(const std::string & prefix) const {
   // Propose prefix_x,

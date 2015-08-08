@@ -1,10 +1,13 @@
+#include "if_conversion_handler.h"
+
 #include <iostream>
 #include <set>
 #include <string>
+
 #include "clang/Tooling/Refactoring.h"
 #include "clang/Tooling/CommonOptionsParser.h"
+
 #include "packet_variable_census.h"
-#include "if_conversion_handler.h"
 #include "pkt_func_transform.h"
 #include "single_pass.h"
 
