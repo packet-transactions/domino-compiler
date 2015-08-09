@@ -86,9 +86,6 @@ static bool scc_depends(const std::vector<const BinaryOperator*> & scc1, const s
 /// And condensed graph onces Stongly Connected Components
 /// have been condensed together
 std::pair<std::string, std::vector<std::string>> dep_graph_transform(const CompoundStmt * function_body, const std::string & pkt_name __attribute__ ((unused))) {
-  // Newly created packet temporaries
-  std::vector<std::string> new_decls = {};
-
   // Verify that it's in SSA
   // and append to a vector of const BinaryOperator *
   // in order of statement occurence.
@@ -156,15 +153,17 @@ std::pair<std::string, std::vector<std::string>> dep_graph_transform(const Compo
     }
   }
 
-  // std::cerr << condensed_graph << std::endl;
+  std::cerr << condensed_graph << std::endl;
 
   // Partition condensed graph using critical path scheduling
   const auto & partitioning = condensed_graph.critical_path_schedule();
 
-  // Print out partitioning, sorted by timestamp
+  // Output partition into valid C code, sorted by timestamp (as comments)
+  std::string ret_c_code = "\n";
   std::vector<std::pair<InstBlock, uint32_t>> sorted_pairs(partitioning.begin(), partitioning.end());
   std::sort(sorted_pairs.begin(), sorted_pairs.end(), [] (const auto & x, const auto & y) { return x.second < y.second; });
-  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&inst_block_printer] (const auto & pair) { std::cerr << "time : " << pair.second << std::endl << inst_block_printer(pair.first) << std::endl; });
+  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&ret_c_code, &inst_block_printer] (const auto & pair)
+                { ret_c_code += "/* time : " + std::to_string(pair.second) + " */\n" + inst_block_printer(pair.first) + "\n"; });
 
-  return std::make_pair(clang_stmt_printer(function_body), new_decls);
+  return std::make_pair(ret_c_code, std::vector<std::string>());
 }
