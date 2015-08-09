@@ -2,11 +2,8 @@
 # If convert
 ./if_converter $1 -- > /tmp/if_converted.c
 
-# Propagate expressions to their uses
-./expr_propagater /tmp/if_converted.c -- > /tmp/prop.c
-
 # Run stateful_flanks on /tmp/prop.c to add prologue and epilpogue for state vars
-./stateful_flanks /tmp/prop.c -- > /tmp/stateful_flanks.c
+./stateful_flanks /tmp/if_converted.c -- > /tmp/stateful_flanks.c
 
 # Run ssa on /tmp/stateful_flanks.c to generate Stateful Static Single Assignment
 ./ssa /tmp/stateful_flanks.c -- > /tmp/ssa.c

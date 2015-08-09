@@ -1,17 +1,12 @@
-#include <iostream>
-#include <string>
+#include "prog_transforms.h"
 
 #include "clang/AST/AST.h"
 
-#include "util.h"
 #include "clang_utility_functions.h"
-#include "pkt_func_transform.h"
-#include "single_pass.h"
 
 using namespace clang;
 
-/// The actual expression propagation
-static std::pair<std::string, std::vector<std::string>> expr_prop(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
+std::pair<std::string, std::vector<std::string>> expr_prop(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
   // Maintain map from variable name (packet or state variable)
   // to a string representing its expression, for expression propagation.
   std::map<std::string, std::string> var_to_expr;
@@ -43,19 +38,4 @@ static std::pair<std::string, std::vector<std::string>> expr_prop(const Compound
     }
   }
   return std::make_pair(transformed_body, std::vector<std::string>());
-}
-
-static std::string help_string(""
-"Expr propagation: replace y = b + c; a = y;"
-"with y=b+c; a=b+c; In some sense we are inverting"
-"the process of common subexpression elimination");
-
-int main(int argc, const char **argv) {
-  // Get string that needs to be parsed
-  const auto string_to_parse = file_to_str(get_file_name(argc, argv, help_string));
-
-  // Parse file once and output it after propagating expressions
-  std::cout << SinglePass<std::string>(string_to_parse, std::bind(pkt_func_transform, std::placeholders::_1, expr_prop)).output();
-
-  return 0;
 }

@@ -49,7 +49,10 @@ int main(int argc, const char **argv) {
 
     old_output = new_output;
   }
-  std::cout << new_output << std::endl;
+
+  // Parse file once and output it after propagating expressions
+  const auto expr_prop_output = SinglePass<std::string>(new_output, std::bind(pkt_func_transform, std::placeholders::_1, expr_prop)).output();
+  std::cout << expr_prop_output;
 
   return 0;
 }
