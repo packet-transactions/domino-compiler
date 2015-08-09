@@ -11,6 +11,8 @@
 
 #include "unique_var_generator.h"
 
+/// Rewrite if statements into ternary operators
+/// and recursively get rid of all branches.
 class IfConversionHandler {
  public:
   /// Constructor

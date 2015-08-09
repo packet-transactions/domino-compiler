@@ -12,14 +12,9 @@
 #include "single_pass.h"
 #include "temp_file.hh"
 
-static std::string help_string(""
-"This allows us to rewrite if statements into ternary operators"
-" and recursively get rid of all branches, from the innermost to"
-" the outermost ones.");
-
 int main(int argc, const char **argv) {
   // Get string that needs to be parsed
-  const auto string_to_parse = file_to_str(get_file_name(argc, argv, help_string));
+  const auto string_to_parse = file_to_str(get_file_name(argc, argv));
 
   // Parse file once and generate set of all packet variables
   const auto packet_var_set   = SinglePass<std::set<std::string>>(string_to_parse, packet_variable_census).output();
