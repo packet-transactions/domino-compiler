@@ -1,6 +1,6 @@
 set -v
 set -x
-
+set -e
 # Clean out all previous work
 rm -rf obj_files all_objs
 mkdir obj_files
@@ -16,12 +16,8 @@ for file in /usr/lib/llvm-3.5/lib/libclangAST.a \
             /usr/lib/llvm-3.5/lib/libclangFrontendTool.a \
             /usr/lib/llvm-3.5/lib/libclangLex.a\
             /usr/lib/llvm-3.5/lib/libclangParse.a \
-            /usr/lib/llvm-3.5/lib/libclangSema.a\
-            /usr/lib/llvm-3.5/lib/libclangASTMatchers.a\
-            /usr/lib/llvm-3.5/lib/libclangRewrite.a\
-            /usr/lib/llvm-3.5/lib/libclangRewriteFrontend.a\
-            /usr/lib/llvm-3.5/lib/libclangSerialization.a\
-            /usr/lib/llvm-3.5/lib/libclangTooling.a
+            /usr/lib/llvm-3.5/lib/libclangSema.a \
+            /usr/lib/llvm-3.5/lib/libclangSerialization.a
 do
   file_name=`echo $file | cut -d '/' -f 6`
   echo "file_name is $file_name"
@@ -40,12 +36,8 @@ for file in /usr/lib/llvm-3.5/lib/libclangAST.a \
             /usr/lib/llvm-3.5/lib/libclangFrontendTool.a \
             /usr/lib/llvm-3.5/lib/libclangLex.a\
             /usr/lib/llvm-3.5/lib/libclangParse.a \
-            /usr/lib/llvm-3.5/lib/libclangSema.a\
-            /usr/lib/llvm-3.5/lib/libclangASTMatchers.a\
-            /usr/lib/llvm-3.5/lib/libclangRewrite.a\
-            /usr/lib/llvm-3.5/lib/libclangRewriteFrontend.a\
-            /usr/lib/llvm-3.5/lib/libclangSerialization.a\
-            /usr/lib/llvm-3.5/lib/libclangTooling.a
+            /usr/lib/llvm-3.5/lib/libclangSema.a \
+            /usr/lib/llvm-3.5/lib/libclangSerialization.a
 do
   file_name=`echo $file | cut -d '/' -f 6`
   echo "file_name is $file_name"
