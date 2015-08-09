@@ -81,6 +81,12 @@ class Graph {
   /// Strongly Connected Components (Kosaraju's algorithm)
   auto scc() const;
 
+  /// Critical path scheduling (This is almost folklore now: https://en.wikipedia.org/wiki/Critical_path_method)
+  /// but goes back to Kelley and Walker (1959): http://dl.acm.org/citation.cfm?id=1460318
+  /// We also assume that all edges between nodes are of length 1 meaning
+  /// that each node needs to be scheduled exactly one time step after its predecessor.
+  std::map<NodeType, uint32_t> critical_path_schedule() const;
+
  private:
   /// Dfs properties, auxiliary data structure for Depth First Search
   struct DfsProps {
@@ -299,6 +305,44 @@ auto Graph<NodeType>::scc() const {
     sccs.emplace_back(visited_nodes);
   }
   return sccs;
+}
+
+template <class NodeType>
+std::map<NodeType, uint32_t> Graph<NodeType>::critical_path_schedule() const {
+  // TODO: Check that graph is acyclic
+  // Initialize list of nodes that need to be scheduled
+  std::vector<NodeType> to_schedule(node_set_.begin(), node_set_.end());
+
+  // The scheduler is a map from NodeType to timestamp telling us when each node of type NodeType is scheduled
+  std::map<NodeType, uint32_t> schedule;
+
+  // Keep scheduling the next node until you run out of nodes
+  while (not to_schedule.empty()) {
+    // Find next node
+    // i.e. a node all of whose predecessors have been scheduled
+    NodeType next_node;
+    for (const auto & candidate : to_schedule) {
+      if (std::accumulate(pred_map_.at(candidate).begin(), pred_map_.at(candidate).end(),
+                          true,
+                          [&to_schedule] (const auto & acc, const auto & x)
+                          { return acc and (std::find(to_schedule.begin(), to_schedule.end(), x) == to_schedule.end());})) {
+        next_node = candidate;
+        break;
+      }
+    }
+
+    // Find time for next_node, assume all edges are of length 1
+    const uint32_t next_node_time = std::accumulate(pred_map_.at(next_node).begin(),
+                                                    pred_map_.at(next_node).end(),
+                                                    static_cast<uint32_t>(0),
+                                                    [&schedule, &next_node, this] (const auto & acc, const auto & x)
+                                                    { return std::max(acc, schedule.at(x) + 1);});
+
+    // append to schedule, remove from to_schedule
+    schedule[next_node] = next_node_time;
+    to_schedule.erase(std::remove(to_schedule.begin(), to_schedule.end(), next_node));
+  }
+  return schedule;
 }
 
 #endif  // GRAPH_H_
