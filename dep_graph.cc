@@ -1,11 +1,10 @@
+#include "prog_transforms.h"
+
 #include <iostream>
 
-#include "util.h"
 #include "expr_functions.h"
 #include "graph.h"
 #include "clang_utility_functions.h"
-#include "pkt_func_transform.h"
-#include "single_pass.h"
 
 using namespace clang;
 
@@ -86,7 +85,7 @@ static bool scc_depends(const std::vector<const BinaryOperator*> & scc1, const s
 /// Print out dependency graph
 /// And condensed graph onces Stongly Connected Components
 /// have been condensed together
-static std::pair<std::string, std::vector<std::string>> dep_graph_transform(const CompoundStmt * function_body, const std::string & pkt_name __attribute__ ((unused))) {
+std::pair<std::string, std::vector<std::string>> dep_graph_transform(const CompoundStmt * function_body, const std::string & pkt_name __attribute__ ((unused))) {
   // Newly created packet temporaries
   std::vector<std::string> new_decls = {};
 
@@ -160,15 +159,4 @@ static std::pair<std::string, std::vector<std::string>> dep_graph_transform(cons
   std::cerr << condensed_graph << std::endl;
 
   return std::make_pair(clang_stmt_printer(function_body), new_decls);
-}
-
-static std::string help_string(""
-"Print out dependency graph of the program as a dot file");
-
-int main(int argc, const char ** argv) {
-  // Get string that needs to be parsed
-  const auto string_to_parse = file_to_str(get_file_name(argc, argv, help_string));
-
-  // Parse file once and output dot file
-  std::cout << SinglePass<std::string>(string_to_parse, std::bind(pkt_func_transform, std::placeholders::_1, dep_graph_transform)).output();
 }

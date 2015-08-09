@@ -61,7 +61,10 @@ int main(int argc, const char **argv) {
   // Parse file once and output it after Stateful SSA
   const auto packet_var_set_for_ssa = SinglePass<std::set<std::string>>(flank_output, packet_variable_census).output();
   const FuncBodyTransform ssa_converter = std::bind(ssa_transform, std::placeholders::_1, std::placeholders::_2, packet_var_set_for_ssa);
-  std::cout << SinglePass<std::string>(flank_output, std::bind(pkt_func_transform, std::placeholders::_1, ssa_converter)).output();
+  const auto ssa_output = SinglePass<std::string>(flank_output, std::bind(pkt_func_transform, std::placeholders::_1, ssa_converter)).output();
+
+  // Generate dependency graph after condensing strongly connected components
+  std::cout << SinglePass<std::string>(ssa_output, std::bind(pkt_func_transform, std::placeholders::_1, dep_graph_transform)).output();
 
   return 0;
 }

@@ -1,9 +1,6 @@
 #! /bin/bash
 # If convert
-./if_converter $1 -- > /tmp/if_converted.c
-
-# Run dep_graph on /tmp/ssa.c to generate final dependency graph after condensation
-./dep_graph /tmp/if_converted.c -- 2> /tmp/dep.dot
+./if_converter $1 -- 2> /tmp/dep.dot
 
 echo "Original: "
 cat $1

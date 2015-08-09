@@ -30,5 +30,11 @@ std::pair<std::string, std::vector<std::string>> stateful_flank_transform(const 
 // simple renaming. SSA is easier for us because we have no branches and no phi nodes.
 std::pair<std::string, std::vector<std::string>> ssa_transform(const clang::CompoundStmt * function_body, const std::string & pkt_name, const std::set<std::string> & packet_var_set);
 
+/// Print out condensed dependency graph
+/// once Stongly Connected Components
+/// have been condensed together.
+/// The resulting graph must be a DAG.
+std::pair<std::string, std::vector<std::string>> dep_graph_transform(const clang::CompoundStmt * function_body, const std::string & pkt_name __attribute__ ((unused)));
+
 #endif // PROG_TRANSFORMS_H_
 
