@@ -74,11 +74,14 @@ static std::string help_string(""
 "variables again");
 
 int main(int argc, const char **argv) {
+  // Get string that needs to be parsed
+  const auto string_to_parse = file_to_str(get_file_name(argc, argv, help_string));
+
   // Parse file once and generate set of all packet variables
-  const auto packet_var_set = SinglePass<std::set<std::string>>(get_file_name(argc, argv, help_string), packet_variable_census).output();
+  const auto packet_var_set = SinglePass<std::set<std::string>>(string_to_parse, packet_variable_census).output();
 
   // Parse file once and output stateful flanks (read prologues, write epilogues)
   const FuncBodyTransform stateful_flank_converter = std::bind(stateful_flank_transform, std::placeholders::_1, std::placeholders::_2, packet_var_set);
 
-  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), std::bind(pkt_func_transform, std::placeholders::_1, stateful_flank_converter)).output();
+  std::cout << SinglePass<std::string>(string_to_parse, std::bind(pkt_func_transform, std::placeholders::_1, stateful_flank_converter)).output();
 }

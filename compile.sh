@@ -2,23 +2,8 @@
 # If convert
 ./if_converter $1 -- > /tmp/if_converted.c
 
-# Iterate expr_flattener till a fixed point
-cp /tmp/if_converted.c /tmp/flat.c
-while [ 1 -lt 2 ] ;
-do
-  ./expr_flattener /tmp/flat.c -- > /tmp/flat_more.c
-  if diff /tmp/flat.c /tmp/flat_more.c;
-  then
-    mv /tmp/flat_more.c /tmp/flat.c
-    break;
-  else
-    mv /tmp/flat_more.c /tmp/flat.c
-    continue;
-  fi
-done
-
 # Propagate expressions to their uses
-./expr_propagater /tmp/flat.c -- > /tmp/prop.c
+./expr_propagater /tmp/if_converted.c -- > /tmp/prop.c
 
 # Run stateful_flanks on /tmp/prop.c to add prologue and epilpogue for state vars
 ./stateful_flanks /tmp/prop.c -- > /tmp/stateful_flanks.c

@@ -51,8 +51,11 @@ static std::string help_string(""
 "the process of common subexpression elimination");
 
 int main(int argc, const char **argv) {
+  // Get string that needs to be parsed
+  const auto string_to_parse = file_to_str(get_file_name(argc, argv, help_string));
+
   // Parse file once and output it after propagating expressions
-  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), std::bind(pkt_func_transform, std::placeholders::_1, expr_prop)).output();
+  std::cout << SinglePass<std::string>(string_to_parse, std::bind(pkt_func_transform, std::placeholders::_1, expr_prop)).output();
 
   return 0;
 }

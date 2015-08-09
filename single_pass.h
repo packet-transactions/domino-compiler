@@ -22,6 +22,7 @@
 #include "clang/Parse/ParseAST.h"
 #include "llvm/Support/Host.h"
 
+#include "temp_file.hh"
 #include "clang_utility_functions.h"
 
 /// Single pass over a translation unit.
@@ -31,9 +32,9 @@ class SinglePass {
  public:
   typedef std::function<OutputType(const clang::TranslationUnitDecl *)> Transformer;
 
-  /// Run a single pass over a given filename
-  /// Using the given Transformer object
-  SinglePass(const std::string & file_name,
+  /// Run a single pass on a given string,
+  /// by creating a TempFile to hold it.
+  SinglePass(const std::string & string_to_parse,
              const Transformer & t_transformer);
 
   /// Output from SinglePass
@@ -60,12 +61,21 @@ class SinglePass {
 
   /// Output Type
   OutputType output_ = {};
+
+  /// TempFile to hold string to be parsed
+  /// This is really a workaround for the fact that the
+  /// entry points into clang's libraries are files on disk
+  TempFile temp_file_;
 };
 
 template <class OutputType>
-SinglePass<OutputType>::SinglePass(const std::string & file_name,
+SinglePass<OutputType>::SinglePass(const std::string & string_to_parse,
                                    const Transformer & t_transformer)
-    : my_ast_consumer_(t_transformer) {
+    : my_ast_consumer_(t_transformer),
+      temp_file_("tmp", ".c") {
+  // Write string_to_parse into temp_file_
+  temp_file_.write(string_to_parse);
+
   // clang::CompilerInstance will hold the instance of the Clang compiler for us,
   // managing the various objects needed to run the compiler.
   clang::CompilerInstance TheCompInst;
@@ -87,7 +97,7 @@ SinglePass<OutputType>::SinglePass(const std::string & file_name,
   TheCompInst.createASTContext();
 
   // Set the main file handled by the source manager to the input file.
-  const clang::FileEntry *FileIn = FileMgr.getFile(file_name.c_str());
+  const clang::FileEntry *FileIn = FileMgr.getFile(temp_file_.name().c_str());
   SourceMgr.setMainFileID(
       SourceMgr.createFileID(FileIn, clang::SourceLocation(), clang::SrcMgr::C_User));
   TheCompInst.getDiagnosticClient().BeginSourceFile(

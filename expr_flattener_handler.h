@@ -20,6 +20,8 @@ struct FlattenResult {
   std::vector<std::string> new_decls;
 };
 
+/// Flatten expressions using temporaries so that every
+/// statement is of the form x = y op z, where x, y, z are atoms
 class ExprFlattenerHandler {
  public:
   /// Constructor

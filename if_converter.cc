@@ -1,5 +1,6 @@
 #include "if_conversion_handler.h"
 #include "prog_transforms.h"
+#include "expr_flattener_handler.h"
 
 #include <iostream>
 #include <set>
@@ -17,17 +18,38 @@ static std::string help_string(""
 " the outermost ones.");
 
 int main(int argc, const char **argv) {
+  // Get string that needs to be parsed
+  const auto string_to_parse = file_to_str(get_file_name(argc, argv, help_string));
+
   // Parse file once and generate set of all packet variables
-  const auto packet_var_set   = SinglePass<std::set<std::string>>(get_file_name(argc, argv, help_string), packet_variable_census).output();
+  const auto packet_var_set   = SinglePass<std::set<std::string>>(string_to_parse, packet_variable_census).output();
 
   // Parse file once and output if converted version
   IfConversionHandler if_conversion_handler(packet_var_set);
   const FuncBodyTransform if_converter = std::bind(& IfConversionHandler::transform, if_conversion_handler, std::placeholders::_1, std::placeholders::_2);
-  TempFile tmp1("if_convert", ".c");
-  tmp1.write(SinglePass<std::string>(get_file_name(argc, argv, help_string), std::bind(pkt_func_transform, std::placeholders::_1, if_converter)).output());
+  const auto if_convert_output = SinglePass<std::string>(string_to_parse, std::bind(pkt_func_transform, std::placeholders::_1, if_converter)).output();
 
   // Parse file once again for strength reduction
-  std::cout << SinglePass<std::string>(tmp1.name(), std::bind(pkt_func_transform, std::placeholders::_1, strength_reducer)).output();
+  const auto strength_reduce_output = SinglePass<std::string>(if_convert_output, std::bind(pkt_func_transform, std::placeholders::_1, strength_reducer)).output();
+
+  // Expression flattening, recurse to fixed point
+  std::string old_output = strength_reduce_output;
+  std::string new_output = "";
+  while (true) {
+    // Parse file once and generate set of all packet variables
+    const auto packet_var_set = SinglePass<std::set<std::string>>(old_output, packet_variable_census).output();
+
+    // Parse file once and output it after flattening
+    ExprFlattenerHandler expr_flattener_handler(packet_var_set);
+    const FuncBodyTransform expr_flattener = std::bind(& ExprFlattenerHandler::transform, expr_flattener_handler, std::placeholders::_1, std::placeholders::_2);
+    new_output = SinglePass<std::string>(old_output, std::bind(pkt_func_transform, std::placeholders::_1, expr_flattener)).output();
+
+    // Fixed point
+    if (new_output == old_output) break;
+
+    old_output = new_output;
+  }
+  std::cout << new_output << std::endl;
 
   return 0;
 }
