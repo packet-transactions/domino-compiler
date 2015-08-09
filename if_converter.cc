@@ -52,7 +52,11 @@ int main(int argc, const char **argv) {
 
   // Parse file once and output it after propagating expressions
   const auto expr_prop_output = SinglePass<std::string>(new_output, std::bind(pkt_func_transform, std::placeholders::_1, expr_prop)).output();
-  std::cout << expr_prop_output;
+
+  // Parse file once and output it after adding stateful flanks
+  const auto packet_var_set_for_flanks = SinglePass<std::set<std::string>>(expr_prop_output, packet_variable_census).output();
+  const FuncBodyTransform stateful_flank_converter = std::bind(stateful_flank_transform, std::placeholders::_1, std::placeholders::_2, packet_var_set_for_flanks);
+  std::cout << SinglePass<std::string>(expr_prop_output, std::bind(pkt_func_transform, std::placeholders::_1, stateful_flank_converter)).output();
 
   return 0;
 }
