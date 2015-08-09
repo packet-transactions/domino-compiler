@@ -82,10 +82,10 @@ static bool scc_depends(const std::vector<const BinaryOperator*> & scc1, const s
   return false;
 }
 
-/// Print out dependency graph
-/// And condensed graph onces Stongly Connected Components
-/// have been condensed together
-std::pair<std::string, std::vector<std::string>> dep_graph_transform(const CompoundStmt * function_body, const std::string & pkt_name __attribute__ ((unused))) {
+/// Print out dependency graph once Stongly Connected Components
+/// have been condensed together to form a DAG.
+/// Also partition the code based on the dependency graph
+std::pair<std::string, std::vector<std::string>> partitioning_transform(const CompoundStmt * function_body, const std::string & pkt_name __attribute__ ((unused))) {
   // Verify that it's in SSA
   // and append to a vector of const BinaryOperator *
   // in order of statement occurence.
