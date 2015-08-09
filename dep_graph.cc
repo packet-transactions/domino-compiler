@@ -156,7 +156,15 @@ std::pair<std::string, std::vector<std::string>> dep_graph_transform(const Compo
     }
   }
 
-  std::cerr << condensed_graph << std::endl;
+  // std::cerr << condensed_graph << std::endl;
+
+  // Partition condensed graph using critical path scheduling
+  const auto & partitioning = condensed_graph.critical_path_schedule();
+
+  // Print out partitioning, sorted by timestamp
+  std::vector<std::pair<InstBlock, uint32_t>> sorted_pairs(partitioning.begin(), partitioning.end());
+  std::sort(sorted_pairs.begin(), sorted_pairs.end(), [] (const auto & x, const auto & y) { return x.second < y.second; });
+  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&inst_block_printer] (const auto & pair) { std::cerr << "time : " << pair.second << std::endl << inst_block_printer(pair.first) << std::endl; });
 
   return std::make_pair(clang_stmt_printer(function_body), new_decls);
 }
