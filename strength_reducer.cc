@@ -1,17 +1,14 @@
-#include <iostream>
-#include <string>
+#include "prog_transforms.h"
 
-#include "clang/AST/AST.h"
+#include "clang/AST/Expr.h"
 
-#include "util.h"
 #include "clang_utility_functions.h"
-#include "pkt_func_transform.h"
-#include "single_pass.h"
 
 using namespace clang;
 
-/// The actual strength reduction
-static std::pair<std::string, std::vector<std::string>> strength_reducer(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
+/// Simple strength reduction: rewrite if (1) ? x : y to x.
+/// Simplify 1 && x to x");
+std::pair<std::string, std::vector<std::string>> strength_reducer(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
   // Rewrite function body
   assert(function_body);
   std::string transformed_body = "";
@@ -71,15 +68,4 @@ static std::pair<std::string, std::vector<std::string>> strength_reducer(const C
     }
   }
   return std::make_pair(transformed_body, std::vector<std::string>());
-}
-
-static std::string help_string(""
-"Simple strength reduction: rewrite if (1) ? x : y to x."
-"Simplify 1 && x to x");
-
-int main(int argc, const char **argv) {
-  // Parse file once and output it after simple strength reduction
-  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), std::bind(pkt_func_transform, std::placeholders::_1, strength_reducer)).output();
-
-  return 0;
 }

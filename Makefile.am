@@ -3,13 +3,12 @@ AM_CPPFLAGS = -isystem /usr/lib/llvm-3.5/include/
 AM_LDFLAGS = $(LLVM_LDFLAGS)
 LDADD = libclangall.a -lLLVMOption  -lLLVMMCParser -lLLVMBitReader  -lLLVMMC -lLLVMSupport -lz -lpthread -ltinfo -ldl
 
-common_source = clang_utility_functions.cc  expr_functions.cc clang_utility_functions.h expr_functions.h packet_variable_census.cc packet_variable_census.h unique_var_generator.h unique_var_generator.cc single_pass.h pkt_func_transform.h pkt_func_transform.cc graph.h cstr_array.h util.h file_descriptor.hh file_descriptor.cc temp_file.hh temp_file.cc exception.hh
+common_source = clang_utility_functions.cc  expr_functions.cc clang_utility_functions.h expr_functions.h packet_variable_census.cc packet_variable_census.h unique_var_generator.h unique_var_generator.cc single_pass.h pkt_func_transform.h pkt_func_transform.cc graph.h cstr_array.h util.h file_descriptor.hh file_descriptor.cc temp_file.hh temp_file.cc exception.hh prog_transforms.h strength_reducer.cc
 
-bin_PROGRAMS = if_converter expr_flattener strength_reducer expr_propagater echo stateful_flanks ssa dep_graph rewritersample
+bin_PROGRAMS = if_converter expr_flattener expr_propagater echo stateful_flanks ssa dep_graph rewritersample
 
 if_converter_SOURCES = $(common_source) if_converter.cc if_conversion_handler.cc if_conversion_handler.h
 expr_flattener_SOURCES = $(common_source) expr_flattener.cc expr_flattener_handler.cc expr_flattener_handler.h
-strength_reducer_SOURCES = $(common_source) strength_reducer.cc
 expr_propagater_SOURCES = $(common_source) expr_propagater.cc
 echo_SOURCES = $(common_source) echo.cc
 stateful_flanks_SOURCES = $(common_source) stateful_flanks.cc

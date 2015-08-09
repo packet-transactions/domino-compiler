@@ -2,11 +2,8 @@
 # If convert
 ./if_converter $1 -- > /tmp/if_converted.c
 
-# Strength reduction
-./strength_reducer /tmp/if_converted.c -- > /tmp/strength_reduced.c
-
 # Iterate expr_flattener till a fixed point
-cp /tmp/strength_reduced.c /tmp/flat.c
+cp /tmp/if_converted.c /tmp/flat.c
 while [ 1 -lt 2 ] ;
 do
   ./expr_flattener /tmp/flat.c -- > /tmp/flat_more.c
