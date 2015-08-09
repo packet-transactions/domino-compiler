@@ -19,8 +19,11 @@ static std::pair<std::string, std::vector<std::string>> ssa_transform(const Comp
   // Create unique variable generator
   UniqueVarGenerator unique_var_gen(packet_var_set);
 
-  // All indices where every packet variable is (re)defined
-  std::map<std::string, std::vector<int>> redef_locs;
+  // All indices where every packet variable is defined.
+  // We choosen to rename ALL definitions of a packet variable
+  // rather than just the redefinitions because there might
+  // be reads preceding the first definition and it's correct to rename all definitions.
+  std::map<std::string, std::vector<int>> def_locs;
   int index = 0;
   for (const auto * child : function_body->children()) {
     assert(isa<BinaryOperator>(child));
@@ -30,10 +33,10 @@ static std::pair<std::string, std::vector<std::string>> ssa_transform(const Comp
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
 
     if (isa<MemberExpr>(lhs)) {
-      if (redef_locs.find(clang_stmt_printer(lhs)) == redef_locs.end()) {
-        redef_locs[clang_stmt_printer(lhs)] = {};
+      if (def_locs.find(clang_stmt_printer(lhs)) == def_locs.end()) {
+        def_locs[clang_stmt_printer(lhs)] = {index};
       } else {
-        redef_locs.at(clang_stmt_printer(lhs)).emplace_back(index);
+        def_locs.at(clang_stmt_printer(lhs)).emplace_back(index);
       }
     }
     index++;
@@ -56,8 +59,8 @@ static std::pair<std::string, std::vector<std::string>> ssa_transform(const Comp
     if (isa<MemberExpr>(lhs)) {
       // Is this a redefinition?
       const std::string lhs_var = clang_stmt_printer(lhs);
-      assert(redef_locs.find(lhs_var) != redef_locs.end());
-      const bool is_redef = std::find(redef_locs.at(lhs_var).begin(), redef_locs.at(lhs_var).end(), index) != redef_locs.at(lhs_var).end();
+      assert(def_locs.find(lhs_var) != def_locs.end());
+      const bool is_redef = std::find(def_locs.at(lhs_var).begin(), def_locs.at(lhs_var).end(), index) != def_locs.at(lhs_var).end();
 
       // If so, modify replacements
       if (is_redef) {
