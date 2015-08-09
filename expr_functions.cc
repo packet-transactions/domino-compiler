@@ -53,7 +53,11 @@ std::string ExprFunctions::replace_vars(const clang::Expr * expr,
   } else if (isa<CastExpr>(expr)) {
     return replace_vars(dyn_cast<CastExpr>(expr)->getSubExpr(), repl_map);
   } else if (isa<UnaryOperator>(expr)) {
-    return replace_vars(dyn_cast<UnaryOperator>(expr)->getSubExpr(), repl_map);
+    const auto * un_op = dyn_cast<UnaryOperator>(expr);
+    assert(un_op->isArithmeticOp());
+    const auto opcode_str = std::string(UnaryOperator::getOpcodeStr(un_op->getOpcode()));
+    assert(opcode_str == "!");
+    return opcode_str + replace_vars(un_op->getSubExpr(), repl_map);
   } else if (isa<ConditionalOperator>(expr)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(expr);
 
