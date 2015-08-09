@@ -1,6 +1,8 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 
+#include <string>
+#include <iostream>
 #include <cstdlib>
 
 std::string get_file_name(const int argc, const char ** argv, const std::string & help_string) {

@@ -30,3 +30,4 @@ echo
 stateful_flanks
 ssa
 dep_graph
+rewritersample
