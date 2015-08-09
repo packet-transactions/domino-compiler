@@ -90,9 +90,9 @@ static std::string help_string(""
 
 int main(int argc, const char **argv) {
   // Generate the set of all packet variables by parsing file once
-  const auto packet_var_set = SinglePass<std::set<std::string>>(get_file_name(argc, argv, help_string), help_string, packet_variable_census).output();
+  const auto packet_var_set = SinglePass<std::set<std::string>>(get_file_name(argc, argv, help_string), packet_variable_census).output();
 
   // Parse file once and output ssa form
   const FuncBodyTransform ssa_converter = std::bind(ssa_transform, std::placeholders::_1, std::placeholders::_2, packet_var_set);
-  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), help_string, std::bind(pkt_func_transform, std::placeholders::_1, ssa_converter)).output();
+  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), std::bind(pkt_func_transform, std::placeholders::_1, ssa_converter)).output();
 }

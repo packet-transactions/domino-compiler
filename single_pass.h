@@ -1,89 +1,103 @@
 #ifndef SINGLE_PASS_H_
 #define SINGLE_PASS_H_
 
-#include <functional>
+// Most code here is based on http://eli.thegreenplace.net/2012/06/08/basic-source-to-source-transformation-with-clang
 
-#include "clang/Tooling/CommonOptionsParser.h"
-#include "clang/Tooling/Refactoring.h"
-#include "clang/AST/Decl.h"
-#include "clang/ASTMatchers/ASTMatchers.h"
-#include "clang/ASTMatchers/ASTMatchFinder.h"
-#include "cstr_array.h"
+#include <functional>
+#include <cstdio>
+#include <memory>
+#include <string>
+#include <sstream>
+#include <iostream>
+
+#include "clang/AST/ASTConsumer.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/FileManager.h"
+#include "clang/Basic/SourceManager.h"
+#include "clang/Basic/TargetOptions.h"
+#include "clang/Basic/TargetInfo.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Lex/Preprocessor.h"
+#include "clang/Parse/ParseAST.h"
+#include "llvm/Support/Host.h"
+
+#include "clang_utility_functions.h"
 
 /// Single pass over a translation unit.
 /// By default, just parse the translation unit, and print it out as such.
-/// If you are interested in rewriting specific parts of it, specify those alone.
 template <class OutputType>
 class SinglePass {
  public:
+  typedef std::function<OutputType(const clang::TranslationUnitDecl *)> Transformer;
+
   /// Run a single pass over a given filename
-  /// Using the given transformer object
+  /// Using the given Transformer object
   SinglePass(const std::string & file_name,
-             const std::string & help_msg,
-             const std::function<OutputType(const clang::TranslationUnitDecl *)> & t_transformer);
+             const Transformer & t_transformer);
 
   /// Output from SinglePass
   auto output() const { return output_; }
  private:
-  /// OptionCategory from LLVM, used for help messages,
-  /// We have it only because the CommonOptionsParser constructor needs it
-  llvm::cl::OptionCategory option_category_;
+  class MyASTConsumer : public clang::ASTConsumer {
+    public:
+    MyASTConsumer(const Transformer & t_transformer) : transformer_(t_transformer) {};
 
-  /// CstrArray to turn vector of strings into const char **
-  CstrArray cstr_array_;
-
-  /// Options to be passed to clang parser
-  clang::tooling::CommonOptionsParser options_parser_;
-
-  /// Refactoring tool
-  clang::tooling::RefactoringTool refactoring_tool_;
-
-  /// Inherit from MatchCallback to call transformer
-  class TransformHandler : public clang::ast_matchers::MatchFinder::MatchCallback {
-   public:
-    TransformHandler(const std::function<OutputType(const clang::TranslationUnitDecl *)> & t_transformer) : transformer_(t_transformer) {}
-    virtual void run(const clang::ast_matchers::MatchFinder::MatchResult & t_result) override;
+    /// Override the method that gets called for the translation unit
+    virtual void HandleTranslationUnit(clang::ASTContext & context) override {
+      const auto * tu_decl = context.getTranslationUnitDecl();
+      assert(llvm::isa<clang::TranslationUnitDecl>(tu_decl));
+      output_ = transformer_(tu_decl);
+    }
     auto output() const { return output_; }
-   private:
-    OutputType output_ = {};
-    /// transformer function
-    std::function<OutputType(const clang::TranslationUnitDecl *)> transformer_;
+    private:
+      OutputType output_ = {};
+      /// Transformer function
+      Transformer transformer_;
   };
-  TransformHandler transform_handler_;
+  /// Instantiate MyASTConsumer using supplied transformer
+  MyASTConsumer my_ast_consumer_;
 
-  /// Find appropriate AST fragment, in our case the entire Translation Unit
-  clang::ast_matchers::MatchFinder find_ast_fragment_ = {};
-
-  /// Output from parsing
+  /// Output Type
   OutputType output_ = {};
 };
 
 template <class OutputType>
 SinglePass<OutputType>::SinglePass(const std::string & file_name,
-                                   const std::string & help_msg,
-                                   const std::function<OutputType(const clang::TranslationUnitDecl *)> & t_transformer)
-    : option_category_(help_msg.c_str()),
-      cstr_array_({"foo", file_name, "--"}),
-      options_parser_(cstr_array_.size(), cstr_array_.get(), option_category_),
-      refactoring_tool_(options_parser_.getCompilations(), options_parser_.getSourcePathList()),
-      transform_handler_(t_transformer) {
-  find_ast_fragment_.addMatcher(clang::ast_matchers::decl().bind("decl"), & transform_handler_);
-  refactoring_tool_.run(clang::tooling::newFrontendActionFactory(& find_ast_fragment_).get());
-  output_ = transform_handler_.output();
-}
+                                   const Transformer & t_transformer)
+    : my_ast_consumer_(t_transformer) {
+  // clang::CompilerInstance will hold the instance of the Clang compiler for us,
+  // managing the various objects needed to run the compiler.
+  clang::CompilerInstance TheCompInst;
+  TheCompInst.createDiagnostics();
+  TheCompInst.getLangOpts().CPlusPlus = 0;
 
-template <class OutputType>
-void SinglePass<OutputType>::TransformHandler::run(const clang::ast_matchers::MatchFinder::MatchResult & t_result) {
-  const auto * decl = t_result.Nodes.getNodeAs<clang::Decl>("decl");
-  assert(decl != nullptr);
+  // Initialize target info with the default triple for our platform.
+  auto TO = std::make_shared<clang::TargetOptions>();
+  TO->Triple = llvm::sys::getDefaultTargetTriple();
+  clang::TargetInfo *TI =
+      clang::TargetInfo::CreateTargetInfo(TheCompInst.getDiagnostics(), TO);
+  TheCompInst.setTarget(TI);
 
-  if (not llvm::isa<clang::TranslationUnitDecl>(decl)) return;
+  TheCompInst.createFileManager();
+  clang::FileManager &FileMgr = TheCompInst.getFileManager();
+  TheCompInst.createSourceManager(FileMgr);
+  clang::SourceManager &SourceMgr = TheCompInst.getSourceManager();
+  TheCompInst.createPreprocessor(clang::TU_Module);
+  TheCompInst.createASTContext();
 
-  // Handle only translation unit decls
-  assert(llvm::isa<clang::TranslationUnitDecl>(decl));
+  // Set the main file handled by the source manager to the input file.
+  const clang::FileEntry *FileIn = FileMgr.getFile(file_name.c_str());
+  SourceMgr.setMainFileID(
+      SourceMgr.createFileID(FileIn, clang::SourceLocation(), clang::SrcMgr::C_User));
+  TheCompInst.getDiagnosticClient().BeginSourceFile(
+      TheCompInst.getLangOpts(), &TheCompInst.getPreprocessor());
 
-  // Carry out transformation
-  output_ = transformer_(llvm::dyn_cast<clang::TranslationUnitDecl>(decl));
+  // Parse the file to AST, registering my_ast_consumer_ as the AST consumer.
+  ParseAST(TheCompInst.getPreprocessor(), &my_ast_consumer_,
+           TheCompInst.getASTContext());
+
+  output_ = my_ast_consumer_.output();
 }
 
 #endif  // SINGLE_PASS_H_

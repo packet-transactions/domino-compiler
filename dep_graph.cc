@@ -167,5 +167,5 @@ static std::string help_string(""
 
 int main(int argc, const char ** argv) {
   // Parse file once and output dot file
-  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), help_string, std::bind(pkt_func_transform, std::placeholders::_1, dep_graph_transform)).output();
+  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), std::bind(pkt_func_transform, std::placeholders::_1, dep_graph_transform)).output();
 }

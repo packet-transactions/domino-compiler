@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "util.h"
-#include "new_single_pass.h"
+#include "single_pass.h"
 #include "clang_utility_functions.h"
 
 static std::string help_string(""
@@ -10,5 +10,5 @@ static std::string help_string(""
 
 int main(int argc, const char **argv) {
   // Parse file once and output it as such. This is just a test program
-  std::cout << NewSinglePass<std::string>(get_file_name(argc, argv, help_string), help_string, clang_decl_printer).output();
+  std::cout << SinglePass<std::string>(get_file_name(argc, argv, help_string), clang_decl_printer).output();
 }
