@@ -1,5 +1,5 @@
-#ifndef PROG_TRANSFORMATIONS_H_
-#define PROG_TRANSFORMATIONS_H_
+#ifndef PROG_TRANSFORMS_H_
+#define PROG_TRANSFORMS_H_
 
 #include <set>
 #include <vector>
@@ -24,4 +24,11 @@ std::pair<std::string, std::vector<std::string>> expr_prop(const clang::Compound
 /// variables again
 std::pair<std::string, std::vector<std::string>> stateful_flank_transform(const clang::CompoundStmt * function_body, const std::string & pkt_name, const std::set<std::string> & packet_var_set);
 
-#endif  // PROG_TRANSFORMATIONS_H_
+// Static Single-Assignment form for function body, excluding the final write
+// in the write epilogue to state variables. This guarantees that each packet
+// variable is assigned exactly once. If it is assigned more than once, perform
+// simple renaming. SSA is easier for us because we have no branches and no phi nodes.
+std::pair<std::string, std::vector<std::string>> ssa_transform(const clang::CompoundStmt * function_body, const std::string & pkt_name, const std::set<std::string> & packet_var_set);
+
+#endif // PROG_TRANSFORMS_H_
+

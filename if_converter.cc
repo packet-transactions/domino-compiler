@@ -56,7 +56,12 @@ int main(int argc, const char **argv) {
   // Parse file once and output it after adding stateful flanks
   const auto packet_var_set_for_flanks = SinglePass<std::set<std::string>>(expr_prop_output, packet_variable_census).output();
   const FuncBodyTransform stateful_flank_converter = std::bind(stateful_flank_transform, std::placeholders::_1, std::placeholders::_2, packet_var_set_for_flanks);
-  std::cout << SinglePass<std::string>(expr_prop_output, std::bind(pkt_func_transform, std::placeholders::_1, stateful_flank_converter)).output();
+  const auto flank_output = SinglePass<std::string>(expr_prop_output, std::bind(pkt_func_transform, std::placeholders::_1, stateful_flank_converter)).output();
+
+  // Parse file once and output it after Stateful SSA
+  const auto packet_var_set_for_ssa = SinglePass<std::set<std::string>>(flank_output, packet_variable_census).output();
+  const FuncBodyTransform ssa_converter = std::bind(ssa_transform, std::placeholders::_1, std::placeholders::_2, packet_var_set_for_ssa);
+  std::cout << SinglePass<std::string>(flank_output, std::bind(pkt_func_transform, std::placeholders::_1, ssa_converter)).output();
 
   return 0;
 }
