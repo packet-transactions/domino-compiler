@@ -134,14 +134,14 @@ std::pair<std::string, std::vector<std::string>> dep_graph_transform(const Compo
   }
 
   // Graph condensation: Add SCCs as nodes
-  Graph<std::vector<const BinaryOperator*>> condensed_graph(
-      [] (const auto & x)
-      { std::string ret = "";
-        for (auto & op : x) {
-          ret += clang_stmt_printer(op) + ";\n";
-        }
-        return ret;
-      });
+  typedef std::vector<const BinaryOperator *> InstBlock;
+  const auto & inst_block_printer = [] (const auto & x)
+                                    { std::string ret = "";
+                                      for (auto & op : x) ret += clang_stmt_printer(op) + ";\n";
+                                      return ret;
+                                    };
+
+  Graph<InstBlock> condensed_graph(inst_block_printer);
 
   for (uint32_t i = 0; i < sccs.size(); i++) {
     condensed_graph.add_node(sccs.at(i));
