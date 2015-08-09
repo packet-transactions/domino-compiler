@@ -125,7 +125,7 @@ static std::pair<std::string, std::vector<std::string>> dep_graph_transform(cons
       }
     }
   }
-  std::cerr << dep_graph << std::endl;
+  // std::cerr << dep_graph << std::endl;
 
   // Extract sccs
   auto sccs = dep_graph.scc();
