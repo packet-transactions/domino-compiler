@@ -16,7 +16,7 @@
 class IfConversionHandler {
  public:
   /// Constructor
-  IfConversionHandler(const std::set<std::string> & init_set) : unique_var_gen_(init_set) {}
+  IfConversionHandler(const std::set<std::string> & init_set) : unique_identifiers_(init_set) {}
 
   /// Transform function
   std::pair<std::string, std::vector<std::string>> transform(const clang::Stmt * function_body, const std::string & pkt_name) const;
@@ -36,8 +36,8 @@ class IfConversionHandler {
   std::string if_convert_atomic_stmt(const clang::BinaryOperator * stmt,
                                      const std::string & predicate) const;
 
-  /// Unique variable generator
-  UniqueVarGenerator unique_var_gen_;
+  /// Unique identifier generator
+  UniqueIdentifiers unique_identifiers_;
 };
 
 #endif  // IF_CONVERSION_HANDLER_H_

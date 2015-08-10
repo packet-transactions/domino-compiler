@@ -14,8 +14,8 @@ std::pair<std::string, std::vector<std::string>> ssa_transform(const CompoundStm
   // Vector of newly created packet temporaries
   std::vector<std::string> new_decls = {};
 
-  // Create unique variable generator
-  UniqueVarGenerator unique_var_gen(id_set);
+  // Create unique identifier set
+  UniqueIdentifiers unique_identifiers(id_set);
 
   // All indices where every packet variable is defined.
   // We choosen to rename ALL definitions of a packet variable
@@ -63,7 +63,7 @@ std::pair<std::string, std::vector<std::string>> ssa_transform(const CompoundStm
       // If so, modify replacements
       if (is_redef) {
         const auto var_type    = dyn_cast<MemberExpr>(lhs)->getMemberDecl()->getType().getAsString();
-        const auto new_tmp_var = unique_var_gen.get_unique_var(dyn_cast<MemberExpr>(lhs)->getMemberDecl()->getNameAsString());
+        const auto new_tmp_var = unique_identifiers.get_unique_identifier(dyn_cast<MemberExpr>(lhs)->getMemberDecl()->getNameAsString());
         const auto var_decl    = var_type + " " + new_tmp_var + ";";
         new_decls.emplace_back(var_decl);
         replacements[lhs_var] =  pkt_name + "." + new_tmp_var;

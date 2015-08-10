@@ -25,7 +25,7 @@ struct FlattenResult {
 class ExprFlattenerHandler {
  public:
   /// Constructor
-  ExprFlattenerHandler(const std::set<std::string> & t_var_set) : unique_var_gen_(t_var_set) {}
+  ExprFlattenerHandler(const std::set<std::string> & t_id_set) : unique_identifiers_(t_id_set) {}
 
   /// Transform function
   std::pair<std::string, std::vector<std::string>> transform(const clang::Stmt * function_body, const std::string & pkt_name) const;
@@ -60,8 +60,8 @@ class ExprFlattenerHandler {
   /// on the left and right halves
   FlattenResult flatten_bin_op(const clang::BinaryOperator * bin_op, const std::string & pkt_name) const;
 
-  /// Unique variable generator
-  UniqueVarGenerator unique_var_gen_;
+  /// Unique identifiers
+  UniqueIdentifiers unique_identifiers_;
 };
 
 #endif  // EXPR_FLATTENER_HANDLER_H_

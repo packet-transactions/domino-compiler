@@ -175,8 +175,8 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl, const st
   // Storage for returned string
   std::string ret;
 
-  // Create unique variable generator
-  UniqueVarGenerator unique_var_gen(id_set);
+  // Create unique identifier generator
+  UniqueIdentifiers unique_identifiers(id_set);
 
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     assert(child_decl);
@@ -200,7 +200,7 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl, const st
       // Create functions with new bodies
       for (const auto & body_pair : func_bodies) {
         ret += function_decl->getReturnType().getAsString() + " " +
-               unique_var_gen.get_unique_var(function_decl->getNameInfo().getName().getAsString()) +
+               unique_identifiers.get_unique_identifier(function_decl->getNameInfo().getName().getAsString()) +
                "( " + pkt_type + " " +  pkt_name + ") { " +
                body_pair.second + "}\n";
       }

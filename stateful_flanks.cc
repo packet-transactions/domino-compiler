@@ -15,8 +15,8 @@ std::pair<std::string, std::vector<std::string>> stateful_flank_transform(const 
   // Vector of newly created packet temporaries
   std::vector<std::string> new_decls = {};
 
-  // Create unique variable generator
-  UniqueVarGenerator unique_var_gen(id_set);
+  // Create unique identifiers object
+  UniqueIdentifiers unique_identifiers(id_set);
 
   // 1. Identify all stateful variables in the program.
   // 2. Create a read prologue for all of them: each state variable is read into a packet temporary.
@@ -38,7 +38,7 @@ std::pair<std::string, std::vector<std::string>> stateful_flank_transform(const 
       const std::string  state_var = clang_stmt_printer(lhs);
       if (state_var_table.find(state_var) == state_var_table.end()) {
         const auto var_type    = dyn_cast<DeclRefExpr>(lhs)->getDecl()->getType().getAsString();
-        const auto new_tmp_var = unique_var_gen.get_unique_var(state_var);
+        const auto new_tmp_var = unique_identifiers.get_unique_identifier(state_var);
         const auto var_decl    = var_type + " " + new_tmp_var + ";";
         new_decls.emplace_back(var_decl);
 

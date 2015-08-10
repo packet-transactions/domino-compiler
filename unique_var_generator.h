@@ -1,25 +1,25 @@
-#ifndef UNIQUE_VAR_GENERATOR_H_
-#define UNIQUE_VAR_GENERATOR_H_
+#ifndef UNIQUE_IDENTIFIERS_H_
+#define UNIQUE_IDENTIFIERS_H_
 
 #include <map>
 #include <set>
 #include <string>
 
-class UniqueVarGenerator {
+class UniqueIdentifiers {
  public:
   /// Constructor
-  UniqueVarGenerator(const std::set<std::string> & initial_set) : var_set_(initial_set) {}
+  UniqueIdentifiers(const std::set<std::string> & initial_set) : id_set_(initial_set) {}
 
-  /// Get unique variable
-  std::string get_unique_var(const std::string & prefix = "tmp") const;
+  /// Get unique identifier
+  std::string get_unique_identifier(const std::string & prefix = "tmp") const;
 
  private:
-  /// Set of packet variables names,
+  /// Set of identifier names
   /// passed to the function in constructor
-  mutable std::set<std::string> var_set_;
+  mutable std::set<std::string> id_set_;
 
-  /// Last unique variable suffix handed out for every prefix
-  mutable std::map<std::string, int>  var_suffix_ = {};
+  /// Last unique id suffix handed out for every prefix
+  mutable std::map<std::string, int>  id_suffix_ = {};
 };
 
-#endif  // UNIQUE_VAR_GENERATOR_H_
+#endif  // UNIQUE_IDENTIFIERS_H_

@@ -35,7 +35,7 @@ void IfConversionHandler::if_convert(std::string & current_stream,
 
     // Create temporary variable to hold the if condition
     const auto condition_type_name = if_stmt->getCond()->getType().getAsString();
-    const auto cond_variable       = unique_var_gen_.get_unique_var();
+    const auto cond_variable       = unique_identifiers_.get_unique_identifier();
     const auto cond_var_decl       = condition_type_name + " " + cond_variable + ";";
 
     // Add cond var decl to the packet structure, so that all decls accumulate there
