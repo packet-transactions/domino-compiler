@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include "clang/AST/Stmt.h"
+#include "clang/AST/Decl.h"
 
 /// Catalogue the core functions corresponding to each program transformation here.
 
@@ -32,7 +33,8 @@ std::pair<std::string, std::vector<std::string>> ssa_transform(const clang::Comp
 /// Print out condensed dependency graph once Stongly Connected Components
 /// have been condensed together. The resulting graph must be a DAG
 /// , which is then partitoned into code that goes into separate pipeline stages.
-std::pair<std::string, std::vector<std::string>> partitioning_transform(const clang::CompoundStmt * function_body, const std::string & pkt_name __attribute__ ((unused)));
+/// Each stage is a separate C function for now.
+std::string partitioning_transform(const clang::TranslationUnitDecl * tu_decl);
 
 #endif // PROG_TRANSFORMS_H_
 

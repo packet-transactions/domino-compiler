@@ -85,7 +85,9 @@ static bool scc_depends(const std::vector<const BinaryOperator*> & scc1, const s
 /// Print out dependency graph once Stongly Connected Components
 /// have been condensed together to form a DAG.
 /// Also partition the code based on the dependency graph
-std::pair<std::string, std::vector<std::string>> partitioning_transform(const CompoundStmt * function_body, const std::string & pkt_name __attribute__ ((unused))) {
+/// and generate a function declaration with a body for each partition
+/// This is to make sure it is valid C code.
+static std::vector<std::string> generate_partitions(const CompoundStmt * function_body) {
   // Verify that it's in SSA
   // and append to a vector of const BinaryOperator *
   // in order of statement occurence.
@@ -159,11 +161,45 @@ std::pair<std::string, std::vector<std::string>> partitioning_transform(const Co
   const auto & partitioning = condensed_graph.critical_path_schedule();
 
   // Output partition into valid C code, sorted by timestamp (as comments)
-  std::string ret_c_code = "\n";
+  std::vector<std::string> function_bodies;
   std::vector<std::pair<InstBlock, uint32_t>> sorted_pairs(partitioning.begin(), partitioning.end());
   std::sort(sorted_pairs.begin(), sorted_pairs.end(), [] (const auto & x, const auto & y) { return x.second < y.second; });
-  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&ret_c_code, &inst_block_printer] (const auto & pair)
-                { ret_c_code += "/* time : " + std::to_string(pair.second) + " */\n" + inst_block_printer(pair.first) + "\n"; });
+  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&function_bodies, &inst_block_printer] (const auto & pair)
+                { function_bodies.emplace_back("/* time : " + std::to_string(pair.second) + " */\n" + inst_block_printer(pair.first) + "\n"); });
 
-  return std::make_pair(ret_c_code, std::vector<std::string>());
+  return function_bodies;
+}
+
+std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
+  std::string ret;
+  for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
+    assert(child_decl);
+    if ( isa<VarDecl>(child_decl) or
+         (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) or
+         isa<RecordDecl>(child_decl)) {
+      // Pass through these declarations as is
+      ret += clang_decl_printer(child_decl) + ";";
+    } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
+      const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
+
+      // Extract function signature
+      assert(function_decl->getNumParams() >= 1);
+      const auto * pkt_param = function_decl->getParamDecl(0);
+      const auto pkt_type  = function_decl->getParamDecl(0)->getType().getAsString();
+      const auto pkt_name = clang_value_decl_printer(pkt_param);
+
+      // Transform function body
+      const auto func_bodies = generate_partitions(dyn_cast<CompoundStmt>(function_decl->getBody()));
+
+      // Create functions with new bodies
+      int count = 0; // TODO: We should reall have a global UniqueVarGenerator
+      for (const auto & body : func_bodies) {
+        ret += function_decl->getReturnType().getAsString() + " " +
+               function_decl->getNameInfo().getName().getAsString() + std::to_string(count++) +
+               "( " + pkt_type + " " +  pkt_name + ") { " +
+               body + "}\n";
+      }
+    }
+  }
+  return ret;
 }

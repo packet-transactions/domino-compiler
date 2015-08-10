@@ -60,7 +60,7 @@ int main(int argc, const char **argv) {
 
   // Generate dependency graph after condensing strongly connected components
   // Use the condensed DAG to partition code
-  std::cout << SinglePass<std::string>(ssa_output, std::bind(pkt_func_transform, std::placeholders::_1, partitioning_transform)).output();
+  std::cout << SinglePass<std::string>(ssa_output, partitioning_transform).output();
 
   return 0;
 }
