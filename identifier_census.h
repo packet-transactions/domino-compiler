@@ -5,8 +5,8 @@
 
 #include "clang/AST/Decl.h"
 
-/// Return the current set of packet variables
+/// Return the current set of identifiers
 /// so that we can generate unique names afterwards
-std::set<std::string> packet_variable_census(const clang::TranslationUnitDecl * decl);
+std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl);
 
 #endif  // PACKET_VARIABLE_CENSUS_H_
