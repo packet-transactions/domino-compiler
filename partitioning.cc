@@ -156,8 +156,6 @@ static std::map<uint32_t, std::string> generate_partitions(const CompoundStmt * 
     }
   }
 
-  std::cerr << condensed_graph << std::endl;
-
   // Partition condensed graph using critical path scheduling
   const auto & partitioning = condensed_graph.critical_path_schedule();
 
@@ -200,6 +198,14 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
                "( " + pkt_type + " " +  pkt_name + ") { " +
                body_pair.second + "}\n";
       }
+
+      // Create pipeline graph
+      // N.B. func_bodies.size() is the number of partitions and all key values
+      // from 0 through func_bodies.size() - 1 are present in the func_bodies map
+      Graph<std::string> pipeline_graph([] (const auto & x) { return x; });
+      for (uint32_t i = 0; i < func_bodies.size(); i++) pipeline_graph.add_node(func_bodies.at(i));
+      for (uint32_t i = 0; i < func_bodies.size() - 1; i++) pipeline_graph.add_edge(func_bodies.at(i), func_bodies.at(i+1));
+      std::cerr << pipeline_graph << std::endl;
     }
   }
   return ret;
