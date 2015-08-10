@@ -10,12 +10,12 @@
 
 using namespace clang;
 
-std::pair<std::string, std::vector<std::string>> ssa_transform(const CompoundStmt * function_body, const std::string & pkt_name, const std::set<std::string> & packet_var_set) {
+std::pair<std::string, std::vector<std::string>> ssa_transform(const CompoundStmt * function_body, const std::string & pkt_name, const std::set<std::string> & id_set) {
   // Vector of newly created packet temporaries
   std::vector<std::string> new_decls = {};
 
   // Create unique variable generator
-  UniqueVarGenerator unique_var_gen(packet_var_set);
+  UniqueVarGenerator unique_var_gen(id_set);
 
   // All indices where every packet variable is defined.
   // We choosen to rename ALL definitions of a packet variable

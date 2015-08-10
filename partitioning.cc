@@ -5,6 +5,7 @@
 #include "expr_functions.h"
 #include "graph.h"
 #include "clang_utility_functions.h"
+#include "unique_var_generator.h"
 
 using namespace clang;
 
@@ -170,8 +171,13 @@ static std::map<uint32_t, std::string> generate_partitions(const CompoundStmt * 
   return function_bodies;
 }
 
-std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
+std::string partitioning_transform(const TranslationUnitDecl * tu_decl, const std::set<std::string> & id_set) {
+  // Storage for returned string
   std::string ret;
+
+  // Create unique variable generator
+  UniqueVarGenerator unique_var_gen(id_set);
+
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     assert(child_decl);
     if ( isa<VarDecl>(child_decl) or
@@ -194,7 +200,7 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
       // Create functions with new bodies
       for (const auto & body_pair : func_bodies) {
         ret += function_decl->getReturnType().getAsString() + " " +
-               function_decl->getNameInfo().getName().getAsString() + std::to_string(body_pair.first) +
+               unique_var_gen.get_unique_var(function_decl->getNameInfo().getName().getAsString()) +
                "( " + pkt_type + " " +  pkt_name + ") { " +
                body_pair.second + "}\n";
       }
