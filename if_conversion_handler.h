@@ -9,7 +9,7 @@
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Expr.h"
 
-#include "unique_var_generator.h"
+#include "unique_identifiers.h"
 
 /// Rewrite if statements into ternary operators
 /// and recursively get rid of all branches.

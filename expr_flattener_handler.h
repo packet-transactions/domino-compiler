@@ -12,7 +12,7 @@
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Expr.h"
 
-#include "unique_var_generator.h"
+#include "unique_identifiers.h"
 
 struct FlattenResult {
   std::string flat_expr;

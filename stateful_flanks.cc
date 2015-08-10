@@ -6,7 +6,7 @@
 #include <utility>
 
 #include "clang_utility_functions.h"
-#include "unique_var_generator.h"
+#include "unique_identifiers.h"
 #include "expr_functions.h"
 
 using namespace clang;
