@@ -3,7 +3,6 @@ AC_INIT([domino], [0.1], [anirudh@csail.mit.edu])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_SRCDIR([ssa.cc])
 AC_CONFIG_HEADERS([config.h])
-LT_INIT
 
 # Checks for programs.
 AC_PROG_CXX
