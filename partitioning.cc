@@ -87,7 +87,7 @@ static bool scc_depends(const std::vector<const BinaryOperator*> & scc1, const s
 /// Also partition the code based on the dependency graph
 /// and generate a function declaration with a body for each partition
 /// This is to make sure it is valid C code.
-static std::vector<std::string> generate_partitions(const CompoundStmt * function_body) {
+static std::map<uint32_t, std::string> generate_partitions(const CompoundStmt * function_body) {
   // Verify that it's in SSA
   // and append to a vector of const BinaryOperator *
   // in order of statement occurence.
@@ -135,8 +135,9 @@ static std::vector<std::string> generate_partitions(const CompoundStmt * functio
   // Graph condensation: Add SCCs as nodes
   typedef std::vector<const BinaryOperator *> InstBlock;
   const auto & inst_block_printer = [] (const auto & x)
-                                    { std::string ret = "";
+                                    { std::string ret = "{";
                                       for (auto & op : x) ret += clang_stmt_printer(op) + ";\n";
+                                      ret.back() = '}';
                                       return ret;
                                     };
 
@@ -160,12 +161,13 @@ static std::vector<std::string> generate_partitions(const CompoundStmt * functio
   // Partition condensed graph using critical path scheduling
   const auto & partitioning = condensed_graph.critical_path_schedule();
 
-  // Output partition into valid C code, sorted by timestamp (as comments)
-  std::vector<std::string> function_bodies;
+  // Output partition into valid C code, one for each timestamp
+  std::map<uint32_t, std::string> function_bodies;
   std::vector<std::pair<InstBlock, uint32_t>> sorted_pairs(partitioning.begin(), partitioning.end());
   std::sort(sorted_pairs.begin(), sorted_pairs.end(), [] (const auto & x, const auto & y) { return x.second < y.second; });
   std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&function_bodies, &inst_block_printer] (const auto & pair)
-                { function_bodies.emplace_back("/* time : " + std::to_string(pair.second) + " */\n" + inst_block_printer(pair.first) + "\n"); });
+                { if (function_bodies.find(pair.second) == function_bodies.end()) function_bodies[pair.second] = "";
+                  function_bodies.at(pair.second).append(inst_block_printer(pair.first) + ";\n"); });
 
   return function_bodies;
 }
@@ -192,12 +194,11 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
       const auto func_bodies = generate_partitions(dyn_cast<CompoundStmt>(function_decl->getBody()));
 
       // Create functions with new bodies
-      int count = 0; // TODO: We should reall have a global UniqueVarGenerator
-      for (const auto & body : func_bodies) {
+      for (const auto & body_pair : func_bodies) {
         ret += function_decl->getReturnType().getAsString() + " " +
-               function_decl->getNameInfo().getName().getAsString() + std::to_string(count++) +
+               function_decl->getNameInfo().getName().getAsString() + std::to_string(body_pair.first) +
                "( " + pkt_type + " " +  pkt_name + ") { " +
-               body + "}\n";
+               body_pair.second + "}\n";
       }
     }
   }
