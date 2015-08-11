@@ -2,11 +2,20 @@
 
 #include <iostream>
 
+#include "pkt_func_transform.h"
 #include "clang_utility_functions.h"
+#include "identifier_census.h"
 
 using namespace clang;
+using std::placeholders::_1;
+using std::placeholders::_2;
 
-std::pair<std::string, std::vector<std::string>> IfConversionHandler::transform(const Stmt * function_body, const std::string & pkt_name) const {
+std::string IfConversionHandler::transform(const TranslationUnitDecl * tu_decl) {
+  unique_identifiers_ = UniqueIdentifiers(identifier_census(tu_decl));
+  return pkt_func_transform(tu_decl, std::bind(& IfConversionHandler::if_convert_body, this, _1, _2));
+}
+
+std::pair<std::string, std::vector<std::string>> IfConversionHandler::if_convert_body(const Stmt * function_body, const std::string & pkt_name) const {
   assert(function_body);
 
   std::string output_ = "";

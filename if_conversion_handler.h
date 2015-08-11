@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 
+#include "clang/AST/Decl.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Expr.h"
 
@@ -15,11 +16,11 @@
 /// and recursively get rid of all branches.
 class IfConversionHandler {
  public:
-  /// Constructor
-  IfConversionHandler(const std::set<std::string> & init_set) : unique_identifiers_(init_set) {}
+  /// Transform function itself, entry point to SinglePass
+  std::string transform(const clang::TranslationUnitDecl * tu_decl);
 
-  /// Transform function
-  std::pair<std::string, std::vector<std::string>> transform(const clang::Stmt * function_body, const std::string & pkt_name) const;
+  /// If convert function body
+  std::pair<std::string, std::vector<std::string>> if_convert_body(const clang::Stmt * function_body, const std::string & pkt_name) const;
 
  private:
   /// if_convert current clang::Stmt
@@ -37,7 +38,7 @@ class IfConversionHandler {
                                      const std::string & predicate) const;
 
   /// Unique identifier generator
-  UniqueIdentifiers unique_identifiers_;
+  UniqueIdentifiers unique_identifiers_ = UniqueIdentifiers(std::set<std::string>());
 };
 
 #endif  // IF_CONVERSION_HANDLER_H_

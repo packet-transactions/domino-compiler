@@ -4,7 +4,7 @@
 #include "partitioning.h"
 #include "stateful_flanks.h"
 #include "expr_flattener_handler.h"
-#include "prog_transforms.h"
+#include "strength_reducer.h"
 
 #include <iostream>
 #include <set>
@@ -30,19 +30,11 @@ int main(int argc, const char **argv) {
   // Get string that needs to be parsed
   const auto string_to_parse = file_to_str(get_file_name(argc, argv));
 
-  // Variable to store identifier sets, whenever required
-  std::set<std::string> id_set;
-
-  // Parse file once and generate identifier set
-  id_set   = SinglePass<std::set<std::string>>(identifier_census)(string_to_parse);
-
   // Parse file once and output if converted version
-  IfConversionHandler if_conversion_handler(id_set);
-  const FuncBodyTransform if_converter = std::bind(& IfConversionHandler::transform, if_conversion_handler, _1, _2);
-  const auto if_convert_output = SinglePass<std::string>(std::bind(pkt_func_transform, _1, if_converter))(string_to_parse);
+  const auto if_convert_output = SinglePass<std::string>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1))(string_to_parse);
 
   // Parse file once again for strength reduction
-  const auto strength_reduce_output = SinglePass<std::string>(std::bind(pkt_func_transform, _1, strength_reducer))(if_convert_output);
+  const auto strength_reduce_output = SinglePass<std::string>(strength_reducer_transform)(if_convert_output);
 
   // Expression flattening, recurse to fixed point
   const auto & expr_flat_output = FixedPointPass<std::string>(ExprFlattenerHandler::transform)(strength_reduce_output);

@@ -1,12 +1,17 @@
-#include "prog_transforms.h"
+#include "strength_reducer.h"
 
 #include "clang/AST/Expr.h"
 
 #include "clang_utility_functions.h"
+#include "pkt_func_transform.h"
 
 using namespace clang;
 
-std::pair<std::string, std::vector<std::string>> strength_reducer(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
+std::string strength_reducer_transform(const TranslationUnitDecl * tu_decl) {
+  return pkt_func_transform(tu_decl, strength_reduce_body); 
+}
+
+std::pair<std::string, std::vector<std::string>> strength_reduce_body(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
   // Rewrite function body
   assert(function_body);
   std::string transformed_body = "";
