@@ -44,8 +44,8 @@ int main(int argc, const char **argv) {
   /// Process them one after the other
   std::cout << std::accumulate(transforms.begin(), transforms.end(), string_to_parse, [] (const auto & current_output, const auto & transform)
                                { return transform.first == TransformType::SINGLE ?
-                                        SinglePass<std::string>(transform.second)(current_output) :
-                                        FixedPointPass<std::string>(transform.second)(current_output); });
+                                        SinglePass(transform.second)(current_output) :
+                                        FixedPointPass(transform.second)(current_output); });
 
   return 0;
 }

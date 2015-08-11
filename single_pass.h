@@ -26,17 +26,15 @@
 #include "clang_utility_functions.h"
 
 /// Single pass over a translation unit.
-/// By default, just parse the translation unit, and print it out as such.
-template <class OutputType>
 class SinglePass {
  public:
-  typedef std::function<OutputType(const clang::TranslationUnitDecl *)> Transformer;
+  typedef std::function<std::string(const clang::TranslationUnitDecl *)> Transformer;
 
   /// Initialize a SinglePass using a Transformer object
   SinglePass(const Transformer & t_transformer);
 
   /// Output from SinglePass by overriding function call object
-  OutputType operator() (const std::string & string_to_parse);
+  std::string operator() (const std::string & string_to_parse);
  private:
   class MyASTConsumer : public clang::ASTConsumer {
     public:
@@ -50,7 +48,7 @@ class SinglePass {
     }
     auto output() const { return output_; }
     private:
-      OutputType output_ = {};
+      std::string  output_ = {};
       /// Transformer function
       Transformer transformer_;
   };
@@ -63,13 +61,11 @@ class SinglePass {
   TempFile temp_file_;
 };
 
-template <class OutputType>
-SinglePass<OutputType>::SinglePass(const Transformer & t_transformer)
+SinglePass::SinglePass(const Transformer & t_transformer)
     : my_ast_consumer_(t_transformer),
       temp_file_("tmp", ".c") {}
 
-template <class OutputType>
-OutputType SinglePass<OutputType>::operator()(const std::string & string_to_parse) {
+std::string SinglePass::operator()(const std::string & string_to_parse) {
   // Write string_to_parse into temp_file_
   temp_file_.write(string_to_parse);
 
