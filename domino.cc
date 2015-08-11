@@ -34,7 +34,7 @@ int main(int argc, const char **argv) {
   // List out all passes
   TransformVector transforms = { std::make_pair(TransformType::SINGLE, std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)),
                                  std::make_pair(TransformType::SINGLE, strength_reducer_transform),
-                                 std::make_pair(TransformType::FIXED_POINT, ExprFlattenerHandler::transform),
+                                 std::make_pair(TransformType::FIXED_POINT, std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1)),
                                  std::make_pair(TransformType::SINGLE, expr_prop_transform),
                                  std::make_pair(TransformType::SINGLE, stateful_flank_transform),
                                  std::make_pair(TransformType::SINGLE, ssa_transform),
