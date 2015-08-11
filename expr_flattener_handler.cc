@@ -4,7 +4,6 @@
 
 #include "clang_utility_functions.h"
 #include "pkt_func_transform.h"
-#include "identifier_census.h"
 
 using namespace clang;
 using std::placeholders::_1;

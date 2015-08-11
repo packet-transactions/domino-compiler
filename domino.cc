@@ -13,7 +13,6 @@
 #include <functional>
 
 #include "util.h"
-#include "identifier_census.h"
 #include "pkt_func_transform.h"
 #include "single_pass.h"
 #include "fixed_point_pass.h"

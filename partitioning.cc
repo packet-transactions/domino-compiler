@@ -3,7 +3,6 @@
 #include "expr_functions.h"
 #include "clang_utility_functions.h"
 #include "unique_identifiers.h"
-#include "identifier_census.h"
 
 using namespace clang;
 
