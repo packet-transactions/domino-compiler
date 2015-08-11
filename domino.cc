@@ -1,9 +1,10 @@
 #include "if_conversion_handler.h"
 #include "ssa.h"
+#include "expr_prop.h"
 #include "partitioning.h"
 #include "stateful_flanks.h"
-#include "prog_transforms.h"
 #include "expr_flattener_handler.h"
+#include "prog_transforms.h"
 
 #include <iostream>
 #include <set>
@@ -52,7 +53,7 @@ int main(int argc, const char **argv) {
     old_output = new_output;
   }
 
-  TransformVector transforms = { std::bind(pkt_func_transform, _1, expr_prop), stateful_flank_transform, ssa_transform, partitioning_transform };
+  TransformVector transforms = { expr_prop_transform, stateful_flank_transform, ssa_transform, partitioning_transform };
   std::cout << std::accumulate(transforms.begin(), transforms.end(), new_output, [] (const auto & current_output, const auto & transform)
                                { return SinglePass<std::string>(current_output, transform).output(); });
 

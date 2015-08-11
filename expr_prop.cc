@@ -1,12 +1,15 @@
-#include "prog_transforms.h"
+#include "expr_prop.h"
 
-#include "clang/AST/AST.h"
-
+#include "pkt_func_transform.h"
 #include "clang_utility_functions.h"
 
 using namespace clang;
 
-std::pair<std::string, std::vector<std::string>> expr_prop(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
+std::string expr_prop_transform(const clang::TranslationUnitDecl * tu_decl) {
+  return pkt_func_transform(tu_decl, expr_prop_fn_body);
+}
+
+std::pair<std::string, std::vector<std::string>> expr_prop_fn_body(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
   // Maintain map from variable name (packet or state variable)
   // to a string representing its expression, for expression propagation.
   std::map<std::string, std::string> var_to_expr;
