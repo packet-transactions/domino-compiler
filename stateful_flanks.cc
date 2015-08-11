@@ -1,17 +1,18 @@
-#include "prog_transforms.h"
+#include "stateful_flanks.h"
 
-#include <iostream>
-#include <set>
-#include <string>
-#include <utility>
+#include <functional>
 
 #include "clang_utility_functions.h"
 #include "unique_identifiers.h"
 #include "expr_functions.h"
+#include "identifier_census.h"
+#include "pkt_func_transform.h"
 
 using namespace clang;
+using std::placeholders::_1;
+using std::placeholders::_2;
 
-std::pair<std::string, std::vector<std::string>> stateful_flank_transform(const CompoundStmt * function_body, const std::string & pkt_name, const std::set<std::string> & id_set) {
+std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const CompoundStmt * function_body, const std::string & pkt_name, const std::set<std::string> & id_set) {
   // Vector of newly created packet temporaries
   std::vector<std::string> new_decls = {};
 
@@ -62,4 +63,9 @@ std::pair<std::string, std::vector<std::string>> stateful_flank_transform(const 
   }
 
   return std::make_pair(read_prologue + "\n\n" +  function_body_str + "\n\n" + write_epilogue, new_decls);
+}
+
+std::string stateful_flank_transform(const TranslationUnitDecl * tu_decl) {
+  const auto & id_set = identifier_census(tu_decl);
+  return pkt_func_transform(tu_decl, std::bind(add_stateful_flanks, _1, _2, id_set));
 }

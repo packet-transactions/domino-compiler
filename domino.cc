@@ -1,6 +1,7 @@
 #include "if_conversion_handler.h"
 #include "ssa.h"
 #include "partitioning.h"
+#include "stateful_flanks.h"
 #include "prog_transforms.h"
 #include "expr_flattener_handler.h"
 
@@ -59,9 +60,7 @@ int main(int argc, const char **argv) {
   const auto expr_prop_output = SinglePass<std::string>(new_output, std::bind(pkt_func_transform, _1, expr_prop)).output();
 
   // Parse file once and output it after adding stateful flanks
-  id_set = SinglePass<std::set<std::string>>(expr_prop_output, identifier_census).output();
-  const FuncBodyTransform stateful_flank_converter = std::bind(stateful_flank_transform, _1, _2, id_set);
-  const auto flank_output = SinglePass<std::string>(expr_prop_output, std::bind(pkt_func_transform, _1, stateful_flank_converter)).output();
+  const auto flank_output = SinglePass<std::string>(expr_prop_output, stateful_flank_transform).output();
 
   // Parse file once and output it after Stateful SSA
   const auto ssa_output = SinglePass<std::string>(flank_output, ssa_transform).output();
