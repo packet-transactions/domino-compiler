@@ -8,6 +8,7 @@
 #include <iostream>
 #include <set>
 #include <string>
+#include <functional>
 
 #include "util.h"
 #include "identifier_census.h"
@@ -19,6 +20,10 @@
 // (Partial Function Application)
 using std::placeholders::_1;
 using std::placeholders::_2;
+
+// Vector of Transform functions, each transform function runs within a SinglePass
+typedef  std::function<std::string(const clang::TranslationUnitDecl *)> Transform;
+typedef  std::vector<Transform> TransformVector;
 
 int main(int argc, const char **argv) {
   // Get string that needs to be parsed
@@ -43,24 +48,13 @@ int main(int argc, const char **argv) {
   std::string new_output = "";
   while (true) {
     new_output = SinglePass<std::string>(old_output, ExprFlattenerHandler::transform).output();
-
-    // Fixed point
     if (new_output == old_output) break;
-
     old_output = new_output;
   }
 
-  // Parse file once and output it after propagating expressions
-  const auto expr_prop_output = SinglePass<std::string>(new_output, std::bind(pkt_func_transform, _1, expr_prop)).output();
-
-  // Parse file once and output it after adding stateful flanks
-  const auto flank_output = SinglePass<std::string>(expr_prop_output, stateful_flank_transform).output();
-
-  // Parse file once and output it after Stateful SSA
-  const auto ssa_output = SinglePass<std::string>(flank_output, ssa_transform).output();
-
-  // Partition code using condensed graph
-  std::cout << SinglePass<std::string>(ssa_output, partitioning_transform).output();
+  TransformVector transforms = { std::bind(pkt_func_transform, _1, expr_prop), stateful_flank_transform, ssa_transform, partitioning_transform };
+  std::cout << std::accumulate(transforms.begin(), transforms.end(), new_output, [] (const auto & current_output, const auto & transform)
+                               { return SinglePass<std::string>(current_output, transform).output(); });
 
   return 0;
 }
