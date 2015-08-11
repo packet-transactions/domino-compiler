@@ -1,19 +1,13 @@
-#include "prog_transforms.h"
-
-#include <iostream>
+#include "partitioning.h"
 
 #include "expr_functions.h"
-#include "graph.h"
 #include "clang_utility_functions.h"
 #include "unique_identifiers.h"
+#include "identifier_census.h"
 
 using namespace clang;
 
-/// Identify statements that read from and write to state
-/// And create a back edge from the write back to the read.
-/// This is really the crux of the compiler:
-/// back edges from stateful writes to the next stateful read.
-static Graph<const BinaryOperator *> handle_state_vars(const std::vector<const BinaryOperator *> & stmt_vector, const Graph<const BinaryOperator*> & dep_graph) {
+Graph<const BinaryOperator *> handle_state_vars(const std::vector<const BinaryOperator *> & stmt_vector, const Graph<const BinaryOperator*> & dep_graph) {
   Graph<const BinaryOperator*> ret = dep_graph;
   std::map<std::string, const BinaryOperator *> state_reads;
   std::map<std::string, const BinaryOperator *> state_writes;
@@ -32,8 +26,7 @@ static Graph<const BinaryOperator *> handle_state_vars(const std::vector<const B
   return ret;
 }
 
-/// Does a particular operation read a variable
-static bool op_reads_var(const BinaryOperator * op, const Expr * var) {
+bool op_reads_var(const BinaryOperator * op, const Expr * var) {
   assert(op);
   assert(var);
 
@@ -43,9 +36,7 @@ static bool op_reads_var(const BinaryOperator * op, const Expr * var) {
   return (std::find(read_vars.begin(), read_vars.end(), clang_stmt_printer(var)) != read_vars.end());
 }
 
-/// Is there a dependence from op1 to op2?
-/// Requiring op1 to be executed before op2?
-static bool depends(const BinaryOperator * op1, const BinaryOperator * op2) {
+bool depends(const BinaryOperator * op1, const BinaryOperator * op2) {
   // If op1 succeeds op2 in program order,
   // return false right away
   if (not (op1->getLocStart() < op2->getLocStart())) {
@@ -73,8 +64,7 @@ static bool depends(const BinaryOperator * op1, const BinaryOperator * op2) {
   return (op_reads_var(op2, op1->getLHS()));
 }
 
-/// Is there a dependence from scc1 to scc2 (because of their constituent operations?)
-static bool scc_depends(const std::vector<const BinaryOperator*> & scc1, const std::vector<const BinaryOperator*> & scc2) {
+bool scc_depends(const std::vector<const BinaryOperator*> & scc1, const std::vector<const BinaryOperator*> & scc2) {
   for (const auto & op1 : scc1) {
     for (const auto & op2 : scc2) {
       if (depends(op1, op2)) return true;
@@ -83,12 +73,7 @@ static bool scc_depends(const std::vector<const BinaryOperator*> & scc1, const s
   return false;
 }
 
-/// Print out dependency graph once Stongly Connected Components
-/// have been condensed together to form a DAG.
-/// Also partition the code based on the dependency graph
-/// and generate a function declaration with a body for each partition
-/// This is to make sure it is valid C code.
-static std::map<uint32_t, std::string> generate_partitions(const CompoundStmt * function_body) {
+std::map<uint32_t, std::string> generate_partitions(const CompoundStmt * function_body) {
   // Verify that it's in SSA
   // and append to a vector of const BinaryOperator *
   // in order of statement occurence.
@@ -171,7 +156,9 @@ static std::map<uint32_t, std::string> generate_partitions(const CompoundStmt * 
   return function_bodies;
 }
 
-std::string partitioning_transform(const TranslationUnitDecl * tu_decl, const std::set<std::string> & id_set) {
+std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
+  const auto & id_set = identifier_census(tu_decl);
+
   // Storage for returned string
   std::string ret;
 

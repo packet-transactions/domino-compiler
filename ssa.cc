@@ -1,16 +1,26 @@
-#include "prog_transforms.h"
+#include "ssa.h"
 
 #include <set>
 #include <string>
 #include <iostream>
+#include <functional>
 
 #include "clang_utility_functions.h"
 #include "expr_functions.h"
+#include "identifier_census.h"
 #include "unique_identifiers.h"
+#include "pkt_func_transform.h"
 
 using namespace clang;
+using std::placeholders::_1;
+using std::placeholders::_2;
 
-std::pair<std::string, std::vector<std::string>> ssa_transform(const CompoundStmt * function_body, const std::string & pkt_name, const std::set<std::string> & id_set) {
+std::string ssa_transform(const TranslationUnitDecl * tu_decl) {
+  const auto & id_set = identifier_census(tu_decl);
+  return pkt_func_transform(tu_decl, std::bind(ssa_rewrite_fn_body, _1, _2, id_set));
+}
+
+std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const CompoundStmt * function_body, const std::string & pkt_name, const std::set<std::string> & id_set) {
   // Vector of newly created packet temporaries
   std::vector<std::string> new_decls = {};
 

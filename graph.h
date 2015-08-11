@@ -11,6 +11,7 @@
 #include <tuple>
 #include <cassert>
 #include <stdexcept>
+#include <iostream>
 
 /// Adjacency list representation of graph
 /// Store both out and in edges for every node

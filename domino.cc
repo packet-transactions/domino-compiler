@@ -1,4 +1,6 @@
 #include "if_conversion_handler.h"
+#include "ssa.h"
+#include "partitioning.h"
 #include "prog_transforms.h"
 #include "expr_flattener_handler.h"
 
@@ -62,14 +64,10 @@ int main(int argc, const char **argv) {
   const auto flank_output = SinglePass<std::string>(expr_prop_output, std::bind(pkt_func_transform, _1, stateful_flank_converter)).output();
 
   // Parse file once and output it after Stateful SSA
-  id_set = SinglePass<std::set<std::string>>(flank_output, identifier_census).output();
-  const FuncBodyTransform ssa_converter = std::bind(ssa_transform, _1, _2, id_set);
-  const auto ssa_output = SinglePass<std::string>(flank_output, std::bind(pkt_func_transform, _1, ssa_converter)).output();
+  const auto ssa_output = SinglePass<std::string>(flank_output, ssa_transform).output();
 
-  // Generate dependency graph after condensing strongly connected components
-  // Use the condensed DAG to partition code
-  id_set = SinglePass<std::set<std::string>>(ssa_output, identifier_census).output();
-  std::cout << SinglePass<std::string>(ssa_output, std::bind(partitioning_transform, _1, id_set)).output();
+  // Partition code using condensed graph
+  std::cout << SinglePass<std::string>(ssa_output, partitioning_transform).output();
 
   return 0;
 }
