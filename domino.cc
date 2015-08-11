@@ -15,7 +15,7 @@
 #include "identifier_census.h"
 #include "pkt_func_transform.h"
 #include "single_pass.h"
-#include "temp_file.hh"
+#include "fixed_point_pass.h"
 
 // For the _1, and _2 in std::bind
 // (Partial Function Application)
@@ -45,16 +45,10 @@ int main(int argc, const char **argv) {
   const auto strength_reduce_output = SinglePass<std::string>(if_convert_output, std::bind(pkt_func_transform, _1, strength_reducer)).output();
 
   // Expression flattening, recurse to fixed point
-  std::string old_output = strength_reduce_output;
-  std::string new_output = "";
-  while (true) {
-    new_output = SinglePass<std::string>(old_output, ExprFlattenerHandler::transform).output();
-    if (new_output == old_output) break;
-    old_output = new_output;
-  }
+  const auto & expr_flat_output = FixedPointPass<std::string>(strength_reduce_output, ExprFlattenerHandler::transform).output();
 
   TransformVector transforms = { expr_prop_transform, stateful_flank_transform, ssa_transform, partitioning_transform };
-  std::cout << std::accumulate(transforms.begin(), transforms.end(), new_output, [] (const auto & current_output, const auto & transform)
+  std::cout << std::accumulate(transforms.begin(), transforms.end(), expr_flat_output, [] (const auto & current_output, const auto & transform)
                                { return SinglePass<std::string>(current_output, transform).output(); });
 
   return 0;
