@@ -1,12 +1,10 @@
-#ifndef SINGLE_PASS_H_
-#define SINGLE_PASS_H_
+#ifndef COMPILER_PASS_H_
+#define COMPILER_PASS_H_
 
-// Most code here is based on http://eli.thegreenplace.net/2012/06/08/basic-source-to-source-transformation-with-clang
-
+#include <string>
 #include <functional>
 #include <cstdio>
 #include <memory>
-#include <string>
 #include <sstream>
 #include <iostream>
 
@@ -25,16 +23,35 @@
 #include "temp_file.hh"
 #include "clang_utility_functions.h"
 
-/// Single pass over a translation unit.
-class SinglePass {
+
+/// Abstract base class for a pass of the Clang compiler,
+/// a function object that takes a string corresponding to a translation unit
+/// and returns another string as another translation unit.
+/// I would have preferred to use a more articulate representation
+/// such as an Abstract Syntax Tree to represent the program.
+/// Unfortunately, clang has very poor support for creating ASTs. It's
+/// best to treat ASTs as intermediate read-only form.
+class CompilerPass {
  public:
   typedef std::function<std::string(const clang::TranslationUnitDecl *)> Transformer;
 
-  /// Initialize a SinglePass using a Transformer object
+  /// Run the compiler pass on a string and return a new string
+  virtual std::string operator()(const std::string &) = 0;
+
+  /// Virtual destructor to shut up g++
+  virtual ~CompilerPass() {};
+};
+
+/// Single pass over a translation unit.
+/// Most code here is based on
+/// http://eli.thegreenplace.net/2012/06/08/basic-source-to-source-transformation-with-clang
+class SinglePass  : public CompilerPass {
+ public:
+  /// Construct a SinglePass using a Transformer object
   SinglePass(const Transformer & t_transformer);
 
-  /// Output from SinglePass by overriding function call object
-  std::string operator() (const std::string & string_to_parse);
+  /// Execute SinglePass object overriding function call operator
+  std::string operator() (const std::string & string_to_parse) final override;
  private:
   class MyASTConsumer : public clang::ASTConsumer {
     public:
@@ -103,4 +120,28 @@ std::string SinglePass::operator()(const std::string & string_to_parse) {
   return my_ast_consumer_.output();
 }
 
-#endif  // SINGLE_PASS_H_
+// Run a SinglePass repeatedly until the output converges to a fixed point
+class FixedPointPass : public CompilerPass {
+ public:
+  /// Construct a FixedPointPass
+  FixedPointPass(const Transformer & t_transformer)
+      : transformer_(t_transformer) {}
+
+  /// Execute FixedPointPass object
+  std::string operator() (const std::string & string_to_parse) final override {
+    std::string old_output = string_to_parse;
+    std::string new_output = "";
+    while (true) {
+      new_output = SinglePass(transformer_)(old_output);
+      if (new_output == old_output) break;
+      old_output = new_output;
+    }
+    return new_output;
+  }
+
+ private:
+  /// Store t_transformer for future use
+  Transformer transformer_;
+};
+
+#endif  // COMPILER_PASS_H_
