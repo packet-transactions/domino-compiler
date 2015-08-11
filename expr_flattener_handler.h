@@ -24,11 +24,11 @@ struct FlattenResult {
 /// statement is of the form x = y op z, where x, y, z are atoms
 class ExprFlattenerHandler {
  public:
-  /// Constructor
-  ExprFlattenerHandler(const std::set<std::string> & t_id_set) : unique_identifiers_(t_id_set) {}
+  /// Function supplied to SinglePass
+  static std::string transform(const clang::TranslationUnitDecl * tu_decl);
 
-  /// Transform function
-  std::pair<std::string, std::vector<std::string>> transform(const clang::Stmt * function_body, const std::string & pkt_name) const;
+  /// Flatten function body
+  static std::pair<std::string, std::vector<std::string>> flatten_body(const clang::Stmt * function_body, const std::string & pkt_name, const std::set<std::string> & id_set);
 
  private:
   /// Flatten expression
@@ -40,28 +40,25 @@ class ExprFlattenerHandler {
   /// flatten maintains the invariant that the returned expression is flat,
   /// but it might create new definitions that aren't flat yet.
   /// We may need to run expr_flatten_prog multiple times until we reach a fixed point.
-  FlattenResult flatten(const clang::Expr *expr, const std::string & pkt_name) const;
+  static FlattenResult flatten(const clang::Expr *expr, const std::string & pkt_name, UniqueIdentifiers & unique_identifiers);
 
   /// Is expression flat?
-  bool is_flat(const clang::Expr * expr) const;
+  static bool is_flat(const clang::Expr * expr);
 
   /// Is expression an atom?
-  bool is_atom(const clang::Expr * expr) const;
+  static bool is_atom(const clang::Expr * expr);
 
   /// Flatten expr to atom if it isn't already an atom
   /// , creating a temporary variable is required
-  FlattenResult flatten_to_atom(const clang::Expr * expr, const std::string & pkt_name) const;
+  static FlattenResult flatten_to_atom(const clang::Expr * expr, const std::string & pkt_name, UniqueIdentifiers & unique_identifiers);
 
   /// Flatten conditional op by calling flatten_to_atom
   /// on its three constituents
-  FlattenResult flatten_cond_op(const clang::ConditionalOperator * cond_op, const std::string & pkt_name) const;
+  static FlattenResult flatten_cond_op(const clang::ConditionalOperator * cond_op, const std::string & pkt_name, UniqueIdentifiers & unique_identifiers);
 
   /// Flatten binary op by calling flatten_to_atom
   /// on the left and right halves
-  FlattenResult flatten_bin_op(const clang::BinaryOperator * bin_op, const std::string & pkt_name) const;
-
-  /// Unique identifiers
-  UniqueIdentifiers unique_identifiers_;
+  static FlattenResult flatten_bin_op(const clang::BinaryOperator * bin_op, const std::string & pkt_name, UniqueIdentifiers & unique_identifiers);
 };
 
 #endif  // EXPR_FLATTENER_HANDLER_H_

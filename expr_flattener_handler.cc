@@ -3,15 +3,27 @@
 #include <iostream>
 
 #include "clang_utility_functions.h"
+#include "pkt_func_transform.h"
+#include "identifier_census.h"
 
 using namespace clang;
+using std::placeholders::_1;
+using std::placeholders::_2;
+
+std::string ExprFlattenerHandler::transform(const TranslationUnitDecl * tu_decl) {
+  const auto & id_set = identifier_census(tu_decl);
+  return pkt_func_transform(tu_decl, std::bind(flatten_body, _1, _2, id_set));
+}
 
 std::pair<std::string, std::vector<std::string>>
-ExprFlattenerHandler::transform(const Stmt * function_body, const std::string & pkt_name) const {
+ExprFlattenerHandler::flatten_body(const Stmt * function_body, const std::string & pkt_name, const std::set<std::string> & id_set) {
   assert(function_body);
 
   std::string output = "";
   std::vector<std::string> new_decls = {};
+
+  // Create unique identifier set
+  UniqueIdentifiers unique_identifiers(id_set);
 
   // iterate through function body
   assert(isa<CompoundStmt>(function_body));
@@ -19,7 +31,7 @@ ExprFlattenerHandler::transform(const Stmt * function_body, const std::string & 
     assert(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
     assert(bin_op->isAssignmentOp());
-    const auto ret = flatten(bin_op->getRHS(), pkt_name);
+    const auto ret = flatten(bin_op->getRHS(), pkt_name, unique_identifiers);
 
     // First add new definitions
     output += ret.new_defs;
@@ -34,12 +46,12 @@ ExprFlattenerHandler::transform(const Stmt * function_body, const std::string & 
   return make_pair(output, new_decls);
 }
 
-bool ExprFlattenerHandler::is_atom(const clang::Expr * expr) const {
+bool ExprFlattenerHandler::is_atom(const clang::Expr * expr) {
   expr = expr->IgnoreParenImpCasts();
   return isa<DeclRefExpr>(expr) or isa<IntegerLiteral>(expr) or isa<MemberExpr>(expr) or isa<CallExpr>(expr);
 }
 
-bool ExprFlattenerHandler::is_flat(const clang::Expr * expr) const {
+bool ExprFlattenerHandler::is_flat(const clang::Expr * expr) {
   expr = expr->IgnoreParenImpCasts();
   assert(expr);
   if (isa<UnaryOperator>(expr)) {
@@ -56,15 +68,15 @@ bool ExprFlattenerHandler::is_flat(const clang::Expr * expr) const {
   }
 }
 
-FlattenResult ExprFlattenerHandler::flatten(const clang::Expr * expr, const std::string & pkt_name) const {
+FlattenResult ExprFlattenerHandler::flatten(const clang::Expr * expr, const std::string & pkt_name, UniqueIdentifiers & unique_identifiers) {
   expr = expr->IgnoreParenImpCasts();
   if (is_flat(expr)) {
     return {clang_stmt_printer(expr), "", {}};
   } else {
     if (isa<ConditionalOperator>(expr)) {
-      return flatten_cond_op(dyn_cast<ConditionalOperator>(expr), pkt_name);
+      return flatten_cond_op(dyn_cast<ConditionalOperator>(expr), pkt_name, unique_identifiers);
     } else if (isa<BinaryOperator>(expr)) {
-      return flatten_bin_op(dyn_cast<BinaryOperator>(expr), pkt_name);
+      return flatten_bin_op(dyn_cast<BinaryOperator>(expr), pkt_name, unique_identifiers);
     } else {
       assert(false);
       return {"", "", {}};
@@ -72,10 +84,10 @@ FlattenResult ExprFlattenerHandler::flatten(const clang::Expr * expr, const std:
   }
 }
 
-FlattenResult ExprFlattenerHandler::flatten_bin_op(const BinaryOperator * bin_op, const std::string & pkt_name) const {
+FlattenResult ExprFlattenerHandler::flatten_bin_op(const BinaryOperator * bin_op, const std::string & pkt_name, UniqueIdentifiers & unique_identifiers) {
   assert(not is_flat(bin_op));
-  const auto ret_lhs = flatten_to_atom(bin_op->getLHS(), pkt_name);
-  const auto ret_rhs = flatten_to_atom(bin_op->getRHS(), pkt_name);
+  const auto ret_lhs = flatten_to_atom(bin_op->getLHS(), pkt_name, unique_identifiers);
+  const auto ret_rhs = flatten_to_atom(bin_op->getRHS(), pkt_name, unique_identifiers);
 
   // Join all declarations
   std::vector<std::string> all_decls;
@@ -87,11 +99,11 @@ FlattenResult ExprFlattenerHandler::flatten_bin_op(const BinaryOperator * bin_op
           all_decls};
 }
 
-FlattenResult ExprFlattenerHandler::flatten_cond_op(const ConditionalOperator * cond_op, const std::string & pkt_name) const {
+FlattenResult ExprFlattenerHandler::flatten_cond_op(const ConditionalOperator * cond_op, const std::string & pkt_name, UniqueIdentifiers & unique_identifiers) {
   assert(not is_flat(cond_op));
-  const auto ret_cond  = flatten_to_atom(cond_op->getCond(), pkt_name);
-  const auto ret_true  = flatten_to_atom(cond_op->getTrueExpr(), pkt_name);
-  const auto ret_false = flatten_to_atom(cond_op->getFalseExpr(), pkt_name);
+  const auto ret_cond  = flatten_to_atom(cond_op->getCond(), pkt_name, unique_identifiers);
+  const auto ret_true  = flatten_to_atom(cond_op->getTrueExpr(), pkt_name, unique_identifiers);
+  const auto ret_false = flatten_to_atom(cond_op->getFalseExpr(), pkt_name, unique_identifiers);
 
   // Join all declarations
   std::vector<std::string> all_decls;
@@ -104,11 +116,11 @@ FlattenResult ExprFlattenerHandler::flatten_cond_op(const ConditionalOperator * 
           all_decls};
 }
 
-FlattenResult ExprFlattenerHandler::flatten_to_atom(const Expr * expr, const std::string & pkt_name) const {
+FlattenResult ExprFlattenerHandler::flatten_to_atom(const Expr * expr, const std::string & pkt_name, UniqueIdentifiers & unique_identifiers) {
   if (is_atom(expr)) {
     return {clang_stmt_printer(expr), "", {}};
   } else {
-    const auto flat_var_member     = unique_identifiers_.get_unique_identifier();
+    const auto flat_var_member     = unique_identifiers.get_unique_identifier();
     const auto flat_var_decl       = expr->getType().getAsString() + " " + flat_var_member + ";";
     const auto pkt_flat_variable   = pkt_name + "." + flat_var_member;
     const auto pkt_flat_var_def    = pkt_flat_variable + " = " + clang_stmt_printer(expr) + ";";

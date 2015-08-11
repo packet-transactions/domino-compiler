@@ -42,13 +42,7 @@ int main(int argc, const char **argv) {
   std::string old_output = strength_reduce_output;
   std::string new_output = "";
   while (true) {
-    // Parse file once and generate identifier set
-    id_set = SinglePass<std::set<std::string>>(old_output, identifier_census).output();
-
-    // Parse file once and output it after flattening
-    ExprFlattenerHandler expr_flattener_handler(id_set);
-    const FuncBodyTransform expr_flattener = std::bind(& ExprFlattenerHandler::transform, expr_flattener_handler, _1, _2);
-    new_output = SinglePass<std::string>(old_output, std::bind(pkt_func_transform, _1, expr_flattener)).output();
+    new_output = SinglePass<std::string>(old_output, ExprFlattenerHandler::transform).output();
 
     // Fixed point
     if (new_output == old_output) break;
