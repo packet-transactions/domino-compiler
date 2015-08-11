@@ -32,13 +32,11 @@ class SinglePass {
  public:
   typedef std::function<OutputType(const clang::TranslationUnitDecl *)> Transformer;
 
-  /// Run a single pass on a given string,
-  /// by creating a TempFile to hold it.
-  SinglePass(const std::string & string_to_parse,
-             const Transformer & t_transformer);
+  /// Initialize a SinglePass using a Transformer object
+  SinglePass(const Transformer & t_transformer);
 
-  /// Output from SinglePass
-  auto output() const { return output_; }
+  /// Output from SinglePass by overriding function call object
+  OutputType operator() (const std::string & string_to_parse);
  private:
   class MyASTConsumer : public clang::ASTConsumer {
     public:
@@ -59,9 +57,6 @@ class SinglePass {
   /// Instantiate MyASTConsumer using supplied transformer
   MyASTConsumer my_ast_consumer_;
 
-  /// Output Type
-  OutputType output_ = {};
-
   /// TempFile to hold string to be parsed
   /// This is really a workaround for the fact that the
   /// entry points into clang's libraries are files on disk
@@ -69,10 +64,12 @@ class SinglePass {
 };
 
 template <class OutputType>
-SinglePass<OutputType>::SinglePass(const std::string & string_to_parse,
-                                   const Transformer & t_transformer)
+SinglePass<OutputType>::SinglePass(const Transformer & t_transformer)
     : my_ast_consumer_(t_transformer),
-      temp_file_("tmp", ".c") {
+      temp_file_("tmp", ".c") {}
+
+template <class OutputType>
+OutputType SinglePass<OutputType>::operator()(const std::string & string_to_parse) {
   // Write string_to_parse into temp_file_
   temp_file_.write(string_to_parse);
 
@@ -107,7 +104,7 @@ SinglePass<OutputType>::SinglePass(const std::string & string_to_parse,
   ParseAST(TheCompInst.getPreprocessor(), &my_ast_consumer_,
            TheCompInst.getASTContext());
 
-  output_ = my_ast_consumer_.output();
+  return my_ast_consumer_.output();
 }
 
 #endif  // SINGLE_PASS_H_

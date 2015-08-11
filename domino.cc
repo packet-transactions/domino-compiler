@@ -34,22 +34,22 @@ int main(int argc, const char **argv) {
   std::set<std::string> id_set;
 
   // Parse file once and generate identifier set
-  id_set   = SinglePass<std::set<std::string>>(string_to_parse, identifier_census).output();
+  id_set   = SinglePass<std::set<std::string>>(identifier_census)(string_to_parse);
 
   // Parse file once and output if converted version
   IfConversionHandler if_conversion_handler(id_set);
   const FuncBodyTransform if_converter = std::bind(& IfConversionHandler::transform, if_conversion_handler, _1, _2);
-  const auto if_convert_output = SinglePass<std::string>(string_to_parse, std::bind(pkt_func_transform, _1, if_converter)).output();
+  const auto if_convert_output = SinglePass<std::string>(std::bind(pkt_func_transform, _1, if_converter))(string_to_parse);
 
   // Parse file once again for strength reduction
-  const auto strength_reduce_output = SinglePass<std::string>(if_convert_output, std::bind(pkt_func_transform, _1, strength_reducer)).output();
+  const auto strength_reduce_output = SinglePass<std::string>(std::bind(pkt_func_transform, _1, strength_reducer))(if_convert_output);
 
   // Expression flattening, recurse to fixed point
-  const auto & expr_flat_output = FixedPointPass<std::string>(strength_reduce_output, ExprFlattenerHandler::transform).output();
+  const auto & expr_flat_output = FixedPointPass<std::string>(ExprFlattenerHandler::transform)(strength_reduce_output);
 
   TransformVector transforms = { expr_prop_transform, stateful_flank_transform, ssa_transform, partitioning_transform };
   std::cout << std::accumulate(transforms.begin(), transforms.end(), expr_flat_output, [] (const auto & current_output, const auto & transform)
-                               { return SinglePass<std::string>(current_output, transform).output(); });
+                               { return SinglePass<std::string>(transform)(current_output); });
 
   return 0;
 }
