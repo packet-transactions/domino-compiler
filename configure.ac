@@ -23,6 +23,10 @@ AC_CHECK_HEADERS([algorithm array cassert cmath queue \
 cstdio string sys/stat.h sys/types.h ctime tuple unistd.h unordered_map \
 utility vector], [], [AC_MSG_ERROR([Missing header file])])
 
+# Check for banzai headers
+AC_CHECK_HEADERS([pipeline.h stage.h field_container.h atom.h packet.h packet_latches.h],
+                 [], [AC_MSG_ERROR([Missing header files for banzai target machine])])
+
 # Check for clang
 AC_PATH_PROG([CLANG], [clang], [])
 AS_IF([test x"$CLANG" = x],
