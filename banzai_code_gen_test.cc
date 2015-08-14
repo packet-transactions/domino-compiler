@@ -16,7 +16,7 @@ int main(int argc, const char ** argv) {
   transforms.emplace_back(std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(), _1)));
 
   std::cout << std::accumulate(transforms.begin(), transforms.end(), string_to_parse, [] (const auto & current_output, const auto & transform)
-                               { return (*transform)(current_output); });
+                               { return (*transform)(current_output); }) << std::endl;
 
 
 }

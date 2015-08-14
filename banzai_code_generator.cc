@@ -41,6 +41,12 @@ std::string BanzaiCodeGenerator::rewrite_into_banzai_ops(const clang::Stmt * stm
     // N.B. Again by overloading the () operator
     const auto * decl_expr = dyn_cast<DeclRefExpr>(stmt);
     return   STATE_IDENTIFIER + "(\"" + clang_value_decl_printer(decl_expr->getDecl()) + "\")";
+  } else if (isa<IntegerLiteral>(stmt)) {
+    return clang_stmt_printer(stmt);
+  } else if (isa<ParenExpr>(stmt)) {
+    return "(" + rewrite_into_banzai_ops(dyn_cast<ParenExpr>(stmt)->getSubExpr()) + ")";
+  } else if (isa<ImplicitCastExpr>(stmt)) {
+    return rewrite_into_banzai_ops(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr());
   } else {
     throw std::logic_error("rewrite_into_banzai_ops cannot handle stmt of type " + std::string(stmt->getStmtClassName()));
   }
