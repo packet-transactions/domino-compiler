@@ -32,8 +32,7 @@ int main(int argc, const char ** argv) {
     /// Turn that into a shared library
     UniqueFile library_file("./libbanzai", ".so");
     run({GPLUSPLUS, "-shared", "-o", library_file.name(), object_file.name()});
-
   } catch (const std::exception & e) {
-   std::cerr << "Caught exception in main " << std::endl << e.what() << std::endl;
+    std::cerr << "Caught exception in main " << std::endl << e.what() << std::endl;
   }
 }
