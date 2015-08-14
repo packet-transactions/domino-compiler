@@ -30,8 +30,12 @@ int main(int argc, const char ** argv) {
     run({GPLUSPLUS, "-std=c++14", "-pedantic", "-Wconversion", "-Wsign-conversion", "-Wall", "-Wextra", "-Weffc++", "-Werror", "-fno-default-inline", "-g", "-c", banzai_file.name(), "-fPIC", "-DPIC", "-o", object_file.name()});
 
     /// Turn that into a shared library
-    UniqueFile library_file("./libbanzai", ".so");
+    TempFile library_file("/tmp/libbanzai", ".so");
     run({GPLUSPLUS, "-shared", "-o", library_file.name(), object_file.name()});
+
+    /// Dump that on the screen (hopefully doesn't bork the terminal)
+    std::cout << file_to_str(library_file.name());
+
   } catch (const std::exception & e) {
     std::cerr << "Caught exception in main " << std::endl << e.what() << std::endl;
   }
