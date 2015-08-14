@@ -6,7 +6,6 @@
 #include "expr_flattener_handler.h"
 #include "strength_reducer.h"
 
-#include <memory>
 #include <utility>
 #include <iostream>
 #include <set>
@@ -21,9 +20,6 @@
 // (Partial Function Application)
 using std::placeholders::_1;
 using std::placeholders::_2;
-
-// Vector of Transform functions, each transform function runs within a CompilerPass
-typedef  std::vector<std::unique_ptr<CompilerPass>> TransformVector;
 
 int main(int argc, const char **argv) {
   // Get string that needs to be parsed
