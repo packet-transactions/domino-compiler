@@ -58,11 +58,10 @@ std::string BanzaiCodeGenerator::rewrite_into_banzai_ops(const clang::Stmt * stm
 }
 
 std::string BanzaiCodeGenerator::rewrite_into_banzai_atom(const clang::Stmt * stmt)  const {
-  return "Packet " +
+  return "void " +
          unique_identifiers_.get_unique_identifier("atom") +
-         "(const Packet & " + PACKET_IDENTIFIER + ", const State & " + STATE_IDENTIFIER + " __attribute__((unused))) { " +
-         rewrite_into_banzai_ops(stmt) +
-         " return " + PACKET_IDENTIFIER + "; }";
+         "(Packet & " + PACKET_IDENTIFIER + ", State & " + STATE_IDENTIFIER + " __attribute__((unused))) {\n" +
+         rewrite_into_banzai_ops(stmt) + "\n }";
 }
 
 std::string BanzaiCodeGenerator::transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const {
