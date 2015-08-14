@@ -1,6 +1,7 @@
 #include "banzai_code_generator.h"
 
 #include <string>
+#include <tuple>
 
 #include "clang/AST/Expr.h"
 #include "clang/AST/Decl.h"
@@ -58,14 +59,22 @@ std::string BanzaiCodeGenerator::rewrite_into_banzai_ops(const clang::Stmt * stm
   }
 }
 
-std::string BanzaiCodeGenerator::rewrite_into_banzai_atom(const clang::Stmt * stmt)  const {
-  return "void " +
-         unique_identifiers_.get_unique_identifier("atom") +
+std::tuple<BanzaiCodeGenerator::BanzaiAtomDefinition,
+           BanzaiCodeGenerator::BanzaiPacketFieldSet,
+           BanzaiCodeGenerator::BanzaiAtomName>
+BanzaiCodeGenerator::rewrite_into_banzai_atom(const clang::Stmt * stmt)  const {
+  const auto atom_name = unique_identifiers_.get_unique_identifier("atom");
+  return std::make_tuple(
+         "void " +
+         atom_name +
          "(Packet & " + PACKET_IDENTIFIER + ", State & " + STATE_IDENTIFIER + " __attribute__((unused))) {\n" +
-         rewrite_into_banzai_ops(stmt) + "\n }";
+         rewrite_into_banzai_ops(stmt) + "\n }",
+
+         gen_pkt_field_list(stmt),
+         atom_name);
 }
 
-std::string BanzaiCodeGenerator::transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const {
+BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const {
   // Storage for returned string
   std::string ret;
 
@@ -76,7 +85,22 @@ std::string BanzaiCodeGenerator::transform_translation_unit(const clang::Transla
         isa<RecordDecl>(child_decl)) {
       // Just quench these, don't emit them
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
-      ret = rewrite_into_banzai_atom(dyn_cast<FunctionDecl>(child_decl)->getBody());
+      const auto return_tuple = rewrite_into_banzai_atom(dyn_cast<FunctionDecl>(child_decl)->getBody());
+
+      // Generate atom definition
+      ret += std::get<BanzaiAtomDefinition>(return_tuple);
+
+      // Generate test_fields for banzai
+      ret += "PacketFieldSet test_fields";
+      ret += "({";
+      for (const auto & field : std::get<BanzaiPacketFieldSet>(return_tuple)) {
+        ret += "{\"" + field + "\",";
+      }
+      ret.back() = '}';
+      ret += ")";
+
+      // Generate test_pipeline for banzai
+      ret += "Pipeline test_pipeline{{Atom(" + std::get<BanzaiAtomName>(return_tuple) + ")}}";
     } else {
       assert(isa<TypedefDecl>(child_decl));
     }

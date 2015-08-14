@@ -14,6 +14,13 @@
 /// a new one, while modifying some internal state.
 class BanzaiCodeGenerator {
  public:
+  /// Convenience typedefs
+  typedef std::string BanzaiAtomDefinition;
+  typedef std::string BanzaiAtomBody;
+  typedef std::set<std::string> BanzaiPacketFieldSet;
+  typedef std::string BanzaiAtomName;
+  typedef std::string BanzaiProgram;
+
   /// Packet identifier when generating banzai code
   static const std::string PACKET_IDENTIFIER;
 
@@ -21,20 +28,27 @@ class BanzaiCodeGenerator {
   static const std::string STATE_IDENTIFIER;
 
   /// Transform a given clang::Stmt into banzai ops
-  std::string rewrite_into_banzai_ops(const clang::Stmt * stmt) const;
+  BanzaiAtomBody rewrite_into_banzai_ops(const clang::Stmt * stmt) const;
 
   /// Transform a given clang::Stmt into a banzai atom,
-  /// by prepending a function signature, appending a return Pkt
+  /// by prepending a function signature
   /// and calling rewrite_into_banzai_ops to generate the body
-  std::string rewrite_into_banzai_atom(const clang::Stmt * stmt) const;
+  /// Return a tuple consisting of:
+  /// 1. The rewritten body
+  /// 2. A field set consisting of all packet fields for test packet generation
+  /// 3. The name of the new atom.
+  std::tuple<BanzaiAtomDefinition,
+             BanzaiPacketFieldSet,
+             BanzaiAtomName>
+  rewrite_into_banzai_atom(const clang::Stmt * stmt) const;
 
   /// Transform a translation unit into banzai atoms, useful for fuzzing
   /// initial passes in the compiler, well, everything except the last pass
-  std::string transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const;
+  BanzaiProgram transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const;
 
   /// Determine all fields used within a clang::Stmt, to generate a field
   /// list for banzai. The field list is to generate random packets.
-  std::set<std::string> gen_pkt_field_list(const clang::Stmt * stmt) const;
+  BanzaiPacketFieldSet gen_pkt_field_list(const clang::Stmt * stmt) const;
 
  private:
   /// Generate unique names for atom functions.
