@@ -6,6 +6,11 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/Decl.h"
 
+#include "third_party/temp_file.hh"
+#include "third_party/system_runner.hh"
+
+#include "util.h"
+#include "config.h"
 #include "set_idioms.h"
 #include "clang_utility_functions.h"
 
@@ -162,7 +167,27 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       assert(isa<TypedefDecl>(child_decl));
     }
   }
-  return ret;
+
+  // Turn banzai C++ code into a library
+  return gen_lib_as_string(ret);
+}
+
+BanzaiCodeGenerator::BanzaiLibString BanzaiCodeGenerator::gen_lib_as_string(const BanzaiCodeGenerator::BanzaiProgram & banzai_program) const {
+  // TempFile to hold banzai_program
+  TempFile banzai_prog_file("/tmp/banzai_prog", ".cc");
+  banzai_prog_file.write(banzai_program);
+
+  // Compile banzai_file into a .o file
+  TempFile object_file("/tmp/banzai_obj", ".o");
+  run({GPLUSPLUS, "-std=c++14", "-pedantic", "-Wconversion", "-Wsign-conversion", "-Wall", "-Wextra", "-Weffc++", "-Werror", "-fno-default-inline", "-g", "-c", banzai_prog_file.name(), "-fPIC", "-DPIC", "-o", object_file.name()});
+
+  // Turn that into a shared library
+  TempFile library_file("/tmp/libbanzai", ".so");
+  run({GPLUSPLUS, "-shared", "-o", library_file.name(), object_file.name()});
+
+  // Return library file binary as a string
+  // (hopefully doesn't bork the terminal)
+  return file_to_str(library_file.name());
 }
 
 std::set<std::string> BanzaiCodeGenerator::gen_pkt_field_list(const clang::Stmt * stmt) const {

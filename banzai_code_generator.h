@@ -20,6 +20,7 @@ class BanzaiCodeGenerator {
   typedef std::set<std::string> BanzaiPacketFieldSet;
   typedef std::string BanzaiAtomName;
   typedef std::string BanzaiProgram;
+  typedef std::string BanzaiLibString;
 
   /// Packet identifier when generating banzai code
   static const std::string PACKET_IDENTIFIER;
@@ -56,6 +57,10 @@ class BanzaiCodeGenerator {
   /// before packet variable declarations, before scalar functions,
   /// before packet functions.
   int get_order(const clang::Decl * decl) const;
+
+  /// Turn banzai program into a shared library,
+  /// by compiling with g++ and then turning the .o file into a .so library
+  BanzaiLibString gen_lib_as_string(const BanzaiProgram & banzai_program) const;
 
   /// Generate unique names for atom functions.
   /// The only forbidden identifiers are PACKET_IDENTIFIER and STATE_IDENTIFIER,
