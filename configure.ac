@@ -20,6 +20,14 @@ AC_SUBST([LLVM_LDFLAGS])
 # Checks for header files.
 AC_LANG_PUSH(C++)
 
+# Search for g++, because we shell out to g++ when generating banzai code
+AC_ARG_VAR([GPLUSPLUS], [path to g++])
+AC_PATH_PROGS([GPLUSPLUS], [g++], [no], [$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/bin$PATH_SEPARATOR/usr/bin])
+if test "$GPLUSPLUS" = "no"; then
+  AC_MSG_ERROR([g++ is required])
+fi
+AC_DEFINE_UNQUOTED([GPLUSPLUS], ["$GPLUSPLUS"], [path to g++])
+
 AC_CHECK_HEADERS([algorithm array cassert cmath queue \
 cstdio string sys/stat.h sys/types.h ctime tuple unistd.h unordered_map \
 utility vector], [], [AC_MSG_ERROR([Missing header file])])
