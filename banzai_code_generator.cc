@@ -87,8 +87,16 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       const auto return_tuple = rewrite_into_banzai_atom(dyn_cast<FunctionDecl>(child_decl)->getBody());
 
+      // Add include files for banzai (the equivalent of a target ABI)
+      ret += "#include \"packet.h\"\n";
+      ret += "#include \"atom.h\"\n";
+      ret += "#include \"pipeline.h\"\n";
+
+      // Add an extern C flank to get around name mangling
+      ret += "extern \"C\"{\n";
+
       // Generate atom definition
-      ret += std::get<0>(return_tuple) + ";";
+      ret += std::get<0>(return_tuple);
 
       // Generate test_fields for banzai
       ret += "PacketFieldSet test_fields";
@@ -100,7 +108,11 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       ret += ");";
 
       // Generate test_pipeline for banzai
-      ret += "Pipeline test_pipeline{{Atom(" + std::get<2>(return_tuple) + ")}};";
+      ret += "Pipeline test_pipeline{{Atom(" + std::get<2>(return_tuple) + ", FieldContainer())}};";
+
+      // Close extern C declaration
+      ret += "}";
+
     } else {
       assert(isa<TypedefDecl>(child_decl));
     }
