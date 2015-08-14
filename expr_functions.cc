@@ -9,7 +9,6 @@
 using namespace clang;
 
 std::set<std::string> ExprFunctions::get_vars(const clang::Expr * expr) {
-  // Get all stateful right hand sides of inst
   assert(expr);
   if (isa<ParenExpr>(expr)) {
     return get_vars(dyn_cast<ParenExpr>(expr)->getSubExpr());
@@ -46,7 +45,6 @@ std::set<std::string> ExprFunctions::get_vars(const clang::Expr * expr) {
 
 std::string ExprFunctions::replace_vars(const clang::Expr * expr,
                                         const std::map<std::string, std::string> & repl_map) {
-  // Get all stateful right hand sides of inst
   assert(expr);
   if (isa<ParenExpr>(expr)) {
     return replace_vars(dyn_cast<ParenExpr>(expr)->getSubExpr(), repl_map);
