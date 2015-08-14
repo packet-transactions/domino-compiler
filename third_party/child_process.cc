@@ -29,9 +29,9 @@ int do_clone( const bool new_namespace )
         }
     }
 
-    return SystemCall( "clone", syscall( SYS_clone,
-                                         SIGCHLD | (new_namespace ? CLONE_NEWNET : 0),
-                                         nullptr, nullptr, nullptr, nullptr ) );
+    return static_cast<int>(SystemCall( "clone", syscall( SYS_clone,
+                                        SIGCHLD | (new_namespace ? CLONE_NEWNET : 0),
+                                        nullptr, nullptr, nullptr, nullptr ) ));
 }
 
 /* start up a child process running the supplied lambda */
@@ -67,7 +67,7 @@ bool ChildProcess::waitable( void ) const
 
     siginfo_t infop;
     zero( infop );
-    SystemCall( "waitid", waitid( P_PID, pid_, &infop,
+    SystemCall( "waitid", waitid( P_PID, static_cast<unsigned int>(pid_), &infop,
                                   WEXITED | WSTOPPED | WCONTINUED | WNOHANG | WNOWAIT ) );
 
     if ( infop.si_pid == 0 ) {
@@ -87,7 +87,7 @@ void ChildProcess::wait( const bool nonblocking )
 
     siginfo_t infop;
     zero( infop );
-    SystemCall( "waitid", waitid( P_PID, pid_, &infop,
+    SystemCall( "waitid", waitid( P_PID, static_cast<unsigned int>(pid_), &infop,
                                   WEXITED | WSTOPPED | WCONTINUED | (nonblocking ? WNOHANG : 0) ) );
 
     if ( nonblocking and (infop.si_pid == 0) ) {
