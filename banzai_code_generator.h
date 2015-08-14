@@ -5,6 +5,7 @@
 #include <string>
 
 #include "unique_identifiers.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/Stmt.h"
 
 /// Simple code generation for banzai, our fake pipelined switch
