@@ -94,7 +94,7 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       ret += "PacketFieldSet test_fields";
       ret += "({";
       for (const auto & field : std::get<1>(return_tuple)) {
-        ret += "{\"" + field + "\",";
+        ret += "\"" + field + "\",";
       }
       ret.back() = '}';
       ret += ");";
