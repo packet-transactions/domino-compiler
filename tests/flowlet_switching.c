@@ -9,8 +9,8 @@ struct Packet {
   int next_hop;
 };
 
-int last_time;
-int next_hop;
+int last_time = 0;
+int next_hop = 0;
 
 void func(struct Packet pkt) {
   pkt.new_hop = (pkt.sport * pkt.dport) % NUM_HOPS;

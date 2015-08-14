@@ -1,4 +1,4 @@
-int x;
+int x = 0;
 
 struct Packet {
   int a;
