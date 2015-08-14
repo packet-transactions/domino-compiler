@@ -6,6 +6,7 @@ AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
+AC_PROG_RANLIB
 
 # Add picky CXXFLAGS
 CPPFLAGS="-std=c++14 -pthread"
@@ -41,6 +42,7 @@ AC_TYPE_SIZE_T
 AC_TYPE_UINT64_T
 AC_LANG_POP(C++)
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile
+                 third_party/Makefile])
 
 AC_OUTPUT

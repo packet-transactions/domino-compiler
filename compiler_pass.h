@@ -20,7 +20,7 @@
 #include "clang/Parse/ParseAST.h"
 #include "llvm/Support/Host.h"
 
-#include "temp_file.hh"
+#include "third_party/temp_file.hh"
 #include "clang_utility_functions.h"
 
 

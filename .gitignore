@@ -32,3 +32,5 @@ ssa
 dep_graph
 rewritersample
 domino
+banzai_code_gen_test
+third_party/libmahimahi.a
