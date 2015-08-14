@@ -88,7 +88,7 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       const auto return_tuple = rewrite_into_banzai_atom(dyn_cast<FunctionDecl>(child_decl)->getBody());
 
       // Generate atom definition
-      ret += std::get<0>(return_tuple);
+      ret += std::get<0>(return_tuple) + ";";
 
       // Generate test_fields for banzai
       ret += "PacketFieldSet test_fields";
@@ -97,10 +97,10 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
         ret += "{\"" + field + "\",";
       }
       ret.back() = '}';
-      ret += ")";
+      ret += ");";
 
       // Generate test_pipeline for banzai
-      ret += "Pipeline test_pipeline{{Atom(" + std::get<2>(return_tuple) + ")}}";
+      ret += "Pipeline test_pipeline{{Atom(" + std::get<2>(return_tuple) + ")}};";
     } else {
       assert(isa<TypedefDecl>(child_decl));
     }
