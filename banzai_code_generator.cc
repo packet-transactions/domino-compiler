@@ -14,6 +14,15 @@ using namespace clang;
 const std::string BanzaiCodeGenerator::PACKET_IDENTIFIER = "packet";
 const std::string BanzaiCodeGenerator::STATE_IDENTIFIER  = "state";
 
+int BanzaiCodeGenerator::get_order(const Decl * decl) const {
+  if (isa<VarDecl>(decl)) return 1;
+  else if (isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 2;
+  else if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 3;
+  else if (isa<RecordDecl>(decl)) return 4;
+  else if (isa<TypedefDecl>(decl)) return 5;
+  else {assert(false); return -1; }
+}
+
 std::string BanzaiCodeGenerator::rewrite_into_banzai_ops(const clang::Stmt * stmt) const {
   assert(stmt);
 
@@ -75,13 +84,32 @@ BanzaiCodeGenerator::rewrite_into_banzai_atom(const clang::Stmt * stmt)  const {
 }
 
 BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const {
+  // Accumulate all declarations
+  std::vector<const Decl*> all_decls;
+  for (const auto * decl : dyn_cast<DeclContext>(tu_decl)->decls())
+    all_decls.emplace_back(decl);
+
+  // Sort all_decls
+  std::sort(all_decls.begin(),
+            all_decls.end(),
+            [this] (const auto * decl1, const auto * decl2)
+            { return this->get_order(decl1) < this->get_order(decl2); });
+
   // Storage for returned string
   std::string ret;
+  // Storage for initial values of all state variables
+  std::map<std::string, uint32_t> init_values;
 
-  for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
+  for (const auto * child_decl : all_decls) {
     assert(child_decl);
-    if (isa<VarDecl>(child_decl) or
-        (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) or
+    if (isa<VarDecl>(child_decl)) {
+      const auto * var_decl = dyn_cast<VarDecl>(child_decl);
+      // Forbid certain constructs
+      if (not var_decl->hasInit()) throw std::logic_error("All state variables must have an initializer in domino: " + clang_decl_printer(var_decl)+ " doesn't");
+      if (init_values.find(clang_value_decl_printer(var_decl)) != init_values.end()) throw std::logic_error("Reinitializing " + clang_value_decl_printer(var_decl) + " not permitted");
+      if (not isa<IntegerLiteral>(var_decl->getInit())) throw std::logic_error("Only integers can be used to initialize state variables " + clang_value_decl_printer(var_decl) + " uses " + clang_stmt_printer(var_decl->getInit()));
+      init_values[clang_value_decl_printer(var_decl)] = static_cast<uint32_t>(std::stoul(clang_stmt_printer(var_decl->getInit())));
+    } else if ((isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) or
         isa<RecordDecl>(child_decl)) {
       // Just quench these, don't emit them
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {

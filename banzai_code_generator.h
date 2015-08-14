@@ -51,6 +51,12 @@ class BanzaiCodeGenerator {
   BanzaiPacketFieldSet gen_pkt_field_list(const clang::Stmt * stmt) const;
 
  private:
+  /// Get priority order of declarations in a TranslationUnitDecl.
+  /// This guarantees that we process state variable definitions
+  /// before packet variable declarations, before scalar functions,
+  /// before packet functions.
+  int get_order(const clang::Decl * decl) const;
+
   /// Generate unique names for atom functions.
   /// The only forbidden identifiers are PACKET_IDENTIFIER and STATE_IDENTIFIER,
   /// because they are used as parameter variables for the atoms.
