@@ -135,8 +135,16 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       ret.back() = '}';
       ret += ");";
 
+      // Generate initial values for all state variables
+      std::string init_state_str = "FieldContainer(std::map<FieldContainer::FieldName, uint32_t>{";
+      for (const auto & state_var_pair : init_values) {
+        init_state_str += "{\"" + state_var_pair.first + "\", " + std::to_string(state_var_pair.second) + "},";
+      }
+      init_state_str.back() = '}'; // to close std::map constructor's initializer list
+      init_state_str += ")"; // to close FieldContainer constructor's left parenthesis
+
       // Generate test_pipeline for banzai
-      ret += "Pipeline test_pipeline{{Atom(" + std::get<2>(return_tuple) + ", FieldContainer())}};";
+      ret += "Pipeline test_pipeline{{Atom(" + std::get<2>(return_tuple) + ", " + init_state_str + ")}};";
 
       // Close extern C declaration
       ret += "}";
