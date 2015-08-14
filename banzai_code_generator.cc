@@ -53,3 +53,22 @@ std::string BanzaiCodeGenerator::rewrite_into_banzai_atom(const clang::Stmt * st
          rewrite_into_banzai_ops(stmt) +
          " return " + PACKET_IDENTIFIER + "; }";
 }
+
+std::string BanzaiCodeGenerator::transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const {
+  // Storage for returned string
+  std::string ret;
+
+  for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
+    assert(child_decl);
+    if (isa<VarDecl>(child_decl) or
+        (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) or
+        isa<RecordDecl>(child_decl)) {
+      // Just quench these, don't emit them
+    } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
+      ret = rewrite_into_banzai_atom(dyn_cast<FunctionDecl>(child_decl)->getBody());
+    } else {
+      assert(isa<TypedefDecl>(child_decl));
+    }
+  }
+  return ret;
+}
