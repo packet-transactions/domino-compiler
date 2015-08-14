@@ -5,6 +5,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/Decl.h"
 
+#include "set_idioms.h"
 #include "clang_utility_functions.h"
 
 using namespace clang;
@@ -81,4 +82,43 @@ std::string BanzaiCodeGenerator::transform_translation_unit(const clang::Transla
     }
   }
   return ret;
+}
+
+std::set<std::string> BanzaiCodeGenerator::gen_pkt_field_list(const clang::Stmt * stmt) const {
+  // Recursively scan stmt to generate a set of fields representing
+  // all the packet fields used within stmt.
+  assert(stmt);
+  std::set<std::string> ret;
+  if (isa<CompoundStmt>(stmt)) {
+    for (const auto & child : stmt->children()) {
+      ret = ret + gen_pkt_field_list(child);
+    }
+    return ret;
+  } else if (isa<IfStmt>(stmt)) {
+    const auto * if_stmt = dyn_cast<IfStmt>(stmt);
+    if (if_stmt->getElse() != nullptr) {
+      return gen_pkt_field_list(if_stmt->getCond()) + gen_pkt_field_list(if_stmt->getThen()) + gen_pkt_field_list(if_stmt->getElse());
+    } else {
+      return gen_pkt_field_list(if_stmt->getCond()) + gen_pkt_field_list(if_stmt->getThen());
+    }
+  } else if (isa<BinaryOperator>(stmt)) {
+    const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
+    return gen_pkt_field_list(bin_op->getLHS()) + gen_pkt_field_list(bin_op->getRHS());
+  } else if (isa<ConditionalOperator>(stmt)) {
+    const auto * cond_op = dyn_cast<ConditionalOperator>(stmt);
+    return gen_pkt_field_list(cond_op->getCond()) + gen_pkt_field_list(cond_op->getTrueExpr()) + gen_pkt_field_list(cond_op->getFalseExpr());
+  } else if (isa<MemberExpr>(stmt)) {
+    const auto * member_expr = dyn_cast<MemberExpr>(stmt);
+    return std::set<std::string>{clang_value_decl_printer(member_expr->getMemberDecl())};
+  } else if (isa<DeclRefExpr>(stmt)) {
+    return std::set<std::string>();
+  } else if (isa<IntegerLiteral>(stmt)) {
+    return std::set<std::string>();
+  } else if (isa<ParenExpr>(stmt)) {
+    return gen_pkt_field_list(dyn_cast<ParenExpr>(stmt)->getSubExpr());
+  } else if (isa<ImplicitCastExpr>(stmt)) {
+    return gen_pkt_field_list(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr());
+  } else {
+    throw std::logic_error("gen_pkt_field_list cannot handle stmt of type " + std::string(stmt->getStmtClassName()));
+  }
 }

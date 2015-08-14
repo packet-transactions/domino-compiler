@@ -31,6 +31,11 @@ class BanzaiCodeGenerator {
   /// Transform a translation unit into banzai atoms, useful for fuzzing
   /// initial passes in the compiler, well, everything except the last pass
   std::string transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const;
+
+  /// Determine all fields used within a clang::Stmt, to generate a field
+  /// list for banzai. The field list is to generate random packets.
+  std::set<std::string> gen_pkt_field_list(const clang::Stmt * stmt) const;
+
  private:
   /// Generate unique names for atom functions.
   /// The only forbidden identifiers are PACKET_IDENTIFIER and STATE_IDENTIFIER,
