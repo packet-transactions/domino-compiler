@@ -9,14 +9,10 @@
 
 #include <sys/types.h>
 
-#include "address.hh"
-
 std::string shell_path( void );
 void drop_privileges( void );
 void check_requirements( const int argc, const char * const argv[] );
 void make_directory( const std::string & directory );
-Address first_nameserver( void );
-std::vector< Address > all_nameservers( void );
 std::vector< std::string > list_directory_contents( const std::string & dir );
 void prepend_shell_prefix( const std::string & str );
 template <typename T> void zero( T & x ) { memset( &x, 0, sizeof( x ) ); }

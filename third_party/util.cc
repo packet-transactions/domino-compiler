@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <paths.h>
 #include <cstdlib>
+#include <cassert>
 #include <fstream>
 #include <resolv.h>
 #include <sys/stat.h>
@@ -17,10 +18,8 @@
 #include "util.hh"
 #include "exception.hh"
 #include "file_descriptor.hh"
-#include "poller.hh"
 
 using namespace std;
-using namespace PollerShortNames;
 
 /* Get the user's shell */
 string shell_path( void )
@@ -104,28 +103,6 @@ void make_directory( const string & directory )
     assert( directory.back() == '/' );
 
     SystemCall( "mkdir " + directory, mkdir( directory.c_str(), 00700 ) );
-}
-
-Address first_nameserver( void )
-{
-    /* find the first nameserver */
-    SystemCall( "res_init", res_init() );
-    return _res.nsaddr;
-}
-
-vector< Address > all_nameservers( void )
-{
-    SystemCall( "res_init", res_init() );
-
-    vector< Address > nameservers;
-
-    /* iterate through the nameservers */
-    for ( unsigned int i = 0; i < MAXNS; i++ ) {
-        if ( _res.nsaddr_list[ i ].sin_port ) {
-            nameservers.emplace_back( _res.nsaddr_list[ i ] );
-        }
-    }
-    return nameservers;
 }
 
 /* tag bash-like shells with the delay parameter */
