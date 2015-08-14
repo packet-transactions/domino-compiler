@@ -34,9 +34,9 @@ std::string BanzaiCodeGenerator::rewrite_into_banzai_ops(const clang::Stmt * stm
   } else if (isa<IfStmt>(stmt)) {
     const auto * if_stmt = dyn_cast<IfStmt>(stmt);
     std::string ret;
-    ret += "if (" + rewrite_into_banzai_ops(if_stmt->getCond()) + ") {" + rewrite_into_banzai_ops(if_stmt->getThen()) + " }";
+    ret += "if (" + rewrite_into_banzai_ops(if_stmt->getCond()) + ") {" + rewrite_into_banzai_ops(if_stmt->getThen()) + "; }";
     if (if_stmt->getElse() != nullptr) {
-      ret += "else {" + rewrite_into_banzai_ops(if_stmt->getElse()) + " }";
+      ret += "else {" + rewrite_into_banzai_ops(if_stmt->getElse()) + "; }";
     }
     return ret;
   } else if (isa<BinaryOperator>(stmt)) {
@@ -44,9 +44,9 @@ std::string BanzaiCodeGenerator::rewrite_into_banzai_ops(const clang::Stmt * stm
     return rewrite_into_banzai_ops(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + rewrite_into_banzai_ops(bin_op->getRHS());
   } else if (isa<ConditionalOperator>(stmt)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(stmt);
-    return   rewrite_into_banzai_ops(cond_op->getCond()) + " ? "
-           + rewrite_into_banzai_ops(cond_op->getTrueExpr()) + " : "
-           + rewrite_into_banzai_ops(cond_op->getFalseExpr()) + " ;";
+    return   "(" + rewrite_into_banzai_ops(cond_op->getCond()) + ") ? ("
+             + rewrite_into_banzai_ops(cond_op->getTrueExpr()) + ") : ("
+             + rewrite_into_banzai_ops(cond_op->getFalseExpr()) + ")";
   } else if (isa<MemberExpr>(stmt)) {
     const auto * member_expr = dyn_cast<MemberExpr>(stmt);
     // All packet fields are of the type p(...) in banzai
@@ -76,7 +76,7 @@ BanzaiCodeGenerator::rewrite_into_banzai_atom(const clang::Stmt * stmt)  const {
   return std::make_tuple(
          "void " +
          atom_name +
-         "(Packet & " + PACKET_IDENTIFIER + ", State & " + STATE_IDENTIFIER + " __attribute__((unused))) {\n" +
+         "(Packet & " + PACKET_IDENTIFIER + " __attribute__((unused)), State & " + STATE_IDENTIFIER + " __attribute__((unused))) {\n" +
          rewrite_into_banzai_ops(stmt) + "\n }",
 
          gen_pkt_field_list(stmt),
