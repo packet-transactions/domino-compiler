@@ -22,27 +22,30 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 
 int main(int argc, const char **argv) {
-  // Get string that needs to be parsed
-  const auto string_to_parse = file_to_str(get_file_name(argc, argv));
+  try {
+    // Get string that needs to be parsed
+    const auto string_to_parse = file_to_str(get_file_name(argc, argv));
 
-  // add all passes
-  // Unfortunately, we can't use a simpler initializer list because initializer lists
-  // use the copy constructor, while unique_ptr's are move-only
-  // http://stackoverflow.com/questions/9618268/initializing-container-of-unique-ptrs-from-initializer-list-fails-with-gcc-4-7
-  // http://stackoverflow.com/questions/8468774/can-i-list-initialize-a-vector-of-move-only-type/8469002#8469002
-  // http://stackoverflow.com/questions/8193102/initializer-list-and-move-semantics
-  TransformVector transforms;
-  transforms.emplace_back(std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)));
-  transforms.emplace_back(std::make_unique<SinglePass>(strength_reducer_transform));
-  transforms.emplace_back(std::make_unique<FixedPointPass>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1)));
-  transforms.emplace_back(std::make_unique<SinglePass>(expr_prop_transform));
-  transforms.emplace_back(std::make_unique<SinglePass>(stateful_flank_transform));
-  transforms.emplace_back(std::make_unique<SinglePass>(ssa_transform));
-  transforms.emplace_back(std::make_unique<SinglePass>(partitioning_transform));
+    // add all passes
+    // Unfortunately, we can't use a simpler initializer list because initializer lists
+    // use the copy constructor, while unique_ptr's are move-only
+    // http://stackoverflow.com/questions/9618268/initializing-container-of-unique-ptrs-from-initializer-list-fails-with-gcc-4-7
+    // http://stackoverflow.com/questions/8468774/can-i-list-initialize-a-vector-of-move-only-type/8469002#8469002
+    // http://stackoverflow.com/questions/8193102/initializer-list-and-move-semantics
+    TransformVector transforms;
+    transforms.emplace_back(std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)));
+    transforms.emplace_back(std::make_unique<SinglePass>(strength_reducer_transform));
+    transforms.emplace_back(std::make_unique<FixedPointPass>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1)));
+    transforms.emplace_back(std::make_unique<SinglePass>(expr_prop_transform));
+    transforms.emplace_back(std::make_unique<SinglePass>(stateful_flank_transform));
+    transforms.emplace_back(std::make_unique<SinglePass>(ssa_transform));
+    transforms.emplace_back(std::make_unique<SinglePass>(partitioning_transform));
 
-  /// Process them one after the other
-  std::cout << std::accumulate(transforms.begin(), transforms.end(), string_to_parse, [] (const auto & current_output, const auto & transform)
-                               { return (*transform)(current_output); });
-
+    /// Process them one after the other
+    std::cout << std::accumulate(transforms.begin(), transforms.end(), string_to_parse, [] (const auto & current_output, const auto & transform)
+                                 { return (*transform)(current_output); });
+  } catch (const std::exception & e) {
+    std::cerr << "Caught exception in main " << std::endl << e.what() << std::endl;
+  }
   return 0;
 }
