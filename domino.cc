@@ -32,33 +32,33 @@ std::vector<std::string> split(const std::string & input, const std::string & re
   return {first, last};
 }
 
+std::unique_ptr<CompilerPass> create_pass(const std::string & pass_name) {
+  if (pass_name == "if_converter") return std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1));
+  else if (pass_name == "strength_reducer") return std::make_unique<SinglePass>(strength_reducer_transform);
+  else if (pass_name == "expr_flattener") return std::make_unique<FixedPointPass>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1));
+  else if (pass_name == "expr_propagater") return std::make_unique<SinglePass>(expr_prop_transform);
+  else if (pass_name == "stateful_flanks") return std::make_unique<SinglePass>(stateful_flank_transform);
+  else if (pass_name == "ssa") return std::make_unique<SinglePass>(ssa_transform);
+  else if (pass_name == "partitioning") return std::make_unique<SinglePass>(partitioning_transform);
+  else throw std::logic_error("Unknown pass " + pass_name);
+}
+
 int main(int argc, const char **argv) {
   try {
     // Get string that needs to be parsed and pass list
     std::string string_to_parse = "";
     std::vector<std::string> pass_list;
-    if (argc < 3) {
+    if (argc != 3) {
       std::cerr << "Usage: " << argv[0] << " file_name comma-separated pass list (if_converter, strength_reducer, expr_flattener, expr_propagater, stateful_flanks, ssa, partitioning) \n";
       exit(1);
     } else {
-      string_to_parse = std::string(argv[1]);
+      string_to_parse = file_to_str(std::string(argv[1]));
       pass_list = split(std::string(argv[2]), ",");
     }
 
-    // add all passes
-    // Unfortunately, we can't use a simpler initializer list because initializer lists
-    // use the copy constructor, while unique_ptr's are move-only
-    // http://stackoverflow.com/questions/9618268/initializing-container-of-unique-ptrs-from-initializer-list-fails-with-gcc-4-7
-    // http://stackoverflow.com/questions/8468774/can-i-list-initialize-a-vector-of-move-only-type/8469002#8469002
-    // http://stackoverflow.com/questions/8193102/initializer-list-and-move-semantics
+    // add all user-requested passes in the same order that the user specified
     TransformVector transforms;
-    transforms.emplace_back(std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)));
-    transforms.emplace_back(std::make_unique<SinglePass>(strength_reducer_transform));
-    transforms.emplace_back(std::make_unique<FixedPointPass>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1)));
-    transforms.emplace_back(std::make_unique<SinglePass>(expr_prop_transform));
-    transforms.emplace_back(std::make_unique<SinglePass>(stateful_flank_transform));
-    transforms.emplace_back(std::make_unique<SinglePass>(ssa_transform));
-    transforms.emplace_back(std::make_unique<SinglePass>(partitioning_transform));
+    for (const auto & pass_name : pass_list) transforms.emplace_back(create_pass(pass_name));
 
     /// Process them one after the other
     std::cout << std::accumulate(transforms.begin(), transforms.end(), string_to_parse, [] (const auto & current_output, const auto & transform)
