@@ -11,6 +11,7 @@
 #include <set>
 #include <string>
 #include <functional>
+#include <regex>
 
 #include "util.h"
 #include "pkt_func_transform.h"
@@ -21,10 +22,28 @@
 using std::placeholders::_1;
 using std::placeholders::_2;
 
+/// Split string based on another string used as delimiter
+/// using C++11's regex_token_iterator
+/// Based on http://en.cppreference.com/w/cpp/regex/regex_token_iterator
+/// and http://stackoverflow.com/a/9437426/1152801
+std::vector<std::string> split(const std::string & input, const std::string & regex_str) {
+  std::regex regex_object(regex_str);
+  std::sregex_token_iterator first{input.begin(), input.end(), regex_object, -1}, last;
+  return {first, last};
+}
+
 int main(int argc, const char **argv) {
   try {
-    // Get string that needs to be parsed
-    const auto string_to_parse = file_to_str(get_file_name(argc, argv));
+    // Get string that needs to be parsed and pass list
+    std::string string_to_parse = "";
+    std::vector<std::string> pass_list;
+    if (argc < 3) {
+      std::cerr << "Usage: " << argv[0] << " file_name comma-separated pass list (if_converter, strength_reducer, expr_flattener, expr_propagater, stateful_flanks, ssa, partitioning) \n";
+      exit(1);
+    } else {
+      string_to_parse = std::string(argv[1]);
+      pass_list = split(std::string(argv[2]), ",");
+    }
 
     // add all passes
     // Unfortunately, we can't use a simpler initializer list because initializer lists
