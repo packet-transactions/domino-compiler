@@ -15,7 +15,8 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
   // Vector of newly created packet temporaries
   std::vector<std::string> new_decls = {};
 
-  // Create unique identifiers object
+  // Generate unique identifiers for packet temporaries,
+  // when replacing state variables with packet variables
   UniqueIdentifiers unique_identifiers(id_set);
 
   // 1. Identify all stateful variables in the program.
@@ -34,6 +35,9 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
 
     // If lhs is a DeclRefExpr, it's a stateful variable
+    // It's sufficient to inspect LHS alone to determine stateful variables,
+    // because we are assuming a stateful variable is written at least once.
+    // Otherwise, I don't see the point of a stateful variable.
     if (isa<DeclRefExpr>(lhs)) {
       const std::string  state_var = clang_stmt_printer(lhs);
       if (state_var_table.find(state_var) == state_var_table.end()) {
