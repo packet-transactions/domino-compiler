@@ -14,9 +14,6 @@
 /// a new one, while modifying some internal state.
 class BanzaiCodeGenerator {
  public:
-  /// Variable type: PACKET or STATE, used in gen_var_list;
-  enum class VariableType { PACKET, STATE };
-
   /// Convenience typedefs
   typedef std::string BanzaiAtomDefinition;
   typedef std::string BanzaiAtomBody;
@@ -52,12 +49,6 @@ class BanzaiCodeGenerator {
   /// Transform a translation unit into banzai atoms, useful for fuzzing
   /// initial passes in the compiler, well, everything except the last pass
   BanzaiProgram transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const;
-
-  /// Determine all variables (either packet or state) used within a clang::Stmt,
-  /// Used for two reasons:
-  /// 1. To generate a packet field list for banzai. The field list is to generate random packets.
-  /// 2. To generate initializers for all state variables used within a stmt.
-  BanzaiPacketFieldSet gen_var_list(const clang::Stmt * stmt, const VariableType & var_type) const;
 
  private:
   /// Get priority order of declarations in a TranslationUnitDecl.
