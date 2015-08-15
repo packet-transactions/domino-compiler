@@ -84,7 +84,7 @@ BanzaiCodeGenerator::rewrite_into_banzai_atom(const clang::Stmt * stmt)  const {
          "(Packet & " + PACKET_IDENTIFIER + " __attribute__((unused)), State & " + STATE_IDENTIFIER + " __attribute__((unused))) {\n" +
          rewrite_into_banzai_ops(stmt) + "\n }",
 
-         gen_pkt_field_list(stmt),
+         gen_var_list(stmt, VariableType::PACKET),
          atom_name);
 }
 
@@ -190,41 +190,42 @@ BanzaiCodeGenerator::BanzaiLibString BanzaiCodeGenerator::gen_lib_as_string(cons
   return file_to_str(library_file.name());
 }
 
-std::set<std::string> BanzaiCodeGenerator::gen_pkt_field_list(const clang::Stmt * stmt) const {
-  // Recursively scan stmt to generate a set of fields representing
-  // all the packet fields used within stmt.
+std::set<std::string> BanzaiCodeGenerator::gen_var_list(const clang::Stmt * stmt, const BanzaiCodeGenerator::VariableType & var_type) const {
+  // Recursively scan stmt to generate a set of strings representing
+  // either packet fields or state variables used within stmt
   assert(stmt);
   std::set<std::string> ret;
   if (isa<CompoundStmt>(stmt)) {
     for (const auto & child : stmt->children()) {
-      ret = ret + gen_pkt_field_list(child);
+      ret = ret + gen_var_list(child, var_type);
     }
     return ret;
   } else if (isa<IfStmt>(stmt)) {
     const auto * if_stmt = dyn_cast<IfStmt>(stmt);
     if (if_stmt->getElse() != nullptr) {
-      return gen_pkt_field_list(if_stmt->getCond()) + gen_pkt_field_list(if_stmt->getThen()) + gen_pkt_field_list(if_stmt->getElse());
+      return gen_var_list(if_stmt->getCond(), var_type) + gen_var_list(if_stmt->getThen(), var_type) + gen_var_list(if_stmt->getElse(), var_type);
     } else {
-      return gen_pkt_field_list(if_stmt->getCond()) + gen_pkt_field_list(if_stmt->getThen());
+      return gen_var_list(if_stmt->getCond(), var_type) + gen_var_list(if_stmt->getThen(), var_type);
     }
   } else if (isa<BinaryOperator>(stmt)) {
     const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
-    return gen_pkt_field_list(bin_op->getLHS()) + gen_pkt_field_list(bin_op->getRHS());
+    return gen_var_list(bin_op->getLHS(), var_type) + gen_var_list(bin_op->getRHS(), var_type);
   } else if (isa<ConditionalOperator>(stmt)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(stmt);
-    return gen_pkt_field_list(cond_op->getCond()) + gen_pkt_field_list(cond_op->getTrueExpr()) + gen_pkt_field_list(cond_op->getFalseExpr());
+    return gen_var_list(cond_op->getCond(), var_type) + gen_var_list(cond_op->getTrueExpr(), var_type) + gen_var_list(cond_op->getFalseExpr(), var_type);
   } else if (isa<MemberExpr>(stmt)) {
-    const auto * member_expr = dyn_cast<MemberExpr>(stmt);
-    return std::set<std::string>{clang_value_decl_printer(member_expr->getMemberDecl())};
+    const auto * packet_var_expr = dyn_cast<MemberExpr>(stmt);
+    return var_type == VariableType::PACKET ? std::set<std::string>{clang_value_decl_printer(packet_var_expr->getMemberDecl())} : std::set<std::string>();
   } else if (isa<DeclRefExpr>(stmt)) {
-    return std::set<std::string>();
+    const auto * state_var_expr = dyn_cast<DeclRefExpr>(stmt);
+    return var_type == VariableType::STATE ? std::set<std::string>{clang_stmt_printer(state_var_expr)} : std::set<std::string>();
   } else if (isa<IntegerLiteral>(stmt)) {
     return std::set<std::string>();
   } else if (isa<ParenExpr>(stmt)) {
-    return gen_pkt_field_list(dyn_cast<ParenExpr>(stmt)->getSubExpr());
+    return gen_var_list(dyn_cast<ParenExpr>(stmt)->getSubExpr(), var_type);
   } else if (isa<ImplicitCastExpr>(stmt)) {
-    return gen_pkt_field_list(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr());
+    return gen_var_list(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr(), var_type);
   } else {
-    throw std::logic_error("gen_pkt_field_list cannot handle stmt of type " + std::string(stmt->getStmtClassName()));
+    throw std::logic_error("gen_var_list cannot handle stmt of type " + std::string(stmt->getStmtClassName()));
   }
 }
