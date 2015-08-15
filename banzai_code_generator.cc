@@ -75,7 +75,8 @@ std::string BanzaiCodeGenerator::rewrite_into_banzai_ops(const clang::Stmt * stm
 
 std::tuple<BanzaiCodeGenerator::BanzaiAtomDefinition,
            BanzaiCodeGenerator::BanzaiPacketFieldSet,
-           BanzaiCodeGenerator::BanzaiAtomName>
+           BanzaiCodeGenerator::BanzaiAtomName,
+           BanzaiCodeGenerator::BanzaiStateVariableSet>
 BanzaiCodeGenerator::rewrite_into_banzai_atom(const clang::Stmt * stmt)  const {
   const auto atom_name = unique_identifiers_.get_unique_identifier("atom");
   return std::make_tuple(
@@ -85,7 +86,8 @@ BanzaiCodeGenerator::rewrite_into_banzai_atom(const clang::Stmt * stmt)  const {
          rewrite_into_banzai_ops(stmt) + "\n }",
 
          gen_var_list(stmt, VariableType::PACKET),
-         atom_name);
+         atom_name,
+         gen_var_list(stmt, VariableType::STATE));
 }
 
 BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const {
@@ -144,12 +146,12 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       }
       ret += ");";
 
-      // Generate initial values for all state variables
+      // Generate initial values for all state variables used within stmt (this is the fourth element of the tuple)
       std::string init_state_str = "FieldContainer(std::map<FieldContainer::FieldName, uint32_t>";
-      if (not init_values.empty()) {
+      if (not std::get<3>(return_tuple).empty()) {
         init_state_str += "{";
-        for (const auto & state_var_pair : init_values) {
-          init_state_str += "{\"" + state_var_pair.first + "\", " + std::to_string(state_var_pair.second) + "},";
+        for (const auto & state_var : std::get<3>(return_tuple)) {
+          init_state_str += "{\"" + state_var + "\", " + std::to_string(init_values.at(state_var)) + "},";
         }
         init_state_str.back() = '}'; // to close std::map constructor's initializer list
       } else {

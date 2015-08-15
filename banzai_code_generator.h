@@ -21,6 +21,7 @@ class BanzaiCodeGenerator {
   typedef std::string BanzaiAtomDefinition;
   typedef std::string BanzaiAtomBody;
   typedef std::set<std::string> BanzaiPacketFieldSet;
+  typedef std::set<std::string> BanzaiStateVariableSet;
   typedef std::string BanzaiAtomName;
   typedef std::string BanzaiProgram;
   typedef std::string BanzaiLibString;
@@ -41,9 +42,11 @@ class BanzaiCodeGenerator {
   /// 1. The rewritten body
   /// 2. A field set consisting of all packet fields for test packet generation
   /// 3. The name of the new atom.
+  /// 4. The set of all state variables used in stmt for initialization.
   std::tuple<BanzaiAtomDefinition,
              BanzaiPacketFieldSet,
-             BanzaiAtomName>
+             BanzaiAtomName,
+             BanzaiStateVariableSet>
   rewrite_into_banzai_atom(const clang::Stmt * stmt) const;
 
   /// Transform a translation unit into banzai atoms, useful for fuzzing
