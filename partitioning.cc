@@ -193,13 +193,7 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
         }
       }
 
-      // Create pipeline graph
-      // N.B. func_bodies.size() is the number of partitions and all key values
-      // from 0 through func_bodies.size() - 1 are present in the func_bodies map
-      Graph<std::string> pipeline_graph([] (const auto & x) { return x; });
-      for (uint32_t i = 0; i < func_bodies.size(); i++) pipeline_graph.add_node(func_bodies.at(i));
-      for (uint32_t i = 0; i < func_bodies.size() - 1; i++) pipeline_graph.add_edge(func_bodies.at(i), func_bodies.at(i+1));
-      std::cerr << pipeline_graph << std::endl;
+      // TODO: Diagram out the pipeline in dia.
     }
   }
   return ret;
