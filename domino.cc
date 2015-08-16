@@ -5,6 +5,7 @@
 #include "stateful_flanks.h"
 #include "expr_flattener_handler.h"
 #include "strength_reducer.h"
+#include "banzai_code_generator.h"
 
 #include <utility>
 #include <iostream>
@@ -40,6 +41,7 @@ std::unique_ptr<CompilerPass> create_pass(const std::string & pass_name) {
   else if (pass_name == "stateful_flanks") return std::make_unique<SinglePass>(stateful_flank_transform);
   else if (pass_name == "ssa") return std::make_unique<SinglePass>(ssa_transform);
   else if (pass_name == "partitioning") return std::make_unique<SinglePass>(partitioning_transform);
+  else if (pass_name == "banzai_code") return std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(), _1));
   else throw std::logic_error("Unknown pass " + pass_name);
 }
 
@@ -49,7 +51,7 @@ int main(int argc, const char **argv) {
     std::string string_to_parse = "";
     std::vector<std::string> pass_list;
     if (argc != 3) {
-      std::cerr << "Usage: " << argv[0] << " file_name comma-separated pass list (if_converter, strength_reducer, expr_flattener, expr_propagater, stateful_flanks, ssa, partitioning) \n";
+      std::cerr << "Usage: " << argv[0] << " file_name comma-separated pass list (if_converter, strength_reducer, expr_flattener, expr_propagater, stateful_flanks, ssa, partitioning, banzai_code) \n";
       exit(1);
     } else {
       string_to_parse = file_to_str(std::string(argv[1]));
