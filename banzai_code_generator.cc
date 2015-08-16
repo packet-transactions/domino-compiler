@@ -60,7 +60,7 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
   std::string scalar_func_decls = "";
 
   // Storage for initial values of all state variables
-  std::map<std::string, uint32_t> init_values;
+  std::map<std::string, FieldContainer::FieldType> init_values;
 
   // Storage for names of all packet fields for test packet generation
   BanzaiPacketFieldSet packet_field_set;
@@ -79,7 +79,7 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       if (not var_decl->hasInit()) throw std::logic_error("All state variables must have an initializer in domino: " + clang_value_decl_printer(var_decl)+ " doesn't");
       if (init_values.find(clang_value_decl_printer(var_decl)) != init_values.end()) throw std::logic_error("Reinitializing " + clang_value_decl_printer(var_decl) + " to " + clang_stmt_printer(var_decl->getInit()) + " not permitted");
       if (not isa<IntegerLiteral>(var_decl->getInit())) throw std::logic_error("Only integers can be used to initialize state variables: " + clang_value_decl_printer(var_decl) + " uses " + clang_stmt_printer(var_decl->getInit()));
-      init_values[clang_value_decl_printer(var_decl)] = static_cast<uint32_t>(std::stoul(clang_stmt_printer(var_decl->getInit())));
+      init_values[clang_value_decl_printer(var_decl)] = static_cast<FieldContainer::FieldType>(std::stoi(clang_stmt_printer(var_decl->getInit())));
     } else if (isa<RecordDecl>(child_decl)) {
       for (const auto * field_decl : dyn_cast<DeclContext>(child_decl)->decls())
        packet_field_set.emplace(clang_value_decl_printer(dyn_cast<ValueDecl>(field_decl)));

@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <map>
+#include <field_container.h> // for banzai's FieldContainer::FieldType
 
 #include "clang/AST/Stmt.h"
 
@@ -26,7 +27,7 @@ class BanzaiAtom {
   /// and then adding state initializers
   BanzaiAtom(const clang::Stmt * stmt,
              const std::string & t_atom_name,
-             const std::map<std::string, uint32_t> & state_initializers);
+             const std::map<FieldContainer::FieldName, FieldContainer::FieldType> & state_initializers);
 
   /// Retrieve atom declaration/definition as string
   auto get_def() const { return atom_definition_; }
@@ -40,7 +41,7 @@ class BanzaiAtom {
   /// initial values using state_initializers (provided in constructor)
   /// and create a FieldContainer to hold everything
   std::string state_init_string(const std::set<std::string> & state_vars_used,
-                                const std::map<std::string, uint32_t> & state_initializers) const;
+                                const std::map<FieldContainer::FieldName, FieldContainer::FieldType> & state_initializers) const;
 
   /// Transform a given clang::Stmt into banzai ops, by replacing
   /// field = expr with state("field") or pkt("field") = expr as the 
@@ -63,7 +64,6 @@ class BanzaiAtom {
   /// i.e. the function representing the atom and the state initializer
   /// using the function_definition_ and name_ that is provided
   std::string atom_definition_;
-
 };
 
 #endif  // BANZAI_ATOM_H_

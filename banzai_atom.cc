@@ -8,7 +8,7 @@ using namespace clang;
 const std::string BanzaiAtom::PACKET_IDENTIFIER = "packet";
 const std::string BanzaiAtom::STATE_IDENTIFIER  = "state";
 
-BanzaiAtom::BanzaiAtom(const clang::Stmt * stmt, const std::string & t_name, const std::map<std::string, uint32_t> & state_initializers)
+BanzaiAtom::BanzaiAtom(const clang::Stmt * stmt, const std::string & t_name, const std::map<FieldContainer::FieldName, FieldContainer::FieldType> & state_initializers)
     : name_(t_name),
       function_body_(rewrite_into_banzai_ops(stmt)),
       function_definition_("[] (Packet & " + PACKET_IDENTIFIER + " __attribute__((unused)), State & " + STATE_IDENTIFIER + " __attribute__((unused))) {\n" +
@@ -17,9 +17,9 @@ BanzaiAtom::BanzaiAtom(const clang::Stmt * stmt, const std::string & t_name, con
       atom_definition_("Atom " + name_ + "(" + function_definition_ + ", " + state_init_string(state_vars_used_, state_initializers) + ");")
 {}
 
-std::string BanzaiAtom::state_init_string(const std::set<std::string> & state_vars_used, const std::map<std::string, uint32_t> & state_initializers) const {
+std::string BanzaiAtom::state_init_string(const std::set<std::string> & state_vars_used, const std::map<FieldContainer::FieldName, FieldContainer::FieldType> & state_initializers) const {
   // Generate initial values for all state variables used within stmt
-  std::string init_state_str = "FieldContainer(std::map<FieldContainer::FieldName, uint32_t>";
+  std::string init_state_str = "FieldContainer(std::map<FieldContainer::FieldName, FieldContainer::FieldType>";
   init_state_str += "{";
   for (const auto & state_var : state_vars_used) {
     init_state_str += "{\"" + state_var + "\", " + std::to_string(state_initializers.at(state_var)) + "},";
