@@ -30,3 +30,7 @@ std::vector<std::string> split(const std::string & input, const std::string & re
   std::sregex_token_iterator first{input.begin(), input.end(), regex_object, -1}, last;
   return {first, last};
 }
+
+std::string hash_string (const std::string & str) {
+  return std::to_string(std::hash<std::string>()(str));
+}

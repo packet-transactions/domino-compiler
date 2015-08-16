@@ -13,6 +13,8 @@
 #include <stdexcept>
 #include <iostream>
 
+#include "util.h"
+
 /// Adjacency list representation of graph
 /// Store both out and in edges for every node
 /// N.B. In many methods, returning a Graph is ok
@@ -131,9 +133,6 @@ class Graph {
 
   /// Node printer function
   NodePrinter node_printer_;
-
-  /// Hash string into unique ID
-  static std::string hash_string (const std::string & str) { return std::to_string(std::hash<std::string>()(str)); }
 };
 
 template <class NodeType>

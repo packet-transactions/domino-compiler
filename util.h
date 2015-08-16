@@ -19,4 +19,7 @@ std::string file_to_str(const std::string & file_name);
 /// and http://stackoverflow.com/a/9437426/1152801
 std::vector<std::string> split(const std::string & input, const std::string & regex_str);
 
+/// Hash string into unique ID and turn that into a string
+std::string hash_string (const std::string & str);
+
 #endif  // UTIL_H_
