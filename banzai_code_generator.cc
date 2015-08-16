@@ -15,9 +15,6 @@
 
 using namespace clang;
 
-const std::string BanzaiCodeGenerator::PACKET_IDENTIFIER = "packet";
-const std::string BanzaiCodeGenerator::STATE_IDENTIFIER  = "state";
-
 int BanzaiCodeGenerator::get_order(const Decl * decl) const {
   if (isa<VarDecl>(decl)) return 1;
   else if (isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 2;
@@ -27,66 +24,20 @@ int BanzaiCodeGenerator::get_order(const Decl * decl) const {
   else {assert(false); return -1; }
 }
 
-std::string BanzaiCodeGenerator::rewrite_into_banzai_ops(const clang::Stmt * stmt) const {
-  assert(stmt);
-
-  if(isa<CompoundStmt>(stmt)) {
-    std::string ret;
-    for (const auto & child : stmt->children())
-      ret += rewrite_into_banzai_ops(child) + ";";
-    return ret;
-  } else if (isa<IfStmt>(stmt)) {
-    const auto * if_stmt = dyn_cast<IfStmt>(stmt);
-    std::string ret;
-    ret += "if (" + rewrite_into_banzai_ops(if_stmt->getCond()) + ") {" + rewrite_into_banzai_ops(if_stmt->getThen()) + "; }";
-    if (if_stmt->getElse() != nullptr) {
-      ret += "else {" + rewrite_into_banzai_ops(if_stmt->getElse()) + "; }";
+std::string BanzaiCodeGenerator::test_fields_decl(const BanzaiCodeGenerator::BanzaiPacketFieldSet & packet_field_set) const {
+  // Generate test_fields for banzai
+  std::string ret = "PacketFieldSet test_fields(";
+  if (not packet_field_set.empty()) {
+    ret += "{";
+    for (const auto & field : packet_field_set) {
+      ret += "\"" + field + "\",";
     }
-    return ret;
-  } else if (isa<BinaryOperator>(stmt)) {
-    const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
-    return rewrite_into_banzai_ops(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + rewrite_into_banzai_ops(bin_op->getRHS());
-  } else if (isa<ConditionalOperator>(stmt)) {
-    const auto * cond_op = dyn_cast<ConditionalOperator>(stmt);
-    return   "(" + rewrite_into_banzai_ops(cond_op->getCond()) + ") ? ("
-             + rewrite_into_banzai_ops(cond_op->getTrueExpr()) + ") : ("
-             + rewrite_into_banzai_ops(cond_op->getFalseExpr()) + ")";
-  } else if (isa<MemberExpr>(stmt)) {
-    const auto * member_expr = dyn_cast<MemberExpr>(stmt);
-    // All packet fields are of the type p(...) in banzai
-    // N.B. the Banzai code overloads the () operator.
-    return   PACKET_IDENTIFIER + "(\"" + clang_value_decl_printer(member_expr->getMemberDecl()) + "\")";
-  } else if (isa<DeclRefExpr>(stmt)) {
-    // All state variables are of the type s(...) in banzai
-    // N.B. Again by overloading the () operator
-    const auto * decl_expr = dyn_cast<DeclRefExpr>(stmt);
-    return   STATE_IDENTIFIER + "(\"" + clang_value_decl_printer(decl_expr->getDecl()) + "\")";
-  } else if (isa<IntegerLiteral>(stmt)) {
-    return clang_stmt_printer(stmt);
-  } else if (isa<ParenExpr>(stmt)) {
-    return "(" + rewrite_into_banzai_ops(dyn_cast<ParenExpr>(stmt)->getSubExpr()) + ")";
-  } else if (isa<ImplicitCastExpr>(stmt)) {
-    return rewrite_into_banzai_ops(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr());
+    ret.back() = '}';
   } else {
-    throw std::logic_error("rewrite_into_banzai_ops cannot handle stmt of type " + std::string(stmt->getStmtClassName()));
+    ret += "{}";
   }
-}
-
-std::tuple<BanzaiCodeGenerator::BanzaiAtomDefinition,
-           BanzaiCodeGenerator::BanzaiPacketFieldSet,
-           BanzaiCodeGenerator::BanzaiAtomName,
-           BanzaiCodeGenerator::BanzaiStateVariableSet>
-BanzaiCodeGenerator::rewrite_into_banzai_atom(const clang::Stmt * stmt)  const {
-  const auto atom_name = unique_identifiers_.get_unique_identifier("atom");
-  return std::make_tuple(
-         "void " +
-         atom_name +
-         "(Packet & " + PACKET_IDENTIFIER + " __attribute__((unused)), State & " + STATE_IDENTIFIER + " __attribute__((unused))) {\n" +
-         rewrite_into_banzai_ops(stmt) + "\n }",
-
-         gen_var_list(stmt, VariableType::PACKET),
-         atom_name,
-         gen_var_list(stmt, VariableType::STATE));
+  ret += ");";
+  return ret;
 }
 
 BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const {
@@ -103,8 +54,12 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
 
   // Storage for returned string
   std::string ret;
+
   // Storage for initial values of all state variables
   std::map<std::string, uint32_t> init_values;
+
+  // Storage for names of all packet fields for test packet generation
+  BanzaiPacketFieldSet packet_field_set;
 
   for (const auto * child_decl : all_decls) {
     assert(child_decl);
@@ -115,11 +70,16 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       if (init_values.find(clang_value_decl_printer(var_decl)) != init_values.end()) throw std::logic_error("Reinitializing " + clang_value_decl_printer(var_decl) + " to " + clang_stmt_printer(var_decl->getInit()) + " not permitted");
       if (not isa<IntegerLiteral>(var_decl->getInit())) throw std::logic_error("Only integers can be used to initialize state variables: " + clang_value_decl_printer(var_decl) + " uses " + clang_stmt_printer(var_decl->getInit()));
       init_values[clang_value_decl_printer(var_decl)] = static_cast<uint32_t>(std::stoul(clang_stmt_printer(var_decl->getInit())));
-    } else if ((isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) or
-        isa<RecordDecl>(child_decl)) {
+    } else if (isa<RecordDecl>(child_decl)) {
+      for (const auto * field_decl : dyn_cast<DeclContext>(child_decl)->decls())
+       packet_field_set.emplace(clang_value_decl_printer(dyn_cast<ValueDecl>(field_decl)));
+    } else if (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       // Just quench these, don't emit them
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
-      const auto return_tuple = rewrite_into_banzai_atom(dyn_cast<FunctionDecl>(child_decl)->getBody());
+      const auto function_name = dyn_cast<FunctionDecl>(child_decl)->getNameInfo().getName().getAsString();
+      const BanzaiAtom banzai_atom(dyn_cast<FunctionDecl>(child_decl)->getBody(),
+                                   function_name,
+                                   init_values);
 
       // Add include files for banzai (the equivalent of a target ABI)
       ret += "#include \"packet.h\"\n";
@@ -130,40 +90,16 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       ret += "extern \"C\"{\n";
 
       // Generate atom definition
-      ret += std::get<0>(return_tuple);
+      ret += banzai_atom.get_def();
 
       // Generate test_fields for banzai
-      ret += "PacketFieldSet test_fields(";
-      if (not std::get<1>(return_tuple).empty()) {
-        ret += "{";
-        for (const auto & field : std::get<1>(return_tuple)) {
-          ret += "\"" + field + "\",";
-        }
-        ret.back() = '}';
-      } else {
-        ret += "{}";
-      }
-      ret += ");";
-
-      // Generate initial values for all state variables used within stmt (this is the fourth element of the tuple)
-      std::string init_state_str = "FieldContainer(std::map<FieldContainer::FieldName, uint32_t>";
-      if (not std::get<3>(return_tuple).empty()) {
-        init_state_str += "{";
-        for (const auto & state_var : std::get<3>(return_tuple)) {
-          init_state_str += "{\"" + state_var + "\", " + std::to_string(init_values.at(state_var)) + "},";
-        }
-        init_state_str.back() = '}'; // to close std::map constructor's initializer list
-      } else {
-        init_state_str += "{}";
-      }
-      init_state_str += ")"; // to close FieldContainer constructor's left parenthesis
+      ret += test_fields_decl(packet_field_set);
 
       // Generate test_pipeline for banzai
-      ret += "Pipeline test_pipeline{{Atom(" + std::get<2>(return_tuple) + ", " + init_state_str + ")}};";
+      ret += "Pipeline test_pipeline{{" + banzai_atom.get_name() + "}};";
 
       // Close extern C declaration
       ret += "}";
-
     } else {
       assert(isa<TypedefDecl>(child_decl));
     }
