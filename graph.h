@@ -50,7 +50,7 @@ class Graph {
   friend std::ostream & operator<< (std::ostream & out, const Graph<NodeType> & graph) {
     assert (graph.node_printer_);
 
-    out << "digraph graph_output {node [shape = box];\n";
+    out << "digraph graph_output {node [shape = box style=rounded];\n";
     for (const auto & node : graph.node_set_) {
       out << hash_string(graph.node_printer_(node)) << " [label = \"" << graph.node_printer_(node)  << "\" ];\n";
     }
