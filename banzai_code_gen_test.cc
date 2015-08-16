@@ -15,7 +15,7 @@ int main(int argc, const char ** argv) {
     const auto string_to_parse = file_to_str(get_file_name(argc, argv));
 
     TransformVector transforms;
-    transforms.emplace_back(std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(), _1)));
+    transforms.emplace_back(std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::BINARY), _1)));
 
     // The BanzaiCodeGenerator::transform_translation_unit method takes in a domino program
     // and turns it into a shared library of banzai atoms that can be run by banzai

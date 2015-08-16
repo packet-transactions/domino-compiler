@@ -22,6 +22,15 @@ class BanzaiCodeGenerator {
   typedef std::string BanzaiLibString;
   typedef uint32_t StageId;
 
+  /// Type of code generation: source or binary
+  /// The source is useful for debugging bugs in domino's BanzaiCodeGenerator
+  /// the binary is useful for running the output within banzai
+  enum class CodeGenerationType { SOURCE, BINARY };
+
+  /// Constructor taking code generation option as argument
+  BanzaiCodeGenerator(const CodeGenerationType & t_code_generation_type)
+    : code_generation_type_(t_code_generation_type) {}
+
   /// Typedef for atom positions in a pipeline
   /// Map
   /// --> from the StageId of the stage into which the atom goes.
@@ -54,6 +63,8 @@ class BanzaiCodeGenerator {
   /// Turn banzai program into a shared library,
   /// by compiling with g++ and then turning the .o file into a .so library
   BanzaiLibString gen_lib_as_string(const BanzaiProgram & banzai_program) const;
+
+  const CodeGenerationType code_generation_type_;
 };
 
 #endif  // BANZAI_CODE_GENERATOR_H_

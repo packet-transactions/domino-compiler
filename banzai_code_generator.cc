@@ -136,8 +136,9 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
   // Close extern C declaration
   ret += "}";
 
-  // Turn banzai C++ code into a library
-  return gen_lib_as_string(ret);
+  // Return banzai C++ code as such or turn it into a library
+  return code_generation_type_ == CodeGenerationType::SOURCE ? ret
+                                                             : gen_lib_as_string(ret);
 }
 
 BanzaiCodeGenerator::BanzaiLibString BanzaiCodeGenerator::gen_lib_as_string(const BanzaiCodeGenerator::BanzaiProgram & banzai_program) const {
