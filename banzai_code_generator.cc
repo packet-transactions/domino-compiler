@@ -54,7 +54,10 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
             { return this->get_order(decl1) < this->get_order(decl2); });
 
   // Storage for returned string
-  std::string ret;
+  std::string ret = "";
+
+  // Storage for scalar function declarations
+  std::string scalar_func_decls = "";
 
   // Storage for initial values of all state variables
   std::map<std::string, uint32_t> init_values;
@@ -81,7 +84,10 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       for (const auto * field_decl : dyn_cast<DeclContext>(child_decl)->decls())
        packet_field_set.emplace(clang_value_decl_printer(dyn_cast<ValueDecl>(field_decl)));
     } else if (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
-      // Just quench these, don't emit them
+      // Pass through non-packet functions as such.
+      // If there is a function body, banzai will execute them as such,
+      // otherwise, it will complain with a linker error.
+      scalar_func_decls += clang_decl_printer(child_decl) + ";";
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       assert(not packet_field_set.empty());
       const auto function_name = dyn_cast<FunctionDecl>(child_decl)->getNameInfo().getName().getAsString();
@@ -108,6 +114,9 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
 
   // Add an extern C flank to get around name mangling
   ret += "extern \"C\"{\n";
+
+  // Add scalar function declarations/definitions (depending on whether the user defined them)
+  ret += scalar_func_decls;
 
   // If atom_defs is empty, return right away
   if (atom_defs.empty()) {

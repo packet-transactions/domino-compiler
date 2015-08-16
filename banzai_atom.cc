@@ -75,6 +75,15 @@ std::string BanzaiAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const 
     return opcode_str + rewrite_into_banzai_ops(un_op->getSubExpr());
   } else if (isa<ImplicitCastExpr>(stmt)) {
     return rewrite_into_banzai_ops(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr());
+  } else if (isa<CallExpr>(stmt)) {
+    const auto * call_expr = dyn_cast<CallExpr>(stmt);
+    std::string ret = clang_stmt_printer(call_expr->getCallee()) + "(";
+    for (const auto * child : call_expr->arguments()) {
+      const auto child_str = rewrite_into_banzai_ops(child);
+      ret += child_str + ",";
+    }
+    ret.back() = ')';
+    return ret;
   } else {
     throw std::logic_error("rewrite_into_banzai_ops cannot handle stmt of type " + std::string(stmt->getStmtClassName()));
   }
