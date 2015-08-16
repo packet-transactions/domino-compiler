@@ -145,24 +145,39 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
   const auto & partitioning = condensed_graph.critical_path_schedule();
 
   // Output partition into valid C code, one for each timestamp
-  std::map<uint32_t, std::vector<InstBlock>> function_bodies;
+  std::map<uint32_t, std::vector<InstBlock>> atom_bodies;
   std::vector<std::pair<InstBlock, uint32_t>> sorted_pairs(partitioning.begin(), partitioning.end());
   std::sort(sorted_pairs.begin(), sorted_pairs.end(), [] (const auto & x, const auto & y) { return x.second < y.second; });
-  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&function_bodies] (const auto & pair)
-                { if (function_bodies.find(pair.second) == function_bodies.end()) function_bodies[pair.second] = std::vector<InstBlock>();
-                  function_bodies.at(pair.second).emplace_back(pair.first); });
-  return function_bodies;
+  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&atom_bodies] (const auto & pair)
+                { if (atom_bodies.find(pair.second) == atom_bodies.end()) atom_bodies[pair.second] = std::vector<InstBlock>();
+                  atom_bodies.at(pair.second).emplace_back(pair.first); });
+
+  // Draw pipeline
+  PipelineDrawing atoms_for_drawing;
+  for (const auto & body_pair : atom_bodies) {
+    uint32_t atom_id = 0;
+    const uint32_t stage_id = body_pair.first;
+    for (const auto & atom_body : body_pair.second) {
+      atoms_for_drawing[stage_id][atom_id] = atom_body;
+      atom_id++;
+    }
+  }
+  std::cerr << draw_pipeline(atoms_for_drawing, condensed_graph) << std::endl;
+  return atom_bodies;
 }
 
-std::string draw_pipeline(const PipelineDrawing & atoms_for_drawing) {
+std::string draw_pipeline(const PipelineDrawing & atoms_for_drawing, const Graph<InstBlock> & condensed_graph) {
+  // Preamble for dot (node shape, fontsize etc)
   std::string ret = "digraph pipeline_diagram {node [shape = box font = 10];\n";
   const uint32_t scale_x = 350;
   const uint32_t scale_y = 100;
+
+  // Print out nodes
   for (const auto & stageid_with_atom_map : atoms_for_drawing) {
     const uint32_t stage_id = stageid_with_atom_map.first;
     for (const auto & atom_pair : stageid_with_atom_map.second) {
       const uint32_t atom_id = atom_pair.first;
-      const auto atom_as_str = atoms_for_drawing.at(stage_id).at(atom_id);
+      const auto atom_as_str = inst_block_printer(atoms_for_drawing.at(stage_id).at(atom_id));
       ret += hash_string(atom_as_str) + " [label = \""
                                       + atom_as_str + "\""
                                       + "  pos = \""
@@ -170,6 +185,12 @@ std::string draw_pipeline(const PipelineDrawing & atoms_for_drawing) {
                                       + "];\n";
     }
   }
+
+  // Print out edges
+  for (const auto & node_pair : condensed_graph.succ_map())
+    for (const auto & neighbor : node_pair.second)
+      ret += hash_string(inst_block_printer(node_pair.first)) + " -> " +
+             hash_string(inst_block_printer(neighbor)) + " ;\n";
   ret += "}";
   return ret;
 }
@@ -204,7 +225,6 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
 
       // Create atom functions with new bodies, encode stage_id and atom_id within function body
       // Also store these atom function bodies as strings for the call to draw_pipeline below
-      PipelineDrawing atoms_for_drawing;
       for (const auto & body_pair : atom_bodies) {
         uint32_t atom_id = 0;
         const uint32_t stage_id = body_pair.first;
@@ -215,11 +235,8 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
                                         inst_block_printer(atom_body) + "}\n";
           atom_id++;
           ret += atom_body_as_str;
-          atoms_for_drawing[stage_id][atom_id] = inst_block_printer(atom_body);
         }
       }
-
-      std::cerr << draw_pipeline(atoms_for_drawing) << std::endl;
     }
   }
   return ret;
