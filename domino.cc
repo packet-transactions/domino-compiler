@@ -12,7 +12,6 @@
 #include <set>
 #include <string>
 #include <functional>
-#include <regex>
 
 #include "util.h"
 #include "pkt_func_transform.h"
@@ -22,16 +21,6 @@
 // (Partial Function Application)
 using std::placeholders::_1;
 using std::placeholders::_2;
-
-/// Split string based on another string used as delimiter
-/// using C++11's regex_token_iterator
-/// Based on http://en.cppreference.com/w/cpp/regex/regex_token_iterator
-/// and http://stackoverflow.com/a/9437426/1152801
-std::vector<std::string> split(const std::string & input, const std::string & regex_str) {
-  std::regex regex_object(regex_str);
-  std::sregex_token_iterator first{input.begin(), input.end(), regex_object, -1}, last;
-  return {first, last};
-}
 
 std::unique_ptr<CompilerPass> create_pass(const std::string & pass_name) {
   if (pass_name == "if_converter") return std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1));

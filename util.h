@@ -1,13 +1,22 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 
+#include <vector>
 #include <string>
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
 
+/// Get file name from command line, exit if not available
 std::string get_file_name(const int argc, const char ** argv);
 
+/// Read a file's contents into a string
 std::string file_to_str(const std::string & file_name);
+
+/// Split string based on another string used as delimiter
+/// using C++11's regex_token_iterator
+/// Based on http://en.cppreference.com/w/cpp/regex/regex_token_iterator
+/// and http://stackoverflow.com/a/9437426/1152801
+std::vector<std::string> split(const std::string & input, const std::string & regex_str);
 
 #endif  // UTIL_H_
