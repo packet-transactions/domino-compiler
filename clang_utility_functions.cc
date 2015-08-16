@@ -118,6 +118,12 @@ std::set<std::string> gen_var_list(const Stmt * stmt, const VariableType & var_t
     return std::set<std::string>();
   } else if (isa<ParenExpr>(stmt)) {
     return gen_var_list(dyn_cast<ParenExpr>(stmt)->getSubExpr(), var_type);
+  } else if (isa<UnaryOperator>(stmt)) {
+    const auto * un_op = dyn_cast<UnaryOperator>(stmt);
+    assert(un_op->isArithmeticOp());
+    const auto opcode_str = std::string(UnaryOperator::getOpcodeStr(un_op->getOpcode()));
+    assert(opcode_str == "!");
+    return gen_var_list(un_op->getSubExpr(), var_type);
   } else if (isa<ImplicitCastExpr>(stmt)) {
     return gen_var_list(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr(), var_type);
   } else {

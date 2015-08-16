@@ -67,6 +67,12 @@ std::string BanzaiAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const 
     return clang_stmt_printer(stmt);
   } else if (isa<ParenExpr>(stmt)) {
     return "(" + rewrite_into_banzai_ops(dyn_cast<ParenExpr>(stmt)->getSubExpr()) + ")";
+  } else if (isa<UnaryOperator>(stmt)) {
+    const auto * un_op = dyn_cast<UnaryOperator>(stmt);
+    assert(un_op->isArithmeticOp());
+    const auto opcode_str = std::string(UnaryOperator::getOpcodeStr(un_op->getOpcode()));
+    assert(opcode_str == "!");
+    return opcode_str + rewrite_into_banzai_ops(un_op->getSubExpr());
   } else if (isa<ImplicitCastExpr>(stmt)) {
     return rewrite_into_banzai_ops(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr());
   } else {
