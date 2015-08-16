@@ -37,7 +37,7 @@ bool scc_depends(const std::vector<const clang::BinaryOperator*> & scc1, const s
 /// Also partition the code based on the dependency graph
 /// and generate a function declaration with a body for each partition
 /// as a string for each timestamp
-std::map<uint32_t, std::string> generate_partitions(const clang::CompoundStmt * function_body);
+std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const clang::CompoundStmt * function_body);
 
 /// Entry point to partitioning logic, called by SinglePass
 std::string partitioning_transform(const clang::TranslationUnitDecl * tu_decl);

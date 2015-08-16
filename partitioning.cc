@@ -80,7 +80,7 @@ bool scc_depends(const std::vector<const BinaryOperator*> & scc1, const std::vec
   return false;
 }
 
-std::map<uint32_t, std::string> generate_partitions(const CompoundStmt * function_body) {
+std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStmt * function_body) {
   // Verify that it's in SSA
   // and append to a vector of const BinaryOperator *
   // in order of statement occurence.
@@ -145,13 +145,12 @@ std::map<uint32_t, std::string> generate_partitions(const CompoundStmt * functio
   const auto & partitioning = condensed_graph.critical_path_schedule();
 
   // Output partition into valid C code, one for each timestamp
-  std::map<uint32_t, std::string> function_bodies;
+  std::map<uint32_t, std::vector<InstBlock>> function_bodies;
   std::vector<std::pair<InstBlock, uint32_t>> sorted_pairs(partitioning.begin(), partitioning.end());
   std::sort(sorted_pairs.begin(), sorted_pairs.end(), [] (const auto & x, const auto & y) { return x.second < y.second; });
   std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&function_bodies] (const auto & pair)
-                { if (function_bodies.find(pair.second) == function_bodies.end()) function_bodies[pair.second] = "";
-                  function_bodies.at(pair.second).append(inst_block_printer(pair.first) + ";\n"); });
-
+                { if (function_bodies.find(pair.second) == function_bodies.end()) function_bodies[pair.second] = std::vector<InstBlock>();
+                  function_bodies.at(pair.second).emplace_back(pair.first); });
   return function_bodies;
 }
 
@@ -183,12 +182,15 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
       // Transform function body
       const auto func_bodies = generate_partitions(dyn_cast<CompoundStmt>(function_decl->getBody()));
 
-      // Create functions with new bodies
+      // Create functions with new bodies, encode stage_id within function name
       for (const auto & body_pair : func_bodies) {
-        ret += function_decl->getReturnType().getAsString() + " " +
-               unique_identifiers.get_unique_identifier(function_decl->getNameInfo().getName().getAsString()) +
-               "( " + pkt_type + " " +  pkt_name + ") { " +
-               body_pair.second + "}\n";
+        uint32_t atom_id = 0;
+        for (const auto & function_body : body_pair.second) {
+          ret += function_decl->getReturnType().getAsString() + " " +
+                 "_atom" + std::to_string(atom_id++) + "_" + std::to_string(body_pair.first) +
+                 "( " + pkt_type + " " +  pkt_name + ") { " +
+                 inst_block_printer(function_body) + "}\n";
+        }
       }
 
       // Create pipeline graph
