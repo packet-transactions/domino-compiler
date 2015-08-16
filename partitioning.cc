@@ -10,7 +10,7 @@ std::string inst_block_printer(const InstBlock & iblock) {
   std::string ret = "{";
   assert(not iblock.empty());
   for (auto & op : iblock) ret += clang_stmt_printer(op) + ";\n";
-  ret.back() = '}';
+  ret += "}";
   return ret;
 }
 

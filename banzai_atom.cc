@@ -20,15 +20,11 @@ BanzaiAtom::BanzaiAtom(const clang::Stmt * stmt, const std::string & t_name, con
 std::string BanzaiAtom::state_init_string(const std::set<std::string> & state_vars_used, const std::map<std::string, uint32_t> & state_initializers) const {
   // Generate initial values for all state variables used within stmt
   std::string init_state_str = "FieldContainer(std::map<FieldContainer::FieldName, uint32_t>";
-  if (not state_vars_used.empty()) {
-    init_state_str += "{";
-    for (const auto & state_var : state_vars_used) {
-      init_state_str += "{\"" + state_var + "\", " + std::to_string(state_initializers.at(state_var)) + "},";
-    }
-    init_state_str.back() = '}'; // to close std::map constructor's initializer list
-  } else {
-    init_state_str += "{}";
+  init_state_str += "{";
+  for (const auto & state_var : state_vars_used) {
+    init_state_str += "{\"" + state_var + "\", " + std::to_string(state_initializers.at(state_var)) + "},";
   }
+  init_state_str += '}'; // to close std::map constructor's initializer list
   init_state_str += ")"; // to close FieldContainer constructor's left parenthesis
   return init_state_str;
 }
