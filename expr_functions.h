@@ -13,9 +13,6 @@
 /// Later, we could probably use it for expression flattening
 class ExprFunctions {
  public:
-  /// Get all variables (state and packet) referenced within expr
-  static std::set<std::string> get_vars(const clang::Expr * expr);
-
   /// Replace a specific string with a new string within expr
   static std::string replace_vars(const clang::Expr * expr, const std::map<std::string, std::string> & repl_map);
 

@@ -8,41 +8,6 @@
 
 using namespace clang;
 
-std::set<std::string> ExprFunctions::get_vars(const clang::Expr * expr) {
-  assert(expr);
-  if (isa<ParenExpr>(expr)) {
-    return get_vars(dyn_cast<ParenExpr>(expr)->getSubExpr());
-  } else if (isa<CastExpr>(expr)) {
-    return get_vars(dyn_cast<CastExpr>(expr)->getSubExpr());
-  } else if (isa<UnaryOperator>(expr)) {
-    return get_vars(dyn_cast<UnaryOperator>(expr)->getSubExpr());
-  } else if (isa<ConditionalOperator>(expr)) {
-    const auto * cond_op = dyn_cast<ConditionalOperator>(expr);
-    return get_vars(cond_op->getCond()) + get_vars(cond_op->getTrueExpr()) + get_vars(cond_op->getFalseExpr());
-  } else if (isa<BinaryOperator>(expr)) {
-    const auto * bin_op = dyn_cast<BinaryOperator>(expr);
-    return get_vars(bin_op->getLHS()) + get_vars(bin_op->getRHS());
-  } else if (isa<DeclRefExpr>(expr)) {
-    // All DeclRefExpr are stateful variables
-    const auto read_var = clang_stmt_printer(dyn_cast<DeclRefExpr>(expr));
-    return std::set<std::string>({read_var});
-  } else if (isa<MemberExpr>(expr)) {
-    // All MemberExpr are packet variables
-    return std::set<std::string>({clang_stmt_printer(dyn_cast<MemberExpr>(expr))});
-  } else if (isa<CallExpr>(expr)) {
-    const auto * call_expr = dyn_cast<CallExpr>(expr);
-    std::set<std::string> ret;
-    for (const auto * child : call_expr->arguments()) {
-      const auto child_uses = get_vars(child);
-      ret = ret + child_uses;
-    }
-    return ret;
-  } else {
-    assert(isa<IntegerLiteral>(expr));
-    return std::set<std::string>();
-  }
-}
-
 std::string ExprFunctions::replace_vars(const clang::Expr * expr,
                                         const std::map<std::string, std::string> & repl_map) {
   assert(expr);

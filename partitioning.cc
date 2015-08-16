@@ -38,7 +38,7 @@ bool op_reads_var(const BinaryOperator * op, const Expr * var) {
   assert(var);
 
   // All reads happen only on the RHS
-  const auto read_vars = ExprFunctions::get_vars(op->getRHS());
+  const auto read_vars = gen_var_list(op->getRHS(), VariableType::PACKET_AND_STATE);
 
   return (std::find(read_vars.begin(), read_vars.end(), clang_stmt_printer(var)) != read_vars.end());
 }

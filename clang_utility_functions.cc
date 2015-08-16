@@ -110,10 +110,14 @@ std::set<std::string> gen_var_list(const Stmt * stmt, const VariableType & var_t
     return gen_var_list(cond_op->getCond(), var_type) + gen_var_list(cond_op->getTrueExpr(), var_type) + gen_var_list(cond_op->getFalseExpr(), var_type);
   } else if (isa<MemberExpr>(stmt)) {
     const auto * packet_var_expr = dyn_cast<MemberExpr>(stmt);
-    return var_type == VariableType::PACKET ? std::set<std::string>{clang_value_decl_printer(packet_var_expr->getMemberDecl())} : std::set<std::string>();
+    return (var_type == VariableType::PACKET or var_type == VariableType::PACKET_AND_STATE)
+           ? std::set<std::string>{clang_stmt_printer(packet_var_expr)}
+           : std::set<std::string>();
   } else if (isa<DeclRefExpr>(stmt)) {
     const auto * state_var_expr = dyn_cast<DeclRefExpr>(stmt);
-    return var_type == VariableType::STATE ? std::set<std::string>{clang_stmt_printer(state_var_expr)} : std::set<std::string>();
+    return (var_type == VariableType::STATE or var_type == VariableType::PACKET_AND_STATE)
+           ? std::set<std::string>{clang_stmt_printer(state_var_expr)}
+           : std::set<std::string>();
   } else if (isa<IntegerLiteral>(stmt)) {
     return std::set<std::string>();
   } else if (isa<ParenExpr>(stmt)) {
@@ -126,6 +130,14 @@ std::set<std::string> gen_var_list(const Stmt * stmt, const VariableType & var_t
     return gen_var_list(un_op->getSubExpr(), var_type);
   } else if (isa<ImplicitCastExpr>(stmt)) {
     return gen_var_list(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr(), var_type);
+  } else if (isa<CallExpr>(stmt)) {
+    const auto * call_expr = dyn_cast<CallExpr>(stmt);
+    std::set<std::string> ret;
+    for (const auto * child : call_expr->arguments()) {
+      const auto child_uses = gen_var_list(child, var_type);
+      ret = ret + child_uses;
+    }
+    return ret;
   } else {
     throw std::logic_error("gen_var_list cannot handle stmt of type " + std::string(stmt->getStmtClassName()));
   }

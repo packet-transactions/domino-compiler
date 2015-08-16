@@ -7,8 +7,8 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/Stmt.h"
 
-/// Enum class to represent Variable type (packet or state)
-enum class VariableType {PACKET, STATE};
+/// Enum class to represent Variable type (packet (p.x) or state (x), or both)
+enum class VariableType {PACKET, STATE, PACKET_AND_STATE};
 
 /// General puprose printer for clang stmts
 /// Everything executable subclasses from clang::Stmt, including clang::Expr
