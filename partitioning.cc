@@ -6,6 +6,14 @@
 
 using namespace clang;
 
+std::string inst_block_printer(const InstBlock & iblock) {
+  std::string ret = "{";
+  assert(not iblock.empty());
+  for (auto & op : iblock) ret += clang_stmt_printer(op) + ";\n";
+  ret.back() = '}';
+  return ret;
+}
+
 Graph<const BinaryOperator *> handle_state_vars(const std::vector<const BinaryOperator *> & stmt_vector, const Graph<const BinaryOperator*> & dep_graph) {
   Graph<const BinaryOperator*> ret = dep_graph;
   std::map<std::string, const BinaryOperator *> state_reads;
@@ -118,14 +126,6 @@ std::map<uint32_t, std::string> generate_partitions(const CompoundStmt * functio
   }
 
   // Graph condensation: Add SCCs as nodes
-  typedef std::vector<const BinaryOperator *> InstBlock;
-  const auto & inst_block_printer = [] (const auto & x)
-                                    { std::string ret = "{";
-                                      for (auto & op : x) ret += clang_stmt_printer(op) + ";\n";
-                                      ret.back() = '}';
-                                      return ret;
-                                    };
-
   Graph<InstBlock> condensed_graph(inst_block_printer);
 
   for (uint32_t i = 0; i < sccs.size(); i++) {
@@ -148,7 +148,7 @@ std::map<uint32_t, std::string> generate_partitions(const CompoundStmt * functio
   std::map<uint32_t, std::string> function_bodies;
   std::vector<std::pair<InstBlock, uint32_t>> sorted_pairs(partitioning.begin(), partitioning.end());
   std::sort(sorted_pairs.begin(), sorted_pairs.end(), [] (const auto & x, const auto & y) { return x.second < y.second; });
-  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&function_bodies, &inst_block_printer] (const auto & pair)
+  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&function_bodies] (const auto & pair)
                 { if (function_bodies.find(pair.second) == function_bodies.end()) function_bodies[pair.second] = "";
                   function_bodies.at(pair.second).append(inst_block_printer(pair.first) + ";\n"); });
 

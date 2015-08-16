@@ -10,6 +10,12 @@
 
 #include "graph.h"
 
+/// Typedef for a set of BinaryOperator's sequenced one after the other
+typedef std::vector<const clang::BinaryOperator *> InstBlock;
+
+/// Printer for an InstBlock
+std::string inst_block_printer(const InstBlock & iblock);
+
 /// Identify statements that read from and write to state
 /// And create a back edge from the write back to the read.
 /// This is really the crux of the compiler:
