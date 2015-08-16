@@ -1,5 +1,6 @@
 #include "partitioning.h"
 
+#include "util.h"
 #include "expr_functions.h"
 #include "clang_utility_functions.h"
 #include "unique_identifiers.h"
@@ -7,10 +8,9 @@
 using namespace clang;
 
 std::string inst_block_printer(const InstBlock & iblock) {
-  std::string ret = "{";
+  std::string ret = "";
   assert(not iblock.empty());
   for (auto & op : iblock) ret += clang_stmt_printer(op) + ";\n";
-  ret += "}";
   return ret;
 }
 
@@ -154,6 +154,26 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
   return function_bodies;
 }
 
+std::string draw_pipeline(const PipelineDrawing & atoms_for_drawing) {
+  std::string ret = "digraph pipeline_diagram {node [shape = box font = 10];\n";
+  const uint32_t scale_x = 350;
+  const uint32_t scale_y = 100;
+  for (const auto & stageid_with_atom_map : atoms_for_drawing) {
+    const uint32_t stage_id = stageid_with_atom_map.first;
+    for (const auto & atom_pair : stageid_with_atom_map.second) {
+      const uint32_t atom_id = atom_pair.first;
+      const auto atom_as_str = atoms_for_drawing.at(stage_id).at(atom_id);
+      ret += hash_string(atom_as_str) + " [label = \""
+                                      + atom_as_str + "\""
+                                      + "  pos = \""
+                                      + std::to_string(scale_x * stage_id) + "," + std::to_string(scale_y * atom_id) + "\""
+                                      + "];\n";
+    }
+  }
+  ret += "}";
+  return ret;
+}
+
 std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
   const auto & id_set = identifier_census(tu_decl);
 
@@ -180,20 +200,26 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
       const auto pkt_name = clang_value_decl_printer(pkt_param);
 
       // Transform function body
-      const auto func_bodies = generate_partitions(dyn_cast<CompoundStmt>(function_decl->getBody()));
+      const auto atom_bodies = generate_partitions(dyn_cast<CompoundStmt>(function_decl->getBody()));
 
-      // Create functions with new bodies, encode stage_id within function name
-      for (const auto & body_pair : func_bodies) {
+      // Create atom functions with new bodies, encode stage_id and atom_id within function body
+      // Also store these atom function bodies as strings for the call to draw_pipeline below
+      PipelineDrawing atoms_for_drawing;
+      for (const auto & body_pair : atom_bodies) {
         uint32_t atom_id = 0;
-        for (const auto & function_body : body_pair.second) {
-          ret += function_decl->getReturnType().getAsString() + " " +
-                 "_atom_" + std::to_string(body_pair.first) + "_" + std::to_string(atom_id++) +
-                 "( " + pkt_type + " " +  pkt_name + ") { " +
-                 inst_block_printer(function_body) + "}\n";
+        const uint32_t stage_id = body_pair.first;
+        for (const auto & atom_body : body_pair.second) {
+          const auto atom_body_as_str = function_decl->getReturnType().getAsString() + " " +
+                                        "_atom_" + std::to_string(stage_id) + "_" + std::to_string(atom_id) +
+                                        "( " + pkt_type + " " +  pkt_name + ") { " +
+                                        inst_block_printer(atom_body) + "}\n";
+          atom_id++;
+          ret += atom_body_as_str;
+          atoms_for_drawing[stage_id][atom_id] = inst_block_printer(atom_body);
         }
       }
 
-      // TODO: Diagram out the pipeline in dia.
+      std::cerr << draw_pipeline(atoms_for_drawing) << std::endl;
     }
   }
   return ret;

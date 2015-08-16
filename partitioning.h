@@ -13,6 +13,12 @@
 /// Typedef for a set of BinaryOperator's sequenced one after the other
 typedef std::vector<const clang::BinaryOperator *> InstBlock;
 
+/// Typedef for a data structure mapping
+/// from stage_id + atom_id
+/// to function body as a string
+/// for diagramming them out in a dot file
+typedef std::map<uint32_t, std::map<uint32_t, std::string>> PipelineDrawing;
+
 /// Printer for an InstBlock
 std::string inst_block_printer(const InstBlock & iblock);
 
@@ -38,6 +44,9 @@ bool scc_depends(const std::vector<const clang::BinaryOperator*> & scc1, const s
 /// and generate a function declaration with a body for each partition
 /// as a string for each timestamp
 std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const clang::CompoundStmt * function_body);
+
+/// Return pipeline diagram as a dot file
+std::string draw_pipeline(const PipelineDrawing & atoms_for_drawing);
 
 /// Entry point to partitioning logic, called by SinglePass
 std::string partitioning_transform(const clang::TranslationUnitDecl * tu_decl);
