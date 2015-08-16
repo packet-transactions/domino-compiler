@@ -52,7 +52,7 @@ std::string ExprFunctions::replace_vars(const clang::Expr * expr,
     }
   } else if (isa<CallExpr>(expr)) {
     const auto * call_expr = dyn_cast<CallExpr>(expr);
-    std::string ret = "(";
+    std::string ret = clang_stmt_printer(call_expr->getCallee()) + "(";
     for (const auto * child : call_expr->arguments()) {
       const auto child_str = replace_vars(child, repl_map);
       ret += child_str + ",";

@@ -21,6 +21,10 @@ Graph<const BinaryOperator *> handle_state_vars(const std::vector<const BinaryOp
   for (const auto * stmt : stmt_vector) {
     const auto * lhs = stmt->getLHS()->IgnoreParenImpCasts();
     const auto * rhs = stmt->getRHS()->IgnoreParenImpCasts();
+    // At this stage, after stateful_flanks has been run, the only
+    // way state variables appear is either on the LHS or on the RHS
+    // and they appear by themselves (not as part of another expression)
+    // Which is why we don't need to recursively traverse an AST to check for state vars
     if (isa<DeclRefExpr>(rhs)) {
       state_reads[clang_stmt_printer(rhs)] = stmt;
     } else if (isa<DeclRefExpr>(lhs)) {
