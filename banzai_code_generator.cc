@@ -109,6 +109,12 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
   // Add an extern C flank to get around name mangling
   ret += "extern \"C\"{\n";
 
+  // If atom_defs is empty, return right away
+  if (atom_defs.empty()) {
+    ret += "}"; // close extern C
+    return ret;
+  }
+
   // Generate all atom declarations/definitions
   for (uint32_t i = 0; i < max_stage_id + 1; i++)
     for (const auto & atom : atom_defs.at(i))
