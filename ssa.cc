@@ -26,10 +26,11 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
   // Create unique identifier set
   UniqueIdentifiers unique_identifiers(id_set);
 
-  // All indices where every packet variable is defined.
-  // We choosen to rename ALL definitions of a packet variable
+  // All indices where every packet variable is defined/written/is on the LHS.
+  // We choosen to rename ALL definitions/writes of a packet variable
   // rather than just the redefinitions because there might
-  // be reads preceding the first definition and it's correct to rename all definitions.
+  // be reads preceding the first definition/write
+  // and it's correct to rename all definitions.
   std::map<std::string, std::vector<int>> def_locs;
   int index = 0;
   for (const auto * child : function_body->children()) {
