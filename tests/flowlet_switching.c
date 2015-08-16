@@ -10,13 +10,13 @@ struct Packet {
 };
 
 int last_time = 0;
-int next_hop = 0;
+int saved_hop = 0;
 
 void func(struct Packet pkt) {
   pkt.new_hop = (pkt.sport * pkt.dport) % NUM_HOPS;
   if (pkt.arrival_time - last_time > THRESHOLD) {
-    next_hop = pkt.new_hop;
+    saved_hop = pkt.new_hop;
   }
   last_time = pkt.arrival_time;
-  pkt.next_hop = next_hop;
+  pkt.next_hop = saved_hop;
 }
