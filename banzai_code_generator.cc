@@ -122,7 +122,8 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
     for (const auto & atom : atom_defs.at(i)) {
       ret += atom.get_name() + ",";
     }
-    ret.back() = '}';
+    ret += '}';
+    ret += ",";
   }
   ret += "};";
 
