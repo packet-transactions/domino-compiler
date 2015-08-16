@@ -17,9 +17,9 @@ using namespace clang;
 
 int BanzaiCodeGenerator::get_order(const Decl * decl) const {
   if (isa<VarDecl>(decl)) return 1;
-  else if (isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 2;
-  else if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 3;
-  else if (isa<RecordDecl>(decl)) return 4;
+  else if (isa<RecordDecl>(decl)) return 2;
+  else if (isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 3;
+  else if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 4;
   else if (isa<TypedefDecl>(decl)) return 5;
   else {assert(false); return -1; }
 }
@@ -27,15 +27,15 @@ int BanzaiCodeGenerator::get_order(const Decl * decl) const {
 std::string BanzaiCodeGenerator::test_fields_decl(const BanzaiCodeGenerator::BanzaiPacketFieldSet & packet_field_set) const {
   // Generate test_fields for banzai
   std::string ret = "PacketFieldSet test_fields(";
-  if (not packet_field_set.empty()) {
-    ret += "{";
-    for (const auto & field : packet_field_set) {
-      ret += "\"" + field + "\",";
-    }
-    ret.back() = '}';
-  } else {
-    ret += "{}";
+  if (packet_field_set.empty()) {
+    throw std::logic_error("Can't pass an empty packet_field_set to test_fields_decl");
   }
+
+  ret += "{";
+  for (const auto & field : packet_field_set) {
+    ret += "\"" + field + "\",";
+  }
+  ret.back() = '}';
   ret += ");";
   return ret;
 }
@@ -76,6 +76,7 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
     } else if (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       // Just quench these, don't emit them
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
+      assert(not packet_field_set.empty());
       const auto function_name = dyn_cast<FunctionDecl>(child_decl)->getNameInfo().getName().getAsString();
       const BanzaiAtom banzai_atom(dyn_cast<FunctionDecl>(child_decl)->getBody(),
                                    function_name,
