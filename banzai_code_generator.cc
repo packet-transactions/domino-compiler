@@ -24,10 +24,10 @@ BanzaiCodeGenerator::StageId BanzaiCodeGenerator::stage_id_from_name(const std::
     return 0;
   } else {
     std::vector<std::string> split_strings = split(function_name, "_");
-    if (split_strings.size() != 2) {
-      throw std::logic_error("Special function names should be of the form _xyz_#, found function with name " + function_name);
+    if (split_strings.size() != 4) { // Contents of split_strings should be { "", "atom", stage_id, atom_id }
+      throw std::logic_error("Special function names should be of the form _xyz_#_#, found function with name " + function_name);
     } else {
-      return static_cast<uint32_t>(std::stoul(split_strings[1]));
+      return static_cast<uint32_t>(std::stoul(split_strings[2]));
     }
   }
 }

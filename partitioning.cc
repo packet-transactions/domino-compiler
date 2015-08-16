@@ -187,7 +187,7 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
         uint32_t atom_id = 0;
         for (const auto & function_body : body_pair.second) {
           ret += function_decl->getReturnType().getAsString() + " " +
-                 "_atom" + std::to_string(atom_id++) + "_" + std::to_string(body_pair.first) +
+                 "_atom_" + std::to_string(body_pair.first) + "_" + std::to_string(atom_id++) +
                  "( " + pkt_type + " " +  pkt_name + ") { " +
                  inst_block_printer(function_body) + "}\n";
         }
