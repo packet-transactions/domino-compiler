@@ -118,7 +118,7 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
   // Generate all atom declarations/definitions
   for (uint32_t i = 0; i < max_stage_id + 1; i++)
     for (const auto & atom : atom_defs.at(i))
-      ret += atom.get_def() + ";";
+      ret += atom.get_def();
 
   // Put them within a pipeline
   ret += "Pipeline test_pipeline{";
