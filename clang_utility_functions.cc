@@ -78,7 +78,7 @@ std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl)
       // add state variable name
       identifiers.emplace(dyn_cast<ValueDecl>(child_decl)->getName());
     } else {
-      // We can't remove this for some reason.
+      // We can't remove TypedefDecl from the AST for some reason.
       assert(isa<TypedefDecl>(child_decl));
     }
   }

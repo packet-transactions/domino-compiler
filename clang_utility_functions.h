@@ -11,13 +11,19 @@
 enum class VariableType {PACKET, STATE};
 
 /// General puprose printer for clang stmts
+/// Everything executable subclasses from clang::Stmt, including clang::Expr
 std::string clang_stmt_printer(const clang::Stmt * stmt);
 
-/// Print clang value decl
+/// Print name of a value declaration (http://clang.llvm.org/doxygen/classclang_1_1ValueDecl.html#details)
+/// We use it to print:
+/// 1. Field names within a packet structure.
+/// 2. Packet parameter names passed to packet functions.
+/// 3. State variable names.
 std::string clang_value_decl_printer(const clang::ValueDecl * value_decl);
 
 /// Print all kinds of clang declarations
 /// This is best used when we want to pass through certain statements unchanged.
+/// It prints the entire declaration (along with the definition if it accompanies the declaration).
 std::string clang_decl_printer(const clang::Decl * decl);
 
 /// Is this a packet function: does it have struct Packet as an argument
