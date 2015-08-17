@@ -3,10 +3,10 @@
 #include <iostream>
 #include <cstdlib>
 #include <unistd.h>
-#include <cassert>
 
 #include "temp_file.hh"
 #include "exception.hh"
+#include "assert_exception.h"
 
 using namespace std;
 
@@ -42,7 +42,7 @@ TempFile::~TempFile()
 
 void UniqueFile::write( const string & contents )
 {
-    assert( not moved_away_ );
+    assert_exception( not moved_away_ );
 
     fd_.write( contents );
 }
@@ -57,6 +57,6 @@ UniqueFile::UniqueFile( UniqueFile && other )
 
 string UniqueFile::name( void ) const
 {
-    assert( mutable_temp_filename_.size() > 1 );
+    assert_exception( mutable_temp_filename_.size() > 1 );
     return string( mutable_temp_filename_.begin(), mutable_temp_filename_.end() - 1 );
 }

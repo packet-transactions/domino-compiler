@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <paths.h>
 #include <cstdlib>
-#include <cassert>
 #include <fstream>
 #include <resolv.h>
 #include <sys/stat.h>
@@ -18,6 +17,7 @@
 #include "util.hh"
 #include "exception.hh"
 #include "file_descriptor.hh"
+#include "assert_exception.h"
 
 using namespace std;
 
@@ -99,8 +99,8 @@ void check_requirements( const int argc, const char * const argv[] )
 void make_directory( const string & directory )
 {
     assert_not_root();
-    assert( not directory.empty() );
-    assert( directory.back() == '/' );
+    assert_exception( not directory.empty() );
+    assert_exception( directory.back() == '/' );
 
     SystemCall( "mkdir " + directory, mkdir( directory.c_str(), 00700 ) );
 }

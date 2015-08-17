@@ -21,6 +21,8 @@
 #include "llvm/Support/Host.h"
 
 #include "third_party/temp_file.hh"
+#include "third_party/assert_exception.h"
+
 #include "clang_utility_functions.h"
 
 
@@ -60,7 +62,7 @@ class SinglePass  : public CompilerPass {
     /// Override the method that gets called for the translation unit
     virtual void HandleTranslationUnit(clang::ASTContext & context) override {
       const auto * tu_decl = context.getTranslationUnitDecl();
-      assert(llvm::isa<clang::TranslationUnitDecl>(tu_decl));
+      assert_exception(llvm::isa<clang::TranslationUnitDecl>(tu_decl));
       output_ = transformer_(tu_decl);
     }
     auto output() const { return output_; }

@@ -1,5 +1,7 @@
 #include "expr_prop.h"
 
+#include "third_party/assert_exception.h"
+
 #include "pkt_func_transform.h"
 #include "clang_utility_functions.h"
 
@@ -16,11 +18,11 @@ std::pair<std::string, std::vector<std::string>> expr_prop_fn_body(const Compoun
 
   // Rewrite function body
   std::string transformed_body = "";
-  assert(function_body);
+  assert_exception(function_body);
   for (const auto & child : function_body->children()) {
-    assert(isa<BinaryOperator>(child));
+    assert_exception(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
-    assert(bin_op->isAssignmentOp());
+    assert_exception(bin_op->isAssignmentOp());
 
     // Strip off parenthesis and casts for LHS and RHS
     const auto * rhs = bin_op->getRHS()->IgnoreParenImpCasts();

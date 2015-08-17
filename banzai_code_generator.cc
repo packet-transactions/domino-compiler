@@ -9,6 +9,7 @@
 
 #include "third_party/temp_file.hh"
 #include "third_party/system_runner.hh"
+#include "third_party/assert_exception.h"
 
 #include "util.h"
 #include "config.h"
@@ -73,7 +74,7 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
   StageId max_stage_id = 0;
 
   for (const auto * child_decl : all_decls) {
-    assert(child_decl);
+    assert_exception(child_decl);
     if (isa<VarDecl>(child_decl)) {
       const auto * var_decl = dyn_cast<VarDecl>(child_decl);
       // Forbid certain constructs
@@ -90,7 +91,7 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       // otherwise, it will complain with a loader error from dlsym
       scalar_func_decls += generate_scalar_func_def(dyn_cast<FunctionDecl>(child_decl));
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
-      assert(not packet_field_set.empty());
+      assert_exception(not packet_field_set.empty());
       const auto function_name = dyn_cast<FunctionDecl>(child_decl)->getNameInfo().getName().getAsString();
       const BanzaiAtom banzai_atom(dyn_cast<FunctionDecl>(child_decl)->getBody(),
                                    function_name,
@@ -104,7 +105,7 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       atom_defs.at(stage_id).emplace_back(banzai_atom);
       max_stage_id = std::max(max_stage_id, stage_id);
     } else {
-      assert(isa<TypedefDecl>(child_decl));
+      assert_exception(isa<TypedefDecl>(child_decl));
     }
   }
 
@@ -134,7 +135,7 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
   ret += "Pipeline test_pipeline{";
   for (uint32_t i = 0; i < max_stage_id + 1; i++) {
     ret += "{";
-    assert(not atom_defs.at(i).empty());
+    assert_exception(not atom_defs.at(i).empty());
     for (const auto & atom : atom_defs.at(i)) {
       ret += atom.get_name() + ",";
     }

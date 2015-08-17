@@ -9,9 +9,10 @@
 #include <functional>
 #include <string>
 #include <tuple>
-#include <cassert>
 #include <stdexcept>
 #include <iostream>
+
+#include "third_party/assert_exception.h"
 
 #include "util.h"
 
@@ -48,7 +49,7 @@ class Graph {
 
   /// Print graph to stream using Graphviz's dot format
   friend std::ostream & operator<< (std::ostream & out, const Graph<NodeType> & graph) {
-    assert (graph.node_printer_);
+    assert_exception(graph.node_printer_);
 
     out << "digraph graph_output {node [shape = box style=rounded];\n";
     for (const auto & node : graph.node_set_) {
@@ -158,7 +159,7 @@ void Graph<NodeType>::add_edge(const NodeType & from_node, const NodeType & to_n
 
   // If edge already exists, return
   if (std::find(succ_map_.at(from_node).begin(), succ_map_.at(from_node).end(), to_node) != succ_map_.at(from_node).end()) {
-    assert(std::find(pred_map_.at(to_node).begin(), pred_map_.at(to_node).end(), from_node) != pred_map_.at(to_node).end());
+    assert_exception(std::find(pred_map_.at(to_node).begin(), pred_map_.at(to_node).end(), from_node) != pred_map_.at(to_node).end());
     std::cout << "Warning: edge already exists, ignoring add_edge command\n";
     return;
   }

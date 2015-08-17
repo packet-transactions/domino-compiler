@@ -2,7 +2,6 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <cassert>
 #include <cstdlib>
 #include <sys/syscall.h>
 #include <string>
@@ -14,6 +13,7 @@
 #include "exception.hh"
 #include "signalfd.hh"
 #include "util.hh"
+#include "assert_exception.h"
 
 using namespace std;
 
@@ -62,8 +62,8 @@ ChildProcess::ChildProcess( const string & name,
 /* is process in a waitable state? */
 bool ChildProcess::waitable( void ) const
 {
-    assert( !moved_away_ );
-    assert( !terminated_ );
+    assert_exception( !moved_away_ );
+    assert_exception( !terminated_ );
 
     siginfo_t infop;
     zero( infop );
@@ -82,8 +82,8 @@ bool ChildProcess::waitable( void ) const
 /* wait for process to change state */
 void ChildProcess::wait( const bool nonblocking )
 {
-    assert( !moved_away_ );
-    assert( !terminated_ );
+    assert_exception( !moved_away_ );
+    assert_exception( !terminated_ );
 
     siginfo_t infop;
     zero( infop );
@@ -128,7 +128,7 @@ void ChildProcess::wait( const bool nonblocking )
 /* if child process was suspended, resume it */
 void ChildProcess::resume( void )
 {
-    assert( !moved_away_ );
+    assert_exception( !moved_away_ );
 
     if ( !running_ ) {
         signal( SIGCONT );
@@ -138,7 +138,7 @@ void ChildProcess::resume( void )
 /* send a signal to the child process */
 void ChildProcess::signal( const int sig )
 {
-    assert( !moved_away_ );
+    assert_exception( !moved_away_ );
 
     if ( !terminated_ ) {
         SystemCall( "kill", kill( pid_, sig ) );
@@ -171,7 +171,7 @@ ChildProcess::ChildProcess( ChildProcess && other )
       graceful_termination_signal_( other.graceful_termination_signal_ ),
       moved_away_( other.moved_away_ )
 {
-    assert( !other.moved_away_ );
+    assert_exception( !other.moved_away_ );
 
     other.moved_away_ = true;
 }

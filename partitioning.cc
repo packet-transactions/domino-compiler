@@ -1,5 +1,7 @@
 #include "partitioning.h"
 
+#include "third_party/assert_exception.h"
+
 #include "util.h"
 #include "expr_functions.h"
 #include "clang_utility_functions.h"
@@ -9,7 +11,7 @@ using namespace clang;
 
 std::string inst_block_printer(const InstBlock & iblock) {
   std::string ret = "";
-  assert(not iblock.empty());
+  assert_exception(not iblock.empty());
   for (auto & op : iblock) ret += clang_stmt_printer(op) + ";\n";
   return ret;
 }
@@ -38,8 +40,8 @@ Graph<const BinaryOperator *> handle_state_vars(const std::vector<const BinaryOp
 }
 
 bool op_reads_var(const BinaryOperator * op, const Expr * var) {
-  assert(op);
-  assert(var);
+  assert_exception(op);
+  assert_exception(var);
 
   // All reads happen only on the RHS
   const auto read_vars = gen_var_list(op->getRHS(), VariableType::PACKET_AND_STATE);
@@ -91,9 +93,9 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
   std::set<std::string> assigned_vars;
   std::vector<const BinaryOperator *> stmt_vector;
   for (const auto * child : function_body->children()) {
-    assert(isa<BinaryOperator>(child));
+    assert_exception(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
-    assert(bin_op->isAssignmentOp());
+    assert_exception(bin_op->isAssignmentOp());
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
     const auto pair = assigned_vars.emplace(clang_stmt_printer(lhs));
     if (pair.second == false) {
@@ -209,7 +211,7 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
   UniqueIdentifiers unique_identifiers(id_set);
 
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
-    assert(child_decl);
+    assert_exception(child_decl);
     if (isa<VarDecl>(child_decl) or
         isa<RecordDecl>(child_decl)) {
       // Pass through these declarations as is
@@ -220,7 +222,7 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
       const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
 
       // Extract function signature
-      assert(function_decl->getNumParams() >= 1);
+      assert_exception(function_decl->getNumParams() >= 1);
       const auto * pkt_param = function_decl->getParamDecl(0);
       const auto pkt_type  = function_decl->getParamDecl(0)->getType().getAsString();
       const auto pkt_name = clang_value_decl_printer(pkt_param);

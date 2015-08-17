@@ -2,6 +2,8 @@
 
 #include <functional>
 
+#include "third_party/assert_exception.h"
+
 #include "clang_utility_functions.h"
 #include "unique_identifiers.h"
 #include "expr_functions.h"
@@ -27,9 +29,9 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
   std::string write_epilogue = "";
   std::map<std::string, std::string> state_var_table;
   for (const auto * child : function_body->children()) {
-    assert(isa<BinaryOperator>(child));
+    assert_exception(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
-    assert(bin_op->isAssignmentOp());
+    assert_exception(bin_op->isAssignmentOp());
 
     // Strip off parenthesis and casts on lhs
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
@@ -57,9 +59,9 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
   // Now, replace all occurences of the stateful variables throughout the code
   std::string function_body_str;
   for (const auto * child : function_body->children()) {
-     assert(isa<BinaryOperator>(child));
+     assert_exception(isa<BinaryOperator>(child));
      const auto * bin_op = dyn_cast<BinaryOperator>(child);
-     assert(bin_op->isAssignmentOp());
+     assert_exception(bin_op->isAssignmentOp());
 
      function_body_str +=   ExprFunctions::replace_vars(bin_op->getLHS(), state_var_table) + " = "
                           + ExprFunctions::replace_vars(bin_op->getRHS(), state_var_table) + ";";

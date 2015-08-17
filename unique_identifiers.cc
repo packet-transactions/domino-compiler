@@ -1,6 +1,6 @@
 #include "unique_identifiers.h"
 
-#include <cassert>
+#include "third_party/assert_exception.h"
 
 std::string UniqueIdentifiers::get_unique_identifier(const std::string & prefix) const {
   // Propose prefix_x,
@@ -16,7 +16,7 @@ std::string UniqueIdentifiers::get_unique_identifier(const std::string & prefix)
     id_suffix_.at(prefix)++;
     candidate = prefix + std::to_string(id_suffix_.at(prefix));
   }
-  assert(id_set_.find(candidate) == id_set_.end());
+  assert_exception(id_set_.find(candidate) == id_set_.end());
   id_set_.emplace(candidate);
   return candidate;
 }

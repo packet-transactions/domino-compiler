@@ -5,6 +5,8 @@
 #include <iostream>
 #include <functional>
 
+#include "third_party/assert_exception.h"
+
 #include "clang_utility_functions.h"
 #include "expr_functions.h"
 #include "unique_identifiers.h"
@@ -34,9 +36,9 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
   std::map<std::string, std::vector<int>> def_locs;
   int index = 0;
   for (const auto * child : function_body->children()) {
-    assert(isa<BinaryOperator>(child));
+    assert_exception(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
-    assert(bin_op->isAssignmentOp());
+    assert_exception(bin_op->isAssignmentOp());
 
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
 
@@ -55,9 +57,9 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
   index = 0;
   std::map<std::string, std::string> replacements;
   for (const auto * child : function_body->children()) {
-    assert(isa<BinaryOperator>(child));
+    assert_exception(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
-    assert(bin_op->isAssignmentOp());
+    assert_exception(bin_op->isAssignmentOp());
 
     // First rewrite RHS using whatever replacements we currently have
     const std::string rhs_str = ExprFunctions::replace_vars(bin_op->getRHS(), replacements);
@@ -67,7 +69,7 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
     if (isa<MemberExpr>(lhs)) {
       // Is this a redefinition?
       const std::string lhs_var = clang_stmt_printer(lhs);
-      assert(def_locs.find(lhs_var) != def_locs.end());
+      assert_exception(def_locs.find(lhs_var) != def_locs.end());
       const bool is_redef = std::find(def_locs.at(lhs_var).begin(), def_locs.at(lhs_var).end(), index) != def_locs.at(lhs_var).end();
 
       // If so, modify replacements
@@ -81,7 +83,7 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
     }
 
     // Now rewrite LHS
-    assert(bin_op->getLHS());
+    assert_exception(bin_op->getLHS());
     const std::string lhs_str = ExprFunctions::replace_vars(bin_op->getLHS(), replacements);
     function_body_str += lhs_str + " = " + rhs_str + ";";
     index++;

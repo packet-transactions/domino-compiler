@@ -2,6 +2,8 @@
 
 #include "clang/AST/Expr.h"
 
+#include "third_party/assert_exception.h"
+
 #include "clang_utility_functions.h"
 
 using namespace clang;
@@ -30,7 +32,7 @@ std::string BanzaiAtom::state_init_string(const std::set<std::string> & state_va
 }
 
 std::string BanzaiAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const {
-  assert(stmt);
+  assert_exception(stmt);
 
   if(isa<CompoundStmt>(stmt)) {
     std::string ret;
@@ -69,9 +71,9 @@ std::string BanzaiAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const 
     return "(" + rewrite_into_banzai_ops(dyn_cast<ParenExpr>(stmt)->getSubExpr()) + ")";
   } else if (isa<UnaryOperator>(stmt)) {
     const auto * un_op = dyn_cast<UnaryOperator>(stmt);
-    assert(un_op->isArithmeticOp());
+    assert_exception(un_op->isArithmeticOp());
     const auto opcode_str = std::string(UnaryOperator::getOpcodeStr(un_op->getOpcode()));
-    assert(opcode_str == "!");
+    assert_exception(opcode_str == "!");
     return opcode_str + rewrite_into_banzai_ops(un_op->getSubExpr());
   } else if (isa<ImplicitCastExpr>(stmt)) {
     return rewrite_into_banzai_ops(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr());

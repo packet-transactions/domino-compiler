@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <iterator>
 
+#include "third_party/assert_exception.h"
+
 #include "clang_utility_functions.h"
 #include "set_idioms.h"
 
@@ -10,16 +12,16 @@ using namespace clang;
 
 std::string ExprFunctions::replace_vars(const clang::Expr * expr,
                                         const std::map<std::string, std::string> & repl_map) {
-  assert(expr);
+  assert_exception(expr);
   if (isa<ParenExpr>(expr)) {
     return replace_vars(dyn_cast<ParenExpr>(expr)->getSubExpr(), repl_map);
   } else if (isa<CastExpr>(expr)) {
     return replace_vars(dyn_cast<CastExpr>(expr)->getSubExpr(), repl_map);
   } else if (isa<UnaryOperator>(expr)) {
     const auto * un_op = dyn_cast<UnaryOperator>(expr);
-    assert(un_op->isArithmeticOp());
+    assert_exception(un_op->isArithmeticOp());
     const auto opcode_str = std::string(UnaryOperator::getOpcodeStr(un_op->getOpcode()));
-    assert(opcode_str == "!");
+    assert_exception(opcode_str == "!");
     return opcode_str + replace_vars(un_op->getSubExpr(), repl_map);
   } else if (isa<ConditionalOperator>(expr)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(expr);
@@ -60,7 +62,7 @@ std::string ExprFunctions::replace_vars(const clang::Expr * expr,
     ret.back() = ')';
     return ret;
   } else {
-    assert(isa<IntegerLiteral>(expr));
+    assert_exception(isa<IntegerLiteral>(expr));
     return clang_stmt_printer(expr);
   }
 }

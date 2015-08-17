@@ -8,6 +8,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/Stmt.h"
 
+#include "third_party/assert_exception.h"
 #include "set_idioms.h"
 
 using namespace clang;
@@ -50,19 +51,19 @@ std::string clang_decl_printer(const clang::Decl * decl) {
 
 bool is_packet_func(const clang::FunctionDecl * func_decl) {
   // Not sure what we would get out of functions with zero args
-  assert(func_decl->getNumParams() >= 1);
+  assert_exception(func_decl->getNumParams() >= 1);
   return func_decl->getNumParams() == 1
          and func_decl->getParamDecl(0)->getType().getAsString() == "struct Packet";
 }
 
 std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl) {
   std::set<std::string> identifiers = {};
-  assert(decl != nullptr);
+  assert_exception(decl != nullptr);
 
   // Get all decls by dyn casting decl into a DeclContext
   for (const auto * child_decl : dyn_cast<DeclContext>(decl)->decls()) {
-    assert(child_decl);
-    assert(child_decl->isDefinedOutsideFunctionOrMethod());
+    assert_exception(child_decl);
+    assert_exception(child_decl->isDefinedOutsideFunctionOrMethod());
     if (isa<RecordDecl>(child_decl)) {
       // add current fields in struct to identifiers
       for (const auto * field_decl : dyn_cast<DeclContext>(child_decl)->decls())
@@ -79,7 +80,7 @@ std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl)
       identifiers.emplace(dyn_cast<ValueDecl>(child_decl)->getName());
     } else {
       // We can't remove TypedefDecl from the AST for some reason.
-      assert(isa<TypedefDecl>(child_decl));
+      assert_exception(isa<TypedefDecl>(child_decl));
     }
   }
   return identifiers;
@@ -88,7 +89,7 @@ std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl)
 std::set<std::string> gen_var_list(const Stmt * stmt, const VariableType & var_type) {
   // Recursively scan stmt to generate a set of strings representing
   // either packet fields or state variables used within stmt
-  assert(stmt);
+  assert_exception(stmt);
   std::set<std::string> ret;
   if (isa<CompoundStmt>(stmt)) {
     for (const auto & child : stmt->children()) {
@@ -124,9 +125,9 @@ std::set<std::string> gen_var_list(const Stmt * stmt, const VariableType & var_t
     return gen_var_list(dyn_cast<ParenExpr>(stmt)->getSubExpr(), var_type);
   } else if (isa<UnaryOperator>(stmt)) {
     const auto * un_op = dyn_cast<UnaryOperator>(stmt);
-    assert(un_op->isArithmeticOp());
+    assert_exception(un_op->isArithmeticOp());
     const auto opcode_str = std::string(UnaryOperator::getOpcodeStr(un_op->getOpcode()));
-    assert(opcode_str == "!");
+    assert_exception(opcode_str == "!");
     return gen_var_list(un_op->getSubExpr(), var_type);
   } else if (isa<ImplicitCastExpr>(stmt)) {
     return gen_var_list(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr(), var_type);
@@ -147,8 +148,8 @@ std::string generate_scalar_func_def(const FunctionDecl * func_decl) {
   // Yet another C quirk. Adding a semicolon after a function definition
   // is caught by -pedantic, not adding a semicolon after a function declaration
   // without a definition is not permitted in C :)
-  assert(func_decl);
-  assert(not is_packet_func(func_decl));
+  assert_exception(func_decl);
+  assert_exception(not is_packet_func(func_decl));
   const bool has_body = func_decl->hasBody();
   return clang_decl_printer(func_decl) + (has_body ? "" : ";");
 }

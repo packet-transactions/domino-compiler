@@ -2,6 +2,8 @@
 
 #include "clang/AST/Expr.h"
 
+#include "third_party/assert_exception.h"
+
 #include "clang_utility_functions.h"
 #include "pkt_func_transform.h"
 
@@ -13,12 +15,12 @@ std::string strength_reducer_transform(const TranslationUnitDecl * tu_decl) {
 
 std::pair<std::string, std::vector<std::string>> strength_reduce_body(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
   // Rewrite function body
-  assert(function_body);
+  assert_exception(function_body);
   std::string transformed_body = "";
   for (const auto & child : function_body->children()) {
-    assert(isa<BinaryOperator>(child));
+    assert_exception(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
-    assert(bin_op->isAssignmentOp());
+    assert_exception(bin_op->isAssignmentOp());
 
     // Strip off parenthesis and casts for RHS
     const auto * rhs = bin_op->getRHS()->IgnoreParenImpCasts();
@@ -39,14 +41,14 @@ std::pair<std::string, std::vector<std::string>> strength_reduce_body(const Comp
       } else if (isa<BinaryOperator>(cond)) {
         // Has to be an &&, otherwise assert
         const auto * cond_predicate = dyn_cast<BinaryOperator>(cond);
-        assert(BinaryOperator::getOpcodeStr(cond_predicate->getOpcode()) == "&&");
+        assert_exception(BinaryOperator::getOpcodeStr(cond_predicate->getOpcode()) == "&&");
 
         // Assuming it's &&, get left and right components
         const auto * left_bool_op = cond_predicate->getLHS();
         const auto * right_bool_op = cond_predicate->getRHS();
 
         // If both left_bool_op and right_bool_op are IntegerLiteral, something's wrong
-        assert (not (isa<IntegerLiteral>(left_bool_op) and isa<IntegerLiteral>(right_bool_op)));
+        assert_exception(not (isa<IntegerLiteral>(left_bool_op) and isa<IntegerLiteral>(right_bool_op)));
 
         // If either of the two is an IntegerLiteral, return the other
         // TODO: Check that it's actually 1.
@@ -66,7 +68,7 @@ std::pair<std::string, std::vector<std::string>> strength_reduce_body(const Comp
         // pass it through, nothing to simplify here
         transformed_body += clang_stmt_printer(bin_op) + ";";
       } else {
-        assert(false);
+        assert_exception(false);
       }
     }
   }

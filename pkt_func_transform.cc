@@ -2,12 +2,14 @@
 
 #include <algorithm>
 
+#include "third_party/assert_exception.h"
+
 #include "clang_utility_functions.h"
 
 using namespace clang;
 
 int get_order(const Decl * decl) {
-  assert(decl != nullptr);
+  assert_exception(decl != nullptr);
   if (isa<VarDecl>(decl)) return 1;
   else if (isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 2;
   else if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 3;
@@ -38,7 +40,7 @@ std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
   std::string record_decl_str = "";
   std::vector<std::string> new_decls;
   for (const auto * child_decl : all_decls) {
-    assert(child_decl);
+    assert_exception(child_decl);
     if (isa<VarDecl>(child_decl)) {
       state_var_str += clang_decl_printer(child_decl) + ";";
     } else if ((isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl))))) {
@@ -47,7 +49,7 @@ std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
       const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
 
       // Extract function signature
-      assert(function_decl->getNumParams() >= 1);
+      assert_exception(function_decl->getNumParams() >= 1);
       const auto * pkt_param = function_decl->getParamDecl(0);
       const auto pkt_type  = function_decl->getParamDecl(0)->getType().getAsString();
       const auto pkt_name = clang_value_decl_printer(pkt_param);
@@ -64,7 +66,7 @@ std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
                       transformed_body + "}\n";
     } else if (isa<RecordDecl>(child_decl)) {
       // Open struct definition
-      assert(dyn_cast<RecordDecl>(child_decl)->isStruct());
+      assert_exception(dyn_cast<RecordDecl>(child_decl)->isStruct());
       record_decl_str += "struct " + dyn_cast<RecordDecl>(child_decl)->getNameAsString() + "{\n";
 
       // acummulate current fields in struct

@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "third_party/assert_exception.h"
+
 #include "pkt_func_transform.h"
 #include "clang_utility_functions.h"
 
@@ -15,7 +17,7 @@ std::string IfConversionHandler::transform(const TranslationUnitDecl * tu_decl) 
 }
 
 std::pair<std::string, std::vector<std::string>> IfConversionHandler::if_convert_body(const Stmt * function_body, const std::string & pkt_name) const {
-  assert(function_body);
+  assert_exception(function_body);
 
   std::string output_ = "";
   std::vector<std::string> new_decls_ = {};
@@ -71,19 +73,19 @@ void IfConversionHandler::if_convert(std::string & current_stream,
   } else if (isa<DeclStmt>(stmt)) {
     // Just append statement as is, but check that this only happens at the
     // top level i.e. when predicate = "1" or true
-    assert(predicate == "1");
+    assert_exception(predicate == "1");
     current_stream += clang_stmt_printer(stmt);
     return;
   } else {
-    assert(false);
+    assert_exception(false);
   }
 }
 
 std::string IfConversionHandler::if_convert_atomic_stmt(const BinaryOperator * stmt,
                                                         const std::string & predicate) const {
-  assert(stmt);
-  assert(stmt->isAssignmentOp());
-  assert(not stmt->isCompoundAssignmentOp());
+  assert_exception(stmt);
+  assert_exception(stmt->isAssignmentOp());
+  assert_exception(not stmt->isCompoundAssignmentOp());
 
   // Create predicated version of BinaryOperator
   const std::string lhs = clang_stmt_printer(dyn_cast<BinaryOperator>(stmt)->getLHS());

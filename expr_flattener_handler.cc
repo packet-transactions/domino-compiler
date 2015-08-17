@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "third_party/assert_exception.h"
+
 #include "clang_utility_functions.h"
 #include "pkt_func_transform.h"
 
@@ -16,17 +18,17 @@ std::string ExprFlattenerHandler::transform(const TranslationUnitDecl * tu_decl)
 
 std::pair<std::string, std::vector<std::string>>
 ExprFlattenerHandler::flatten_body(const Stmt * function_body, const std::string & pkt_name) const {
-  assert(function_body);
+  assert_exception(function_body);
 
   std::string output = "";
   std::vector<std::string> new_decls = {};
 
   // iterate through function body
-  assert(isa<CompoundStmt>(function_body));
+  assert_exception(isa<CompoundStmt>(function_body));
   for (const auto & child : function_body->children()) {
-    assert(isa<BinaryOperator>(child));
+    assert_exception(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
-    assert(bin_op->isAssignmentOp());
+    assert_exception(bin_op->isAssignmentOp());
     const auto ret = flatten(bin_op->getRHS(), pkt_name);
 
     // First add new definitions
@@ -49,7 +51,7 @@ bool ExprFlattenerHandler::is_atom(const clang::Expr * expr) const {
 
 bool ExprFlattenerHandler::is_flat(const clang::Expr * expr) const {
   expr = expr->IgnoreParenImpCasts();
-  assert(expr);
+  assert_exception(expr);
   if (isa<UnaryOperator>(expr)) {
     return is_atom(dyn_cast<UnaryOperator>(expr)->getSubExpr());
   } else if (isa<ConditionalOperator>(expr)) {
@@ -59,7 +61,7 @@ bool ExprFlattenerHandler::is_flat(const clang::Expr * expr) const {
     return is_atom(dyn_cast<BinaryOperator>(expr)->getLHS()) and
            is_atom(dyn_cast<BinaryOperator>(expr)->getRHS());
   } else {
-    assert(is_atom(expr));
+    assert_exception(is_atom(expr));
     return true;
   }
 }
@@ -74,14 +76,14 @@ FlattenResult ExprFlattenerHandler::flatten(const clang::Expr * expr, const std:
     } else if (isa<BinaryOperator>(expr)) {
       return flatten_bin_op(dyn_cast<BinaryOperator>(expr), pkt_name);
     } else {
-      assert(false);
+      assert_exception(false);
       return {"", "", {}};
     }
   }
 }
 
 FlattenResult ExprFlattenerHandler::flatten_bin_op(const BinaryOperator * bin_op, const std::string & pkt_name) const {
-  assert(not is_flat(bin_op));
+  assert_exception(not is_flat(bin_op));
   const auto ret_lhs = flatten_to_atom(bin_op->getLHS(), pkt_name);
   const auto ret_rhs = flatten_to_atom(bin_op->getRHS(), pkt_name);
 
@@ -96,7 +98,7 @@ FlattenResult ExprFlattenerHandler::flatten_bin_op(const BinaryOperator * bin_op
 }
 
 FlattenResult ExprFlattenerHandler::flatten_cond_op(const ConditionalOperator * cond_op, const std::string & pkt_name) const {
-  assert(not is_flat(cond_op));
+  assert_exception(not is_flat(cond_op));
   const auto ret_cond  = flatten_to_atom(cond_op->getCond(), pkt_name);
   const auto ret_true  = flatten_to_atom(cond_op->getTrueExpr(), pkt_name);
   const auto ret_false = flatten_to_atom(cond_op->getFalseExpr(), pkt_name);

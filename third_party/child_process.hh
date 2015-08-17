@@ -5,8 +5,9 @@
 
 #include <functional>
 #include <unistd.h>
-#include <cassert>
 #include <csignal>
+
+#include "assert_exception.h"
 
 /* object-oriented wrapper for handling Unix child processes */
 
@@ -32,14 +33,14 @@ public:
     void signal( const int sig ); /* send signal */
     void resume( void ); /* send SIGCONT */
 
-    const std::string & name( void ) const { assert( not moved_away_ ); return name_; }
-    pid_t pid( void ) const { assert( not moved_away_ ); return pid_; }
-    bool running( void ) const { assert( not moved_away_ ); return running_; }
-    bool terminated( void ) const { assert( not moved_away_ ); return terminated_; }
+    const std::string & name( void ) const { assert_exception( not moved_away_ ); return name_; }
+    pid_t pid( void ) const { assert_exception( not moved_away_ ); return pid_; }
+    bool running( void ) const { assert_exception( not moved_away_ ); return running_; }
+    bool terminated( void ) const { assert_exception( not moved_away_ ); return terminated_; }
 
     /* Return exit status or signal that killed process */
-    bool died_on_signal( void ) const { assert( not moved_away_ ); assert( terminated_ ); return died_on_signal_; }
-    int exit_status( void ) const { assert( not moved_away_ ); assert( terminated_ ); return exit_status_; }
+    bool died_on_signal( void ) const { assert_exception( not moved_away_ ); assert_exception( terminated_ ); return died_on_signal_; }
+    int exit_status( void ) const { assert_exception( not moved_away_ ); assert_exception( terminated_ ); return exit_status_; }
     void throw_exception( void ) const;
 
     ~ChildProcess();
