@@ -16,9 +16,9 @@ class AssertException : public std::exception {
 };
 
 # define assert_exception(expr)	if (not (expr)) { throw AssertException(\
-                                                        " assert failed with expr " + std::string(__STRING(expr)) + \
-                                                        " in function " + std::string(__PRETTY_FUNCTION__) + \
-                                                        " in file " + std::string(__FILE__) + \
+                                                        " assert failed with expr " + std::string(__STRING(expr)) + "\n" + \
+                                                        " in function " + std::string(__PRETTY_FUNCTION__) + "\n" + \
+                                                        " in file " + std::string(__FILE__) + "\n" + \
                                                         " at line number " + std::to_string(__LINE__)); }
 
 
