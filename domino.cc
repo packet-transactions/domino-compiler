@@ -44,6 +44,7 @@ void populate_passes() {
   all_passes["partitioning"]     = std::make_unique<SinglePass>(partitioning_transform);
   all_passes["banzai_source"]    = std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::SOURCE), _1));
   all_passes["banzai_binary"]    = std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::BINARY), _1));
+  all_passes["echo"]             = std::make_unique<SinglePass>(clang_decl_printer);
 }
 
 CompilerPass * get_pass(const std::string & pass_name, const PassMap & pass_map) {
