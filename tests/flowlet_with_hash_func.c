@@ -9,7 +9,9 @@ struct Packet {
   int next_hop;
 };
 
-int hash(int, int);
+int hash(int a, int b) {
+  return (a * b) % NUM_HOPS;
+}
 
 int last_time = 0;
 int saved_hop = 0;
