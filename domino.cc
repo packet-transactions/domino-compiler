@@ -24,39 +24,67 @@
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-std::unique_ptr<CompilerPass> create_pass(const std::string & pass_name) {
-  if (pass_name == "if_converter") return std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1));
-  else if (pass_name == "strength_reducer") return std::make_unique<SinglePass>(strength_reducer_transform);
-  else if (pass_name == "expr_flattener") return std::make_unique<FixedPointPass>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1));
-  else if (pass_name == "expr_propagater") return std::make_unique<SinglePass>(expr_prop_transform);
-  else if (pass_name == "stateful_flanks") return std::make_unique<SinglePass>(stateful_flank_transform);
-  else if (pass_name == "ssa") return std::make_unique<SinglePass>(ssa_transform);
-  else if (pass_name == "partitioning") return std::make_unique<SinglePass>(partitioning_transform);
-  else if (pass_name == "banzai_source") return std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::SOURCE), _1));
-  else if (pass_name == "banzai_binary") return std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::BINARY), _1));
-  else throw std::logic_error("Unknown pass " + pass_name);
+// Convenience typedefs
+typedef std::string PassName;
+typedef std::map<PassName, std::unique_ptr<CompilerPass>> PassMap;
+
+// Map to store all passes
+static  PassMap all_passes;
+
+void populate_passes() {
+  // We need to explicitly call populate_passes instead of using an initializer list
+  // to populate PassMap all_passes because initializer lists don't play well with move-only
+  // types like unique_ptrs (http://stackoverflow.com/questions/9618268/initializing-container-of-unique-ptrs-from-initializer-list-fails-with-gcc-4-7)
+  all_passes["if_converter"]     = std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1));
+  all_passes["strength_reducer"] = std::make_unique<SinglePass>(strength_reducer_transform);
+  all_passes["expr_flattener"]   = std::make_unique<FixedPointPass>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1));
+  all_passes["expr_propagater"]  = std::make_unique<SinglePass>(expr_prop_transform);
+  all_passes["stateful_flanks"]  = std::make_unique<SinglePass>(stateful_flank_transform);
+  all_passes["ssa"]              = std::make_unique<SinglePass>(ssa_transform);
+  all_passes["partitioning"]     = std::make_unique<SinglePass>(partitioning_transform);
+  all_passes["banzai_source"]    = std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::SOURCE), _1));
+  all_passes["banzai_binary"]    = std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::BINARY), _1));
+}
+
+CompilerPass * get_pass(const std::string & pass_name, const PassMap & pass_map) {
+  if (pass_map.find(pass_name) != pass_map.end()) {
+    // This is a bit misleading because we don't have deep const correctness
+    return pass_map.at(pass_name).get();
+  } else {
+    throw std::logic_error("Unknown pass " + pass_name);
+  }
+}
+
+std::string all_passes_as_string(const PassMap & pass_map) {
+  std::string ret;
+  for (const auto & pass_pair : pass_map)
+    ret += pass_pair.first + "\n";
+  return ret;
 }
 
 int main(int argc, const char **argv) {
   try {
+    // Populate all passes
+    populate_passes();
+
     // Get string that needs to be parsed and pass list
     std::string string_to_parse = "";
     std::vector<std::string> pass_list;
     if (argc != 3) {
-      std::cerr << "Usage: " << argv[0] << " file_name comma-separated pass list (if_converter, strength_reducer, expr_flattener, expr_propagater, stateful_flanks, ssa, partitioning, banzai_source, banzai_binary) \n";
-      exit(1);
+      std::cerr << "Usage: " << argv[0] << " comma-separated list of passes given below " << std::endl;
+      std::cerr << all_passes_as_string(all_passes);
     } else {
       string_to_parse = file_to_str(std::string(argv[1]));
       pass_list = split(std::string(argv[2]), ",");
+
+      // add all user-requested passes in the same order that the user specified
+      TransformVector transforms;
+      for (const auto & pass_name : pass_list) transforms.emplace_back(get_pass(pass_name, all_passes));
+
+      /// Process them one after the other
+      std::cout << std::accumulate(transforms.begin(), transforms.end(), string_to_parse, [] (const auto & current_output, const auto & transform)
+                                   { return (*transform)(current_output); });
     }
-
-    // add all user-requested passes in the same order that the user specified
-    TransformVector transforms;
-    for (const auto & pass_name : pass_list) transforms.emplace_back(create_pass(pass_name));
-
-    /// Process them one after the other
-    std::cout << std::accumulate(transforms.begin(), transforms.end(), string_to_parse, [] (const auto & current_output, const auto & transform)
-                                 { return (*transform)(current_output); });
   } catch (const std::exception & e) {
     std::cerr << "Caught exception in main " << std::endl << e.what() << std::endl;
   }

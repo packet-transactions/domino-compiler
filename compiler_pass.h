@@ -147,6 +147,6 @@ class FixedPointPass : public CompilerPass {
 };
 
 // Vector of Transform functions, each transform function runs within a CompilerPass
-typedef  std::vector<std::unique_ptr<CompilerPass>> TransformVector;
+typedef  std::vector<CompilerPass *> TransformVector;
 
 #endif  // COMPILER_PASS_H_
