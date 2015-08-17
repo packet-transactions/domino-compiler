@@ -210,11 +210,12 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
 
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     assert(child_decl);
-    if ( isa<VarDecl>(child_decl) or
-         (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) or
-         isa<RecordDecl>(child_decl)) {
+    if (isa<VarDecl>(child_decl) or
+        isa<RecordDecl>(child_decl)) {
       // Pass through these declarations as is
       ret += clang_decl_printer(child_decl) + ";";
+    } else if (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
+      ret += generate_scalar_func_def(dyn_cast<FunctionDecl>(child_decl));
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
 

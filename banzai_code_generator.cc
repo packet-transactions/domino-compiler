@@ -38,8 +38,9 @@ int BanzaiCodeGenerator::get_order(const Decl * decl) const {
   else if (isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 3;
   else if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 4;
   else if (isa<TypedefDecl>(decl)) return 5;
-  else {assert(false); return -1; }
-}
+  else {
+    throw std::logic_error("BanzaiCodeGenerator::get_order cannot handle decl " + clang_decl_printer(decl) + " of type " + std::string(decl->getDeclKindName()));
+  }}
 
 BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const {
   // Accumulate all declarations
@@ -86,8 +87,8 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
     } else if (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       // Pass through non-packet functions as such.
       // If there is a function body, banzai will execute them as such,
-      // otherwise, it will complain with a linker error.
-      scalar_func_decls += clang_decl_printer(child_decl) + ";";
+      // otherwise, it will complain with a loader error from dlsym
+      scalar_func_decls += generate_scalar_func_def(dyn_cast<FunctionDecl>(child_decl));
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       assert(not packet_field_set.empty());
       const auto function_name = dyn_cast<FunctionDecl>(child_decl)->getNameInfo().getName().getAsString();

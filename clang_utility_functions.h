@@ -36,4 +36,8 @@ std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl)
 /// Determine all variables (either packet or state) used within a clang::Stmt,
 std::set<std::string> gen_var_list(const clang::Stmt * stmt, const VariableType & var_type);
 
+/// Generate scalar function declarations,
+/// including function definitions if provided
+std::string generate_scalar_func_def(const clang::FunctionDecl * func_decl);
+
 #endif  // CLANG_UTILITY_FUNCTIONS_H_

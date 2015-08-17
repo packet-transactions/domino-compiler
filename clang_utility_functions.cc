@@ -142,3 +142,13 @@ std::set<std::string> gen_var_list(const Stmt * stmt, const VariableType & var_t
     throw std::logic_error("gen_var_list cannot handle stmt of type " + std::string(stmt->getStmtClassName()));
   }
 }
+
+std::string generate_scalar_func_def(const FunctionDecl * func_decl) {
+  // Yet another C quirk. Adding a semicolon after a function definition
+  // is caught by -pedantic, not adding a semicolon after a function declaration
+  // without a definition is not permitted in C :)
+  assert(func_decl);
+  assert(not is_packet_func(func_decl));
+  const bool has_body = func_decl->hasBody();
+  return clang_decl_printer(func_decl) + (has_body ? "" : ";");
+}

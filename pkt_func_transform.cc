@@ -7,12 +7,15 @@
 using namespace clang;
 
 int get_order(const Decl * decl) {
+  assert(decl != nullptr);
   if (isa<VarDecl>(decl)) return 1;
   else if (isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 2;
   else if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 3;
   else if (isa<RecordDecl>(decl)) return 4;
   else if (isa<TypedefDecl>(decl)) return 5;
-  else {assert(false); return -1; }
+  else {
+    throw std::logic_error("get_order in pkt_func_transform.cc cannot handle decl " + clang_decl_printer(decl) + " of type " + std::string(decl->getDeclKindName()));
+  }
 }
 
 std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
@@ -39,7 +42,7 @@ std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
     if (isa<VarDecl>(child_decl)) {
       state_var_str += clang_decl_printer(child_decl) + ";";
     } else if ((isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl))))) {
-      scalar_func_str += clang_decl_printer(child_decl) + ";";
+      scalar_func_str += generate_scalar_func_def(dyn_cast<FunctionDecl>(child_decl));
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
 
