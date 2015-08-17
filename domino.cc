@@ -16,6 +16,7 @@
 #include "util.h"
 #include "pkt_func_transform.h"
 #include "compiler_pass.h"
+#include "assert_exception.h"
 
 // For the _1, and _2 in std::bind
 // (Partial Function Application)
