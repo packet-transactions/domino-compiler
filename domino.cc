@@ -72,7 +72,7 @@ int main(int argc, const char **argv) {
     std::string string_to_parse = "";
     std::vector<std::string> pass_list;
     if (argc != 3) {
-      std::cerr << "Usage: " << argv[0] << " comma-separated list of passes given below " << std::endl;
+      std::cerr << "Usage: " << argv[0] << " <source_file> <comma-separated list of passes given below>" << std::endl;
       std::cerr << all_passes_as_string(all_passes);
       return EXIT_FAILURE;
     } else {
