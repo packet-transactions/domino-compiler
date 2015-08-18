@@ -59,6 +59,11 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
   // Map from packet variable name to replacement used for renaming
   std::map<std::string, std::string> current_packet_var_replacements;
 
+  // Map from field name to replacement used for renaming
+  // (mirrors current_packet_var_replacements, but instead of storing p.x,
+  // we store x).
+  std::map<std::string, std::string> current_packet_field_replacements;
+
   for (const auto * child : function_body->children()) {
     assert_exception(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
@@ -81,6 +86,7 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
       const auto var_decl    = var_type + " " + new_tmp_var + ";";
       new_decls.emplace_back(var_decl);
       current_packet_var_replacements[lhs_var] =  pkt_name + "." + new_tmp_var;
+      current_packet_field_replacements[dyn_cast<MemberExpr>(lhs)->getMemberDecl()->getNameAsString()] = new_tmp_var;
     }
 
     // Now rewrite LHS
@@ -90,9 +96,9 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
     index++;
   }
 
-  // Print out the final replacements, i.e. the value of current_replacements at this point
-  for (const auto & repl_pair : current_replacements)
-    std::cerr << repl_pair.first << " finally replaced to " << repl_pair.second << std::endl;
+  // Print out the final replacements, i.e. the value of current_packet_var_replacements at this point
+  for (const auto & repl_pair : current_packet_field_replacements)
+    std::cerr << repl_pair.first << " " << repl_pair.second << std::endl;
 
   return std::make_pair(function_body_str, new_decls);
 }
