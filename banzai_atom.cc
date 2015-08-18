@@ -15,7 +15,7 @@ BanzaiAtom::BanzaiAtom(const clang::Stmt * stmt, const std::string & t_name, con
       function_body_(rewrite_into_banzai_ops(stmt)),
       function_definition_("[] (Packet & " + PACKET_IDENTIFIER + " __attribute__((unused)), State & " + STATE_IDENTIFIER + " __attribute__((unused))) {\n" +
                            function_body_ + "\n }"),
-      state_vars_used_(gen_var_list(stmt, VariableType::STATE)),
+      state_vars_used_(gen_var_list(stmt, {{VariableType::STATE, true}, {VariableType::PACKET, false}})),
       atom_definition_("Atom " + name_ + "(" + function_definition_ + ", " + state_init_string(state_vars_used_, state_initializers) + ");")
 {}
 

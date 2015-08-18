@@ -56,7 +56,7 @@ bool is_packet_func(const clang::FunctionDecl * func_decl) {
          and func_decl->getParamDecl(0)->getType().getAsString() == "struct Packet";
 }
 
-std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl) {
+std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl, const VariableTypeSelector & var_selector) {
   std::set<std::string> identifiers = {};
   assert_exception(decl != nullptr);
 
@@ -66,18 +66,24 @@ std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl)
     assert_exception(child_decl->isDefinedOutsideFunctionOrMethod());
     if (isa<RecordDecl>(child_decl)) {
       // add current fields in struct to identifiers
-      for (const auto * field_decl : dyn_cast<DeclContext>(child_decl)->decls())
-        identifiers.emplace(dyn_cast<FieldDecl>(field_decl)->getName());
+      if (var_selector.at(VariableType::PACKET)) {
+        for (const auto * field_decl : dyn_cast<DeclContext>(child_decl)->decls())
+          identifiers.emplace(dyn_cast<FieldDecl>(field_decl)->getName());
+      }
     } else if (isa<FunctionDecl>(child_decl)) {
-      // add function name
-      identifiers.emplace(dyn_cast<FunctionDecl>(child_decl)->getName());
-      // add all function parameters
-      for (const auto * parm_decl : dyn_cast<FunctionDecl>(child_decl)->parameters()) {
-        identifiers.emplace(dyn_cast<ParmVarDecl>(parm_decl)->getName());
+      if (var_selector.at(VariableType::FUNCTION_PARAMETER)) {
+        // add function name
+        identifiers.emplace(dyn_cast<FunctionDecl>(child_decl)->getName());
+        // add all function parameters
+        for (const auto * parm_decl : dyn_cast<FunctionDecl>(child_decl)->parameters()) {
+          identifiers.emplace(dyn_cast<ParmVarDecl>(parm_decl)->getName());
+        }
       }
     } else if (isa<ValueDecl>(child_decl)) {
       // add state variable name
-      identifiers.emplace(dyn_cast<ValueDecl>(child_decl)->getName());
+      if (var_selector.at(VariableType::STATE)) {
+        identifiers.emplace(dyn_cast<ValueDecl>(child_decl)->getName());
+      }
     } else {
       // We can't remove TypedefDecl from the AST for some reason.
       assert_exception(isa<TypedefDecl>(child_decl));
@@ -86,56 +92,56 @@ std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl)
   return identifiers;
 }
 
-std::set<std::string> gen_var_list(const Stmt * stmt, const VariableType & var_type) {
+std::set<std::string> gen_var_list(const Stmt * stmt, const VariableTypeSelector & var_selector) {
   // Recursively scan stmt to generate a set of strings representing
   // either packet fields or state variables used within stmt
   assert_exception(stmt);
   std::set<std::string> ret;
   if (isa<CompoundStmt>(stmt)) {
     for (const auto & child : stmt->children()) {
-      ret = ret + gen_var_list(child, var_type);
+      ret = ret + gen_var_list(child, var_selector);
     }
     return ret;
   } else if (isa<IfStmt>(stmt)) {
     const auto * if_stmt = dyn_cast<IfStmt>(stmt);
     if (if_stmt->getElse() != nullptr) {
-      return gen_var_list(if_stmt->getCond(), var_type) + gen_var_list(if_stmt->getThen(), var_type) + gen_var_list(if_stmt->getElse(), var_type);
+      return gen_var_list(if_stmt->getCond(), var_selector) + gen_var_list(if_stmt->getThen(), var_selector) + gen_var_list(if_stmt->getElse(), var_selector);
     } else {
-      return gen_var_list(if_stmt->getCond(), var_type) + gen_var_list(if_stmt->getThen(), var_type);
+      return gen_var_list(if_stmt->getCond(), var_selector) + gen_var_list(if_stmt->getThen(), var_selector);
     }
   } else if (isa<BinaryOperator>(stmt)) {
     const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
-    return gen_var_list(bin_op->getLHS(), var_type) + gen_var_list(bin_op->getRHS(), var_type);
+    return gen_var_list(bin_op->getLHS(), var_selector) + gen_var_list(bin_op->getRHS(), var_selector);
   } else if (isa<ConditionalOperator>(stmt)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(stmt);
-    return gen_var_list(cond_op->getCond(), var_type) + gen_var_list(cond_op->getTrueExpr(), var_type) + gen_var_list(cond_op->getFalseExpr(), var_type);
+    return gen_var_list(cond_op->getCond(), var_selector) + gen_var_list(cond_op->getTrueExpr(), var_selector) + gen_var_list(cond_op->getFalseExpr(), var_selector);
   } else if (isa<MemberExpr>(stmt)) {
     const auto * packet_var_expr = dyn_cast<MemberExpr>(stmt);
-    return (var_type == VariableType::PACKET or var_type == VariableType::PACKET_AND_STATE)
+    return (var_selector.at(VariableType::PACKET))
            ? std::set<std::string>{clang_stmt_printer(packet_var_expr)}
            : std::set<std::string>();
   } else if (isa<DeclRefExpr>(stmt)) {
     const auto * state_var_expr = dyn_cast<DeclRefExpr>(stmt);
-    return (var_type == VariableType::STATE or var_type == VariableType::PACKET_AND_STATE)
+    return (var_selector.at(VariableType::STATE))
            ? std::set<std::string>{clang_stmt_printer(state_var_expr)}
            : std::set<std::string>();
   } else if (isa<IntegerLiteral>(stmt)) {
     return std::set<std::string>();
   } else if (isa<ParenExpr>(stmt)) {
-    return gen_var_list(dyn_cast<ParenExpr>(stmt)->getSubExpr(), var_type);
+    return gen_var_list(dyn_cast<ParenExpr>(stmt)->getSubExpr(), var_selector);
   } else if (isa<UnaryOperator>(stmt)) {
     const auto * un_op = dyn_cast<UnaryOperator>(stmt);
     assert_exception(un_op->isArithmeticOp());
     const auto opcode_str = std::string(UnaryOperator::getOpcodeStr(un_op->getOpcode()));
     assert_exception(opcode_str == "!");
-    return gen_var_list(un_op->getSubExpr(), var_type);
+    return gen_var_list(un_op->getSubExpr(), var_selector);
   } else if (isa<ImplicitCastExpr>(stmt)) {
-    return gen_var_list(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr(), var_type);
+    return gen_var_list(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr(), var_selector);
   } else if (isa<CallExpr>(stmt)) {
     const auto * call_expr = dyn_cast<CallExpr>(stmt);
     std::set<std::string> ret;
     for (const auto * child : call_expr->arguments()) {
-      const auto child_uses = gen_var_list(child, var_type);
+      const auto child_uses = gen_var_list(child, var_selector);
       ret = ret + child_uses;
     }
     return ret;
@@ -152,4 +158,15 @@ std::string generate_scalar_func_def(const FunctionDecl * func_decl) {
   assert_exception(not is_packet_func(func_decl));
   const bool has_body = func_decl->hasBody();
   return clang_decl_printer(func_decl) + (has_body ? "" : ";");
+}
+
+std::string gen_pkt_fields(const TranslationUnitDecl * tu_decl) {
+  std::string ret = "";
+  for (const auto & field : identifier_census(tu_decl,
+                                              {{VariableType::PACKET, true},
+                                               {VariableType::STATE,  false},
+                                               {VariableType::FUNCTION_PARAMETER, false}})) {
+    ret += field + "\n";
+  }
+  return ret;
 }
