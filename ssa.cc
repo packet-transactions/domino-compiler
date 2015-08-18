@@ -90,5 +90,9 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
     index++;
   }
 
+  // Print out the final replacements, i.e. the value of current_replacements at this point
+  for (const auto & repl_pair : current_replacements)
+    std::cerr << repl_pair.first << " finally replaced to " << repl_pair.second << std::endl;
+
   return std::make_pair(function_body_str, new_decls);
 }
