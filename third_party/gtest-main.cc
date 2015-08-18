@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <gtest/gtest.h>
+#include <gtest.h>
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
