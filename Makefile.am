@@ -1,4 +1,4 @@
-SUBDIRS = third_party .
+SUBDIRS = third_party . tests
 
 AM_CXXFLAGS = $(PICKY_CXXFLAGS)
 AM_CPPFLAGS = -isystem /usr/lib/llvm-3.5/include/
