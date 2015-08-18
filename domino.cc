@@ -74,6 +74,7 @@ int main(int argc, const char **argv) {
     if (argc != 3) {
       std::cerr << "Usage: " << argv[0] << " comma-separated list of passes given below " << std::endl;
       std::cerr << all_passes_as_string(all_passes);
+      return EXIT_FAILURE;
     } else {
       string_to_parse = file_to_str(std::string(argv[1]));
       pass_list = split(std::string(argv[2]), ",");
@@ -85,9 +86,11 @@ int main(int argc, const char **argv) {
       /// Process them one after the other
       std::cout << std::accumulate(transforms.begin(), transforms.end(), string_to_parse, [] (const auto & current_output, const auto & transform)
                                    { return (*transform)(current_output); });
+
+      return EXIT_SUCCESS;
     }
   } catch (const std::exception & e) {
     std::cerr << "Caught exception in main " << std::endl << e.what() << std::endl;
+    return EXIT_FAILURE;
   }
-  return 0;
 }
