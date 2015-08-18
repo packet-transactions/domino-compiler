@@ -22,4 +22,7 @@ std::vector<std::string> split(const std::string & input, const std::string & re
 /// Hash string into unique ID and turn that into a string
 std::string hash_string (const std::string & str);
 
+/// Compare two strings after removing all forms of whitespace
+bool compare_after_removing_space(const std::string & s1, const std::string & s2);
+
 #endif  // UTIL_H_

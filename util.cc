@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include <regex>
+#include <algorithm>
+#include <cctype>
 
 std::string get_file_name(const int argc, const char ** argv) {
   std::string ret;
@@ -33,4 +35,12 @@ std::vector<std::string> split(const std::string & input, const std::string & re
 
 std::string hash_string (const std::string & str) {
   return std::to_string(std::hash<std::string>()(str));
+}
+
+bool compare_after_removing_space(const std::string & s1, const std::string & s2) {
+  auto s1_tmp = s1;
+  auto s2_tmp = s2;
+  s1_tmp.erase(std::remove_if(s1_tmp.begin(), s1_tmp.end(), isspace), s1_tmp.end());
+  s2_tmp.erase(std::remove_if(s2_tmp.begin(), s2_tmp.end(), isspace), s2_tmp.end());
+  return s1_tmp == s2_tmp;
 }
