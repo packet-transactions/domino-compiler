@@ -40,3 +40,8 @@ TEST(IfConverterTests, IfElseIf) {
   test_if_converter("struct Packet {int x;}; void func(struct Packet p) { if(p.x) p.x = 2; else if (p.x + 2) p.x = 3;}",
                     "struct Packet {int x; int tmp0; int tmp1;}; void func(struct Packet p) { p.tmp0 = (1 ? (p.x) : p.tmp0); p.x = ((1 && p.tmp0) ? (2) : p.x); p.tmp1 = ((1 && !p.tmp0) ? (p.x + 2) : p.tmp1); p.x = (((1 && !p.tmp0) && p.tmp1) ? (3) : p.x);}");
 }
+
+TEST(IfConverterTests, NestedIf) {
+  test_if_converter("struct Packet {int x; int y; int z;}; void func(struct Packet p) { if(p.x) if(p.y) p.z = 2; }",
+                    "struct Packet {int x; int y; int z; int tmp0; int tmp1;}; void func(struct Packet p) { p.tmp0 = (1 ? (p.x) : p.tmp0); p.tmp1 = ((1 && p.tmp0) ? (p.y) : p.tmp1); p.z = (((1 && p.tmp0) && p.tmp1) ? (2) : p.z); }");
+}
