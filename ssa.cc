@@ -67,19 +67,17 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
     // Now look at LHS
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
     if (isa<MemberExpr>(lhs)) {
-      // Is this a redefinition?
+      // Assert that this definition and current value of index show up in def_locs
       const std::string lhs_var = clang_stmt_printer(lhs);
       assert_exception(def_locs.find(lhs_var) != def_locs.end());
-      const bool is_redef = std::find(def_locs.at(lhs_var).begin(), def_locs.at(lhs_var).end(), index) != def_locs.at(lhs_var).end();
+      assert_exception(std::find(def_locs.at(lhs_var).begin(), def_locs.at(lhs_var).end(), index) != def_locs.at(lhs_var).end());
 
-      // If so, modify replacements
-      if (is_redef) {
-        const auto var_type    = dyn_cast<MemberExpr>(lhs)->getMemberDecl()->getType().getAsString();
-        const auto new_tmp_var = unique_identifiers.get_unique_identifier(dyn_cast<MemberExpr>(lhs)->getMemberDecl()->getNameAsString());
-        const auto var_decl    = var_type + " " + new_tmp_var + ";";
-        new_decls.emplace_back(var_decl);
-        replacements[lhs_var] =  pkt_name + "." + new_tmp_var;
-      }
+      // Modify replacements
+      const auto var_type    = dyn_cast<MemberExpr>(lhs)->getMemberDecl()->getType().getAsString();
+      const auto new_tmp_var = unique_identifiers.get_unique_identifier(dyn_cast<MemberExpr>(lhs)->getMemberDecl()->getNameAsString());
+      const auto var_decl    = var_type + " " + new_tmp_var + ";";
+      new_decls.emplace_back(var_decl);
+      replacements[lhs_var] =  pkt_name + "." + new_tmp_var;
     }
 
     // Now rewrite LHS
