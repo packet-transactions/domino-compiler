@@ -56,8 +56,8 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
   std::string function_body_str;
   index = 0;
 
-  // Map from variable name to replacement used for renaming
-  std::map<std::string, std::string> current_replacements;
+  // Map from packet variable name to replacement used for renaming
+  std::map<std::string, std::string> current_packet_var_replacements;
 
   for (const auto * child : function_body->children()) {
     assert_exception(isa<BinaryOperator>(child));
@@ -65,7 +65,7 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
     assert_exception(bin_op->isAssignmentOp());
 
     // First rewrite RHS using whatever replacements we currently have
-    const std::string rhs_str = ExprFunctions::replace_vars(bin_op->getRHS(), current_replacements);
+    const std::string rhs_str = ExprFunctions::replace_vars(bin_op->getRHS(), current_packet_var_replacements);
 
     // Now look at LHS
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
@@ -80,12 +80,12 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
       const auto new_tmp_var = unique_identifiers.get_unique_identifier(dyn_cast<MemberExpr>(lhs)->getMemberDecl()->getNameAsString());
       const auto var_decl    = var_type + " " + new_tmp_var + ";";
       new_decls.emplace_back(var_decl);
-      current_replacements[lhs_var] =  pkt_name + "." + new_tmp_var;
+      current_packet_var_replacements[lhs_var] =  pkt_name + "." + new_tmp_var;
     }
 
     // Now rewrite LHS
     assert_exception(bin_op->getLHS());
-    const std::string lhs_str = ExprFunctions::replace_vars(bin_op->getLHS(), current_replacements);
+    const std::string lhs_str = ExprFunctions::replace_vars(bin_op->getLHS(), current_packet_var_replacements);
     function_body_str += lhs_str + " = " + rhs_str + ";";
     index++;
   }
