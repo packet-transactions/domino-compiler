@@ -159,6 +159,7 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
                   atom_bodies.at(pair.second).emplace_back(pair.first); });
 
   // Draw pipeline
+  uint32_t max_stage_id = 0;
   PipelineDrawing atoms_for_drawing;
   for (const auto & body_pair : atom_bodies) {
     uint32_t atom_id = 0;
@@ -167,8 +168,10 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
       atoms_for_drawing[stage_id][atom_id] = atom_body;
       atom_id++;
     }
+    max_stage_id = std::max(max_stage_id, stage_id);
   }
   std::cerr << draw_pipeline(atoms_for_drawing, condensed_graph) << std::endl;
+  std::cerr << "// " + std::to_string(max_stage_id + 1) + " stages" << std::endl;
   return atom_bodies;
 }
 
