@@ -177,7 +177,7 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
 
 std::string draw_pipeline(const PipelineDrawing & atoms_for_drawing, const Graph<InstBlock> & condensed_graph) {
   // Preamble for dot (node shape, fontsize etc)
-  std::string ret = "digraph pipeline_diagram {node [shape = box style=rounded fontsize = 10];\n";
+  std::string ret = "digraph pipeline_diagram {splines=true node [shape = box style=rounded fontsize = 10];\n";
   const uint32_t scale_x = 250;
   const uint32_t scale_y = 75;
 
