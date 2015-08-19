@@ -122,7 +122,7 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
       }
     }
   }
-  // std::cerr << dep_graph << std::endl;
+  std::cerr << dep_graph << std::endl;
 
   // Extract sccs
   auto sccs = dep_graph.scc();
