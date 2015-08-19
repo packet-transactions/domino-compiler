@@ -98,7 +98,7 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
 
   // Print out the final replacements, i.e. the value of current_packet_var_replacements at this point
   for (const auto & repl_pair : current_packet_field_replacements)
-    std::cerr << repl_pair.first << " " << repl_pair.second << std::endl;
+    std::cerr << "// " + repl_pair.first << " " << repl_pair.second << std::endl;
 
   return std::make_pair(function_body_str, new_decls);
 }
