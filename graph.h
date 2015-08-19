@@ -30,9 +30,13 @@ class Graph {
   /// Printer type for node objects
   typedef std::function<std::string(const NodeType &)> NodePrinter;
 
+  /// Node crayon for coloring nodes in dot
+  typedef std::function<std::string(const NodeType &)> NodeCrayon;
+
   /// Graph constructor, taking node printer as argument
-  Graph<NodeType>(const NodePrinter & node_printer)
-    : node_printer_(node_printer) {};
+  Graph<NodeType>(const NodePrinter & node_printer, const NodeCrayon & node_crayon = [] (const auto & x __attribute__((unused))) { return "white"; })
+    : node_printer_(node_printer),
+      node_crayon_(node_crayon) {};
 
   /// Add node alone to existing graph, check that node doesn't already exist
   void add_node(const NodeType & node);
@@ -53,7 +57,9 @@ class Graph {
 
     out << "digraph graph_output {node [shape = box style=rounded];\n";
     for (const auto & node : graph.node_set_) {
-      out << hash_string(graph.node_printer_(node)) << " [label = \"" << graph.node_printer_(node)  << "\" ];\n";
+      out << hash_string(graph.node_printer_(node)) << " [label = \"" << graph.node_printer_(node)  << "\" "
+                                                    << " style=filled"
+                                                    << " fillcolor=" << graph.node_crayon_(node) + "];\n";
     }
 
     for (const auto & node_pair : graph.succ_map_)
@@ -134,6 +140,9 @@ class Graph {
 
   /// Node printer function
   NodePrinter node_printer_;
+
+  /// Node crayon function, to color nodes for dot output
+  NodeCrayon node_crayon_;
 };
 
 template <class NodeType>

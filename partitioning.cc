@@ -132,7 +132,7 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
   }
 
   // Graph condensation: Add SCCs as nodes
-  Graph<InstBlock> condensed_graph(inst_block_printer);
+  Graph<InstBlock> condensed_graph(inst_block_printer, [] (const InstBlock & instblock) { return instblock.size() > 1 ? "red" : "white"; });
 
   for (uint32_t i = 0; i < sccs.size(); i++) {
     condensed_graph.add_node(sccs.at(i));
@@ -186,11 +186,14 @@ std::string draw_pipeline(const PipelineDrawing & atoms_for_drawing, const Graph
     const uint32_t stage_id = stageid_with_atom_map.first;
     for (const auto & atom_pair : stageid_with_atom_map.second) {
       const uint32_t atom_id = atom_pair.first;
-      const auto atom_as_str = inst_block_printer(atoms_for_drawing.at(stage_id).at(atom_id));
+      const auto atom = atoms_for_drawing.at(stage_id).at(atom_id);
+      const auto atom_as_str = inst_block_printer(atom);
       ret += hash_string(atom_as_str) + " [label = \""
                                       + atom_as_str + "\""
                                       + "  pos = \""
                                       + std::to_string(scale_x * stage_id) + "," + std::to_string(scale_y * atom_id) + "\""
+                                      + " style=filled "
+                                      + " fillcolor=" + (atom.size() > 1 ? "red" : "white")
                                       + "];\n";
     }
   }
