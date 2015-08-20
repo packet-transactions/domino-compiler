@@ -39,3 +39,5 @@ test-driver
 echo_test
 *.log
 *.trs
+if_converter_test
+strength_reducer_test

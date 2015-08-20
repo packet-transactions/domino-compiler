@@ -19,6 +19,7 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Parse/ParseAST.h"
 #include "llvm/Support/Host.h"
+#include "llvm/ADT/SmallString.h"
 
 #include "third_party/temp_file.hh"
 #include "third_party/assert_exception.h"
@@ -74,6 +75,17 @@ class SinglePass  : public CompilerPass {
   /// Instantiate MyASTConsumer using supplied transformer
   MyASTConsumer my_ast_consumer_;
 
+  /// SimpleDiag, TODO: Add FixIt hints and other goodies to make it comparable to gcc/clang
+  class  SimpleDiag : public clang::DiagnosticConsumer {
+    void HandleDiagnostic(clang::DiagnosticsEngine::Level DiagLevel __attribute__((unused)),
+                          const clang::Diagnostic & diagnostic) override {
+      llvm::SmallString<100> OutStr;
+      diagnostic.FormatDiagnostic(OutStr);
+      throw std::logic_error("Clang compiler error: " + std::string(OutStr.str()));
+    }
+  };
+  SimpleDiag simple_diag_ = {};
+
   /// TempFile to hold string to be parsed
   /// This is really a workaround for the fact that the
   /// entry points into clang's libraries are files on disk
@@ -91,7 +103,7 @@ std::string SinglePass::operator()(const std::string & string_to_parse) {
   // clang::CompilerInstance will hold the instance of the Clang compiler for us,
   // managing the various objects needed to run the compiler.
   clang::CompilerInstance TheCompInst;
-  TheCompInst.createDiagnostics();
+  TheCompInst.createDiagnostics(& simple_diag_, false);
   TheCompInst.getLangOpts().CPlusPlus = 0;
 
   // Initialize target info with the default triple for our platform.
