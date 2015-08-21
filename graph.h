@@ -55,10 +55,9 @@ class Graph {
   friend std::ostream & operator<< (std::ostream & out, const Graph<NodeType> & graph) {
     assert_exception(graph.node_printer_);
 
-    out << "digraph graph_output {splines=true node [shape = box style=rounded];\n";
+    out << "digraph graph_output {splines=true node [shape = box style=\"rounded,filled\"];\n";
     for (const auto & node : graph.node_set_) {
       out << hash_string(graph.node_printer_(node)) << " [label = \"" << graph.node_printer_(node)  << "\" "
-                                                    << " style=filled"
                                                     << " fillcolor=" << graph.node_crayon_(node) + "];\n";
     }
 
