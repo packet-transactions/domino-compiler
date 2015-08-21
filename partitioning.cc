@@ -192,7 +192,7 @@ std::string draw_pipeline(const PipelineDrawing & atoms_for_drawing, const Graph
                                       + atom_as_str + "\""
                                       + "  pos = \""
                                       + std::to_string(scale_x * stage_id) + "," + std::to_string(scale_y * atom_id) + "\""
-                                      + " fillcolor=" + (atom.size() > 1 ? "red" : "white")
+                                      + " fillcolor=" + (atom.size() > 1 ? "darkturquoise" : "white")
                                       + "];\n";
     }
   }
