@@ -7,8 +7,6 @@
 #include "../clang_utility_functions.h"
 #include "../util.h"
 
-using std::placeholders::_1;
-
 void test_strength_reducer(const std::string & input, const std::string & expected_output) {
   auto strength_reducer_pass = SinglePass(strength_reducer_transform);
   const auto output = strength_reducer_pass(input);

@@ -41,3 +41,4 @@ echo_test
 *.trs
 if_converter_test
 strength_reducer_test
+expr_flattener_test
