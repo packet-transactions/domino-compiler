@@ -61,8 +61,9 @@ std::string ExprFunctions::replace_vars(const clang::Expr * expr,
     }
     ret.back() = ')';
     return ret;
-  } else {
-    assert_exception(isa<IntegerLiteral>(expr));
+  } else if (isa<IntegerLiteral>(expr)){
     return clang_stmt_printer(expr);
+  } else {
+    throw std::logic_error("replace_vars cannot handle expr " + std::string(clang_stmt_printer(expr)) + " of type " + std::string(expr->getStmtClassName()));
   }
 }
