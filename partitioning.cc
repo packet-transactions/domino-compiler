@@ -24,12 +24,12 @@ Graph<const BinaryOperator *> handle_state_vars(const std::vector<const BinaryOp
     const auto * lhs = stmt->getLHS()->IgnoreParenImpCasts();
     const auto * rhs = stmt->getRHS()->IgnoreParenImpCasts();
     // At this stage, after stateful_flanks has been run, the only
-    // way state variables appear is either on the LHS or on the RHS
+    // way state variables (scalar or array-based) appear is either on the LHS or on the RHS
     // and they appear by themselves (not as part of another expression)
     // Which is why we don't need to recursively traverse an AST to check for state vars
-    if (isa<DeclRefExpr>(rhs)) {
+    if (isa<DeclRefExpr>(rhs) or isa<ArraySubscriptExpr>(rhs)) {
       state_reads[clang_stmt_printer(rhs)] = stmt;
-    } else if (isa<DeclRefExpr>(lhs)) {
+    } else if (isa<DeclRefExpr>(lhs) or isa<ArraySubscriptExpr>(lhs)) {
       state_writes[clang_stmt_printer(lhs)] = stmt;
       const auto state_var = clang_stmt_printer(lhs);
       ret.add_edge(state_reads.at(state_var), state_writes.at(state_var));
@@ -66,7 +66,7 @@ bool depends(const BinaryOperator * op1, const BinaryOperator * op2) {
     // Make an exception for state variables. There is no way around this.
     // There is no need to add this edge, because handle_state_vars() does
     // this already.
-    if (isa<DeclRefExpr>(op2->getLHS())) {
+    if (isa<DeclRefExpr>(op2->getLHS()) or isa<ArraySubscriptExpr>(op2->getLHS())) {
       return false;
     } else {
       throw std::logic_error("Cannot have Write-After-Read dependencies in SSA form from " + clang_stmt_printer(op1) +  " to " + clang_stmt_printer(op2) + "\n");

@@ -125,6 +125,11 @@ std::set<std::string> gen_var_list(const Stmt * stmt, const VariableTypeSelector
     return (var_selector.at(VariableType::STATE))
            ? std::set<std::string>{clang_stmt_printer(state_var_expr)}
            : std::set<std::string>();
+  } else if (isa<ArraySubscriptExpr>(stmt)) {
+    const auto * array_subscript_expr = dyn_cast<ArraySubscriptExpr>(stmt);
+    return (var_selector.at(VariableType::STATE))
+           ? std::set<std::string>{clang_stmt_printer(array_subscript_expr)}
+           : std::set<std::string>();
   } else if (isa<IntegerLiteral>(stmt)) {
     return std::set<std::string>();
   } else if (isa<ParenExpr>(stmt)) {

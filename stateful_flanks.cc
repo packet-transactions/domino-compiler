@@ -36,15 +36,17 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
     // Strip off parenthesis and casts on lhs
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
 
-    // If lhs is a DeclRefExpr, it's a stateful variable
+    // If lhs is a DeclRefExpr or an ArraySubscriptExpr, it's a stateful variable
     // It's sufficient to inspect LHS alone to determine stateful variables,
     // because we are assuming a stateful variable is written at least once.
     // Otherwise, I don't see the point of a stateful variable.
-    if (isa<DeclRefExpr>(lhs)) {
+    if (isa<DeclRefExpr>(lhs) or isa<ArraySubscriptExpr>(lhs)) {
       const std::string  state_var = clang_stmt_printer(lhs);
       if (state_var_table.find(state_var) == state_var_table.end()) {
-        const auto var_type    = dyn_cast<DeclRefExpr>(lhs)->getDecl()->getType().getAsString();
-        const auto new_tmp_var = unique_identifiers.get_unique_identifier(state_var);
+        const auto var_type    = isa<DeclRefExpr>(lhs) ? dyn_cast<DeclRefExpr>(lhs)->getDecl()->getType().getAsString() :
+                                                         dyn_cast<ArraySubscriptExpr>(lhs)->getType().getAsString();
+        const auto new_tmp_var = unique_identifiers.get_unique_identifier(isa<DeclRefExpr>(lhs) ? state_var
+                                                                                                : clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(lhs)->getBase()));
         const auto var_decl    = var_type + " " + new_tmp_var + ";";
         new_decls.emplace_back(var_decl);
 

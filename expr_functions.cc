@@ -38,6 +38,7 @@ std::string ExprFunctions::replace_vars(const clang::Expr * expr,
     return lhs_str + std::string(BinaryOperator::getOpcodeStr(bin_op->getOpcode())) + rhs_str;
   } else if (isa<DeclRefExpr>(expr)) {
     // All DeclRefExpr are stateful variables
+    // TODO: Merge this with the code below
     const std::string state_var_name = clang_stmt_printer(expr);
     if (repl_map.find(state_var_name) != repl_map.end()) {
       return repl_map.at(state_var_name);
@@ -51,6 +52,13 @@ std::string ExprFunctions::replace_vars(const clang::Expr * expr,
       return repl_map.at(pkt_var_name);
     } else {
       return pkt_var_name;
+    }
+  } else if (isa<ArraySubscriptExpr>(expr)) {
+    const std::string state_array_name = clang_stmt_printer(expr);
+    if (repl_map.find(state_array_name) != repl_map.end()) {
+        return repl_map.at(state_array_name);
+    } else {
+      return state_array_name;
     }
   } else if (isa<CallExpr>(expr)) {
     const auto * call_expr = dyn_cast<CallExpr>(expr);
