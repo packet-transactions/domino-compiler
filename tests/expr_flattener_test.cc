@@ -28,3 +28,7 @@ TEST(ExprFlattenerTests, AlreadyFlat) {
 TEST(ExprFlattenerTests, OnePass) {
   test_expr_flattener("struct Packet {int x; int y; int z;}; void func(struct Packet p) { p.x = p.y + 1 + p.z; }", "struct Packet {int x; int y; int z; int tmp0;}; void func(struct Packet p) { p.tmp0 = p.y + 1; p.x = p.tmp0 + p.z;}");
 }
+
+TEST(ExprFlattenerTests, TwoPass) {
+  test_expr_flattener("struct Packet {int x; int y; int z;}; void func(struct Packet p) { p.x = p.y + 1 + p.z + 1; }", "struct Packet {int x; int y; int z; int tmp0; int tmp1;}; void func (struct Packet p) { p.tmp1 = p.y + 1; p.tmp0 = p.tmp1 + p.z; p.x = p.tmp0 + 1;}");
+}
