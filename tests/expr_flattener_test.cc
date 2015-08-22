@@ -20,3 +20,8 @@ void test_expr_flattener(const std::string & input, const std::string & expected
 TEST(ExprFlattenerTests, Trivial) {
   test_expr_flattener("int a;", "int a;");
 }
+
+
+TEST(ExprFlattenerTests, AlreadyFlat) {
+  test_expr_flattener("struct Packet {int x; int y;}; void func(struct Packet p) { p.x = p.y + 1; }", "struct Packet {int x; int y;}; void func(struct Packet p) { p.x = p.y + 1; }");
+}
