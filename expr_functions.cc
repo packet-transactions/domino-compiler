@@ -36,29 +36,15 @@ std::string ExprFunctions::replace_vars(const clang::Expr * expr,
     const auto lhs_str = replace_vars(bin_op->getLHS(), repl_map);
     const auto rhs_str = replace_vars(bin_op->getRHS(), repl_map);
     return lhs_str + std::string(BinaryOperator::getOpcodeStr(bin_op->getOpcode())) + rhs_str;
-  } else if (isa<DeclRefExpr>(expr)) {
-    // All DeclRefExpr are stateful variables
-    // TODO: Merge this with the code below
-    const std::string state_var_name = clang_stmt_printer(expr);
-    if (repl_map.find(state_var_name) != repl_map.end()) {
-      return repl_map.at(state_var_name);
-    } else {
-      return state_var_name;
-    }
-  } else if (isa<MemberExpr>(expr)) {
+  } else if (isa<DeclRefExpr>(expr) or isa<MemberExpr>(expr) or isa<ArraySubscriptExpr>(expr)) {
+    // All DeclRefExpr are stateful scalars
     // All MemberExpr are packet variables
-    const std::string pkt_var_name = clang_stmt_printer(expr);
-    if (repl_map.find(pkt_var_name) != repl_map.end()) {
-      return repl_map.at(pkt_var_name);
+    // All ArraySubscriptExpr are stateful arrays
+    const std::string var_name = clang_stmt_printer(expr);
+    if (repl_map.find(var_name) != repl_map.end()) {
+      return repl_map.at(var_name);
     } else {
-      return pkt_var_name;
-    }
-  } else if (isa<ArraySubscriptExpr>(expr)) {
-    const std::string state_array_name = clang_stmt_printer(expr);
-    if (repl_map.find(state_array_name) != repl_map.end()) {
-        return repl_map.at(state_array_name);
-    } else {
-      return state_array_name;
+      return var_name;
     }
   } else if (isa<CallExpr>(expr)) {
     const auto * call_expr = dyn_cast<CallExpr>(expr);

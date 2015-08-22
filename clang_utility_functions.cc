@@ -116,19 +116,12 @@ std::set<std::string> gen_var_list(const Stmt * stmt, const VariableTypeSelector
     const auto * cond_op = dyn_cast<ConditionalOperator>(stmt);
     return gen_var_list(cond_op->getCond(), var_selector) + gen_var_list(cond_op->getTrueExpr(), var_selector) + gen_var_list(cond_op->getFalseExpr(), var_selector);
   } else if (isa<MemberExpr>(stmt)) {
-    const auto * packet_var_expr = dyn_cast<MemberExpr>(stmt);
     return (var_selector.at(VariableType::PACKET))
-           ? std::set<std::string>{clang_stmt_printer(packet_var_expr)}
+           ? std::set<std::string>{clang_stmt_printer(stmt)}
            : std::set<std::string>();
-  } else if (isa<DeclRefExpr>(stmt)) {
-    const auto * state_var_expr = dyn_cast<DeclRefExpr>(stmt);
+  } else if (isa<DeclRefExpr>(stmt) or isa<ArraySubscriptExpr>(stmt)) {
     return (var_selector.at(VariableType::STATE))
-           ? std::set<std::string>{clang_stmt_printer(state_var_expr)}
-           : std::set<std::string>();
-  } else if (isa<ArraySubscriptExpr>(stmt)) {
-    const auto * array_subscript_expr = dyn_cast<ArraySubscriptExpr>(stmt);
-    return (var_selector.at(VariableType::STATE))
-           ? std::set<std::string>{clang_stmt_printer(array_subscript_expr)}
+           ? std::set<std::string>{clang_stmt_printer(stmt)}
            : std::set<std::string>();
   } else if (isa<IntegerLiteral>(stmt)) {
     return std::set<std::string>();
