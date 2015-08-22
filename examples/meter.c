@@ -1,5 +1,5 @@
-#define PBS 100
-#define CBS 10
+#define PBS 2000000000
+#define CBS 2000000000
 
 #define PIR 2
 #define CIR 1
@@ -20,7 +20,7 @@ void func(struct Packet pkt) {
   } else if (tc < pkt.size) {
     pkt.color = 2;
     tp = tp - pkt.size;
-  } else if (tc < pkt.size) {
+  } else {
     pkt.color = 3;
     tp = tp - pkt.size;
     tc = tc - pkt.size;
