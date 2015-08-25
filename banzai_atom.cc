@@ -8,27 +8,51 @@
 
 using namespace clang;
 const std::string BanzaiAtom::PACKET_IDENTIFIER = "packet";
-const std::string BanzaiAtom::STATE_IDENTIFIER  = "state";
+const std::string BanzaiAtom::STATE_SCALAR_IDENTIFIER  = "scalar";
+const std::string BanzaiAtom::STATE_ARRAY_IDENTIFIER = "array";
 
-BanzaiAtom::BanzaiAtom(const clang::Stmt * stmt, const std::string & t_name, const std::map<FieldContainer::FieldName, FieldContainer::FieldType> & state_initializers)
+BanzaiAtom::BanzaiAtom(const clang::Stmt * stmt,
+                       const std::string & t_name,
+                       const ScalarInitializer & scalar_initializer,
+                       const ArrayInitializer  & array_initializer)
     : name_(t_name),
       function_body_(rewrite_into_banzai_ops(stmt)),
-      function_definition_("[] (Packet & " + PACKET_IDENTIFIER + " __attribute__((unused)), State & " + STATE_IDENTIFIER + " __attribute__((unused))) {\n" +
+      function_definition_("[] (Packet  & " + PACKET_IDENTIFIER       + " __attribute__((unused)), " +
+                           "StateScalar & " + STATE_SCALAR_IDENTIFIER + " __attribute__((unused)), " +
+                           "StateArray  & " + STATE_ARRAY_IDENTIFIER  + " __attribute__((unused))) {\n" +
                            function_body_ + "\n }"),
-      state_vars_used_(gen_var_list(stmt, {{VariableType::STATE, true}, {VariableType::PACKET, false}})),
-      atom_definition_("Atom " + name_ + "(" + function_definition_ + ", " + state_init_string(state_vars_used_, state_initializers) + ");")
+      state_scalars_used_(gen_var_list(stmt, {{VariableType::STATE_ARRAY, false}, {VariableType::STATE_SCALAR, true},  {VariableType::PACKET, false}})),
+      state_arrays_used_(gen_var_list(stmt, {{VariableType::STATE_ARRAY, true},  {VariableType::STATE_SCALAR, false}, {VariableType::PACKET, false}})),
+      atom_definition_("Atom " + name_ + "(" + function_definition_ + ", "
+                        + scalar_init_string(state_scalars_used_, scalar_initializer)
+                        + ", " + array_init_string(state_arrays_used_, array_initializer) + ");")
 {}
 
-std::string BanzaiAtom::state_init_string(const std::set<std::string> & state_vars_used, const std::map<FieldContainer::FieldName, FieldContainer::FieldType> & state_initializers) const {
-  // Generate initial values for all state variables used within stmt
-  std::string init_state_str = "FieldContainer(std::map<FieldContainer::FieldName, FieldContainer::FieldType>";
-  init_state_str += "{";
-  for (const auto & state_var : state_vars_used) {
-    init_state_str += "{\"" + state_var + "\", " + std::to_string(state_initializers.at(state_var)) + "},";
+std::string BanzaiAtom::scalar_init_string(const VariableSet & state_scalars_used, const ScalarInitializer & scalar_initializer) const {
+  // Generate initial values for all state scalars used within stmt
+  std::string scalar_init_str = "StateScalar(std::map<std::string, int>";
+  scalar_init_str += "{";
+  for (const auto & scalar_var : state_scalars_used) {
+    scalar_init_str += "{\"" + scalar_var + "\", " + std::to_string(scalar_initializer.at(scalar_var)) + "},";
   }
-  init_state_str += '}'; // to close std::map constructor's initializer list
-  init_state_str += ")"; // to close FieldContainer constructor's left parenthesis
-  return init_state_str;
+  scalar_init_str += '}'; // to close std::map constructor's initializer list
+  scalar_init_str += ")"; // to close FieldContainer constructor's left parenthesis
+  return scalar_init_str;
+}
+
+std::string BanzaiAtom::array_init_string(const VariableSet & state_arrays_used, const ArrayInitializer & array_initializer) const {
+  // Generate initial values for all state arrays used within stmt
+  std::string array_init_str = "StateArray(std::map<std::string, std::vector<int>>";
+  array_init_str += "{";
+  for (const auto & array_var : state_arrays_used) {
+    array_init_str += "{\"" + array_var + "\", std::vector<int>("
+                      + std::to_string(array_initializer.at(array_var).first) + ", " + std::to_string(array_initializer.at(array_var).second)
+                      /* The above uses the second constructor from here: http://en.cppreference.com/w/cpp/container/vector/vector */
+                      + ")},";
+  }
+  array_init_str += "}"; // to close std::map constructor's initializer list
+  array_init_str += ")"; // to close FieldContainer constructor's left parenthesis
+  return array_init_str;
 }
 
 std::string BanzaiAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const {
@@ -64,7 +88,11 @@ std::string BanzaiAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const 
     // All state variables are of the type s(...) in banzai
     // N.B. Again by overloading the () operator
     const auto * decl_expr = dyn_cast<DeclRefExpr>(stmt);
-    return   STATE_IDENTIFIER + "(\"" + clang_value_decl_printer(decl_expr->getDecl()) + "\")";
+    return   STATE_SCALAR_IDENTIFIER + "(\"" + clang_value_decl_printer(decl_expr->getDecl()) + "\")";
+  } else if (isa<ArraySubscriptExpr>(stmt)) {
+    const auto * array_expr = dyn_cast<ArraySubscriptExpr>(stmt);
+    return   STATE_ARRAY_IDENTIFIER + "(\"" + clang_stmt_printer(array_expr->getBase()) + "\")"
+             + "[" + rewrite_into_banzai_ops(array_expr->getIdx()) + "]";
   } else if (isa<IntegerLiteral>(stmt)) {
     return clang_stmt_printer(stmt);
   } else if (isa<ParenExpr>(stmt)) {

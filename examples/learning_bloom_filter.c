@@ -4,9 +4,9 @@ struct Packet {
   int member;
 };
 
-int filter1[256];
-int filter2[256];
-int filter3[256];
+int filter1[256] = {1};
+int filter2[256] = {1};
+int filter3[256] = {1};
 
 int hash1(int a, int b) {
   return a * b;

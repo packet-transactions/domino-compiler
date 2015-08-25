@@ -7,9 +7,9 @@ struct Packet {
   int is_not_heavy_hitter;
 };
 
-int sketch_cnt_1[4096];
-int sketch_cnt_2[4096];
-int sketch_cnt_3[4096];
+int sketch_cnt_1[4096] = {0};
+int sketch_cnt_2[4096] = {0};
+int sketch_cnt_3[4096] = {0};
 
 int hash1(int a, int b) {
   return a * b;

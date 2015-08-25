@@ -62,7 +62,11 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
   std::string scalar_func_decls = "";
 
   // Storage for initial values of all state variables
-  std::map<std::string, FieldContainer::FieldType> init_values;
+  std::map<std::string, int> init_scalar_values;
+
+  // Storage for initial values of all state arrays
+  // TODO: We assume all elements have the same value initially.
+  std::map<std::string, std::pair<BanzaiAtom::ArraySize, BanzaiAtom::ScalarValue>> init_array_values;
 
   // Storage for names of all packet fields for test packet generation
   BanzaiPacketFieldSet packet_field_set;
@@ -78,10 +82,33 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
     if (isa<VarDecl>(child_decl)) {
       const auto * var_decl = dyn_cast<VarDecl>(child_decl);
       // Forbid certain constructs
-      if (not var_decl->hasInit()) throw std::logic_error("All state variables must have an initializer in domino: " + clang_value_decl_printer(var_decl)+ " doesn't");
-      if (init_values.find(clang_value_decl_printer(var_decl)) != init_values.end()) throw std::logic_error("Reinitializing " + clang_value_decl_printer(var_decl) + " to " + clang_stmt_printer(var_decl->getInit()) + " not permitted");
-      if (not isa<IntegerLiteral>(var_decl->getInit())) throw std::logic_error("Only integers can be used to initialize state variables: " + clang_value_decl_printer(var_decl) + " uses " + clang_stmt_printer(var_decl->getInit()));
-      init_values[clang_value_decl_printer(var_decl)] = static_cast<FieldContainer::FieldType>(std::stoi(clang_stmt_printer(var_decl->getInit())));
+      if (not var_decl->hasInit()) {
+        throw std::logic_error("All state variables must have an initializer in domino: " + clang_value_decl_printer(var_decl)+ " doesn't");
+      }
+      if ((not isa<IntegerLiteral>(var_decl->getInit())) and (not isa<InitListExpr>(var_decl->getInit()))) {
+        throw std::logic_error("Only integers or initializer lists can be used to initialize state variables: "
+                               + clang_value_decl_printer(var_decl)
+                               + " uses "
+                               + clang_stmt_printer(var_decl->getInit())
+                               + " of type " + std::string(var_decl->getInit()->getStmtClassName()) );
+      }
+      if (isa<IntegerLiteral>(var_decl->getInit())) {
+        init_scalar_values[clang_value_decl_printer(var_decl)] = static_cast<int>(std::stoi(clang_stmt_printer(var_decl->getInit())));
+      } else {
+        assert(isa<InitListExpr>(var_decl->getInit()));
+        const auto * underlying_type = var_decl->getType().getTypePtrOrNull();
+        assert_exception(underlying_type != nullptr);
+        if (not isa<ConstantArrayType>(underlying_type)) {
+          throw std::logic_error("Can handle only arrays whose sizes are known at compile time");
+        }
+        uint64_t array_size = dyn_cast<ConstantArrayType>(underlying_type)->getSize().getZExtValue();
+        std::cerr << "Array declaration with size " << array_size
+                  << " and initial value " << std::stoi(clang_stmt_printer(dyn_cast<InitListExpr>(var_decl->getInit())->getInit(0)))
+                  << std::endl;
+        init_array_values[clang_value_decl_printer(var_decl)]  = std::make_pair(
+                                                                 array_size,
+                                                                 static_cast<int>(std::stoi(clang_stmt_printer(dyn_cast<InitListExpr>(var_decl->getInit())->getInit(0)))));
+      }
     } else if (isa<RecordDecl>(child_decl)) {
       for (const auto * field_decl : dyn_cast<DeclContext>(child_decl)->decls())
        packet_field_set.emplace(clang_value_decl_printer(dyn_cast<ValueDecl>(field_decl)));
@@ -95,7 +122,8 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       const auto function_name = dyn_cast<FunctionDecl>(child_decl)->getNameInfo().getName().getAsString();
       const BanzaiAtom banzai_atom(dyn_cast<FunctionDecl>(child_decl)->getBody(),
                                    function_name,
-                                   init_values);
+                                   init_scalar_values,
+                                   init_array_values);
 
       // Add to atom_defs object, track max_stage_id so far
       const auto stage_id = stage_id_from_name(function_name);

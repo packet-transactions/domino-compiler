@@ -8,8 +8,13 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/Stmt.h"
 
-/// Enum class to represent Variable type (packet (p.x) or state (x), or both)
-enum class VariableType {PACKET, STATE, FUNCTION_PARAMETER};
+/// Enum class to represent Variable type
+/// PACKET is for the names of all packet fields (in identifier_census)
+/// and packet fields prefixed with "pkt." (in gen_var_list)
+/// STATE_SCALAR is for all scalar state variables
+/// STATE_ARRAY is for all array state variables
+/// FUNCTION_PARAMETER is for the function name and function parameters
+enum class VariableType {PACKET, STATE_SCALAR, STATE_ARRAY, FUNCTION_PARAMETER};
 
 /// Map from VariableType to bool,
 /// denoting whether a variable should be selected or not
@@ -38,12 +43,12 @@ bool is_packet_func(const clang::FunctionDecl * func_decl);
 /// so that we can generate unique names afterwards
 std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl,
                                         const VariableTypeSelector & var_selector =
-                                        {{VariableType::PACKET, true}, {VariableType::FUNCTION_PARAMETER, true}, {VariableType::STATE, true}});
+                                        {{VariableType::PACKET, true}, {VariableType::FUNCTION_PARAMETER, true}, {VariableType::STATE_SCALAR, true}, {VariableType::STATE_ARRAY, true}});
 
 /// Determine all variables (either packet or state) used within a clang::Stmt,
 std::set<std::string> gen_var_list(const clang::Stmt * stmt,
                                    const VariableTypeSelector & var_selector =
-                                   {{VariableType::PACKET, true}, {VariableType::STATE, true}}
+                                   {{VariableType::PACKET, true}, {VariableType::STATE_SCALAR, true}}
                                    );
 
 /// Generate scalar function declarations,

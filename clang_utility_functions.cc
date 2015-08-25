@@ -79,10 +79,20 @@ std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl,
           identifiers.emplace(dyn_cast<ParmVarDecl>(parm_decl)->getName());
         }
       }
-    } else if (isa<ValueDecl>(child_decl)) {
-      // add state variable name
-      if (var_selector.at(VariableType::STATE)) {
-        identifiers.emplace(dyn_cast<ValueDecl>(child_decl)->getName());
+    } else if (isa<VarDecl>(child_decl)) {
+      const auto * underlying_type = dyn_cast<VarDecl>(child_decl)->getType().getTypePtrOrNull();
+      if (isa<ConstantArrayType>(underlying_type)) {
+        if (var_selector.at(VariableType::STATE_ARRAY)) {
+          identifiers.emplace(dyn_cast<VarDecl>(child_decl)->getName());
+        }
+      } else if (isa<BuiltinType>(underlying_type) and dyn_cast<BuiltinType>(underlying_type)->isInteger()) {
+        if (var_selector.at(VariableType::STATE_SCALAR)) {
+          identifiers.emplace(dyn_cast<VarDecl>(child_decl)->getName());
+        }
+      } else {
+        throw std::logic_error("We don't support this: state variable "
+                               + clang_value_decl_printer(dyn_cast<VarDecl>(child_decl))
+                               + " has type " + std::string(dyn_cast<VarDecl>(child_decl)->getName()));
       }
     } else {
       // We can't remove TypedefDecl from the AST for some reason.
@@ -119,10 +129,14 @@ std::set<std::string> gen_var_list(const Stmt * stmt, const VariableTypeSelector
     return (var_selector.at(VariableType::PACKET))
            ? std::set<std::string>{clang_stmt_printer(stmt)}
            : std::set<std::string>();
-  } else if (isa<DeclRefExpr>(stmt) or isa<ArraySubscriptExpr>(stmt)) {
-    return (var_selector.at(VariableType::STATE))
+  } else if (isa<DeclRefExpr>(stmt)) {
+    return (var_selector.at(VariableType::STATE_SCALAR))
            ? std::set<std::string>{clang_stmt_printer(stmt)}
            : std::set<std::string>();
+  } else if (isa<ArraySubscriptExpr>(stmt)) {
+    return (var_selector.at(VariableType::STATE_ARRAY))
+          ? std::set<std::string>{clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(stmt)->getBase())}
+          : std::set<std::string>();
   } else if (isa<IntegerLiteral>(stmt)) {
     return std::set<std::string>();
   } else if (isa<ParenExpr>(stmt)) {
@@ -162,8 +176,9 @@ std::string gen_pkt_fields(const TranslationUnitDecl * tu_decl) {
   std::string ret = "";
   for (const auto & field : identifier_census(tu_decl,
                                               {{VariableType::PACKET, true},
-                                               {VariableType::STATE,  false},
-                                               {VariableType::FUNCTION_PARAMETER, false}})) {
+                                               {VariableType::STATE_SCALAR,  false},
+                                               {VariableType::FUNCTION_PARAMETER, false},
+                                               {VariableType::STATE_ARRAY, false}})) {
     ret += field + "\n";
   }
   return ret;
