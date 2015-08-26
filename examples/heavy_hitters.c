@@ -12,15 +12,21 @@ int sketch_cnt_2[4096] = {0};
 int sketch_cnt_3[4096] = {0};
 
 int hash1(int a, int b) {
-  return a * b;
+  int ret = (a * b) % 256;
+  if (ret < 0) ret = 0;
+  return ret;
 }
 
 int hash2(int a, int b) {
-  return a * b;
+  int ret = (a * b) % 256;
+  if (ret < 0) ret = 0;
+  return ret;
 }
 
 int hash3(int a, int b) {
-  return a * b;
+  int ret = (a * b) % 256;
+  if (ret < 0) ret = 0;
+  return ret;
 }
 
 void func(struct Packet p) {
