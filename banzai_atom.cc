@@ -92,7 +92,7 @@ std::string BanzaiAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const 
   } else if (isa<ArraySubscriptExpr>(stmt)) {
     const auto * array_expr = dyn_cast<ArraySubscriptExpr>(stmt);
     return   STATE_ARRAY_IDENTIFIER + "(\"" + clang_stmt_printer(array_expr->getBase()) + "\")"
-             + "[static_cast<uint64_t>(" + rewrite_into_banzai_ops(array_expr->getIdx()) + ")]";
+             + ".at(static_cast<uint64_t>(" + rewrite_into_banzai_ops(array_expr->getIdx()) + "))";
   } else if (isa<IntegerLiteral>(stmt)) {
     return clang_stmt_printer(stmt);
   } else if (isa<ParenExpr>(stmt)) {
