@@ -3,7 +3,6 @@
 #include "third_party/assert_exception.h"
 
 #include "util.h"
-#include "expr_functions.h"
 #include "clang_utility_functions.h"
 #include "unique_identifiers.h"
 

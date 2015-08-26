@@ -7,8 +7,9 @@
 
 #include "third_party/assert_exception.h"
 
+#include "clang/AST/Expr.h"
+
 #include "clang_utility_functions.h"
-#include "expr_functions.h"
 #include "unique_identifiers.h"
 #include "pkt_func_transform.h"
 
@@ -70,7 +71,7 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
     assert_exception(bin_op->isAssignmentOp());
 
     // First rewrite RHS using whatever replacements we currently have
-    const std::string rhs_str = ExprFunctions::replace_vars(bin_op->getRHS(), current_packet_var_replacements);
+    const std::string rhs_str = replace_vars(bin_op->getRHS(), current_packet_var_replacements);
 
     // Now look at LHS
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
@@ -91,7 +92,7 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
 
     // Now rewrite LHS
     assert_exception(bin_op->getLHS());
-    const std::string lhs_str = ExprFunctions::replace_vars(bin_op->getLHS(), current_packet_var_replacements);
+    const std::string lhs_str = replace_vars(bin_op->getLHS(), current_packet_var_replacements);
     function_body_str += lhs_str + " = " + rhs_str + ";";
     index++;
   }

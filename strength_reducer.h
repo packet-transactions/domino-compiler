@@ -8,7 +8,7 @@
 #include "clang/AST/Decl.h"
 
 /// Entry point from SinglePass,
-/// which immediately delegate to strength_reduce_body
+/// which immediately delegates to strength_reduce_body
 std::string strength_reducer_transform(const clang::TranslationUnitDecl * tu_decl);
 
 /// Simple strength reduction: rewrite if (1) ? x : y to x.

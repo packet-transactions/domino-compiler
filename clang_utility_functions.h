@@ -61,4 +61,7 @@ std::string generate_scalar_func_def(const clang::FunctionDecl * func_decl);
 /// by first calling identifier_census and then serializing the result
 std::string gen_pkt_fields(const clang::TranslationUnitDecl * tu_decl);
 
+/// Replace a specific string with a new string within expr
+std::string replace_vars(const clang::Expr * expr, const std::map<std::string, std::string> & repl_map);
+
 #endif  // CLANG_UTILITY_FUNCTIONS_H_
