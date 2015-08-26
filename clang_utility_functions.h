@@ -48,7 +48,9 @@ std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl,
 /// Determine all variables (either packet or state) used within a clang::Stmt,
 std::set<std::string> gen_var_list(const clang::Stmt * stmt,
                                    const VariableTypeSelector & var_selector =
-                                   {{VariableType::PACKET, true}, {VariableType::STATE_SCALAR, true}}
+                                   {{VariableType::PACKET, true},
+                                    {VariableType::STATE_SCALAR, true},
+                                    {VariableType::STATE_ARRAY, true}}
                                    );
 
 /// Generate scalar function declarations,
