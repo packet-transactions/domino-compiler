@@ -7,6 +7,7 @@
 #include "strength_reducer.h"
 #include "banzai_code_generator.h"
 #include "desugar_compound_assignment.h"
+#include "int_type_checker.h"
 
 #include <utility>
 #include <iostream>
@@ -36,6 +37,7 @@ void populate_passes() {
   // We need to explicitly call populate_passes instead of using an initializer list
   // to populate PassMap all_passes because initializer lists don't play well with move-only
   // types like unique_ptrs (http://stackoverflow.com/questions/9618268/initializing-container-of-unique-ptrs-from-initializer-list-fails-with-gcc-4-7)
+  all_passes["int_type_checker"] = std::make_unique<SinglePass>(int_type_checker_transform);
   all_passes["desugar_comp_asgn"]= std::make_unique<SinglePass>(desugar_compound_assignment_transform);
   all_passes["if_converter"]     = std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1));
   all_passes["strength_reducer"] = std::make_unique<SinglePass>(strength_reducer_transform);
