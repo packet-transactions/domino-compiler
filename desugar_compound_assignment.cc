@@ -38,7 +38,6 @@ BinaryOperator::Opcode get_underlying_op(const BinaryOperator::Opcode & comp_asg
 std::string desugar_compound_assignments(const Stmt * stmt) {
   assert_exception(stmt);
   std::string ret;
-  std::cerr << "Within desugar_compound_assignments, handling stmt of type " << std::string(stmt->getStmtClassName()) << std::endl;
   if(isa<CompoundStmt>(stmt)) {
     std::string ret;
     for (const auto & child : stmt->children())

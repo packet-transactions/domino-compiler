@@ -76,7 +76,11 @@ void IfConversionHandler::if_convert(std::string & current_stream,
     assert_exception(predicate == "1");
     current_stream += clang_stmt_printer(stmt);
     return;
+  } else if (isa<NullStmt>(stmt)) {
+    // Do nothing
+    return;
   } else {
+    throw std::logic_error("Cannot handle stmt " + clang_stmt_printer(stmt) + " of type " + std::string(stmt->getStmtClassName()));
     assert_exception(false);
   }
 }
