@@ -17,7 +17,7 @@ void func(struct Packet p) {
   if (p.util < best_path_util[p.src % 256]) {
     best_path_util[p.src % 256] = p.util;
     best_path[p.src % 256] = p.path_id;
-  } else if (p.path_id == best_path[p.src]) {
+  } else if (p.path_id == best_path[p.src % 256]) {
     best_path_util[p.src % 256] = p.util;
     // TODO: I guess we aren't switching to another path in
     // case the utilization on the best path went up.
