@@ -15,9 +15,9 @@ struct Packet {
   int sojourn_time;
 };
 
-int sqrt(int val) {
+int mysqrt(int val) {
   // TODO: Fill this up
-  return 1;
+  return val + 1;
 }
 
 void func(struct Packet pkt) {
@@ -41,7 +41,7 @@ void func(struct Packet pkt) {
     if (pkt.tick >= drop_next && dropping) {
       pkt.drop = 1;
       count += 1;
-      drop_next = drop_next + INTERVAL / sqrt(count);
+      drop_next = drop_next + INTERVAL / mysqrt(count);
     }
   } else if (pkt.ok_to_drop) {
     pkt.drop = 1;
@@ -50,7 +50,7 @@ void func(struct Packet pkt) {
       count = count - 2;
     } else {
       count = 1;
-      drop_next = pkt.tick + INTERVAL / sqrt(count);
+      drop_next = pkt.tick + INTERVAL / mysqrt(count);
     }
   }
 }
