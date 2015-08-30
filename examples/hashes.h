@@ -79,7 +79,7 @@ static inline unsigned short int crc16(unsigned char *buf, int len) {
 unsigned short int hash(int a, int b) {
   // Pack a and b into a char buffer
   unsigned char buf[2 * sizeof(int)];
-  *((int *)(&buf)) = a;
-  *((int *)((&buf) + sizeof(int))) = b;
+  *(int *)buf = a;
+  *((int *)(buf + sizeof(int))) = b;
   return crc16(buf, 2 * sizeof(int));
 }
