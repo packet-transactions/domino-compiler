@@ -11,10 +11,12 @@ int filter1[256] = {0};
 int filter2[256] = {0};
 int filter3[256] = {0};
 
-int hash(int a, int b) {
-  int ret = (a * b) % 256;
-  if (ret < 0) ret = 0;
-  return ret;
+unsigned short int hash(int a, int b) {
+  // Pack a and b into a char buffer
+  unsigned char buf[2 * sizeof(int)];
+  *((int *)(&buf)) = a;
+  *((int *)((&buf) + sizeof(int))) = b;
+  return crc16(buf, 2 * sizeof(int));
 }
 
 void func(struct Packet pkt) {
