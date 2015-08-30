@@ -1,3 +1,5 @@
+// This code was taken from the P4 behavioral model simulator (v1 and v2)
+
 /* This code was adapted from:
    http://www.barrgroup.com/Embedded-Systems/How-To/CRC-Calculation-C-Code */
 
@@ -24,7 +26,7 @@ unsigned int reflect(unsigned int data, int nBits) {
 /* TODO: try to implement something a bit more generic that will cover
    programmable CRCs */
 
-static inline void crc16(unsigned char *buf, int len, unsigned char *result) {
+static inline unsigned short int crc16(unsigned char *buf, int len) {
   /* generating from my Python script gen_crc_tables inspired from the C code at:
      http://www.barrgroup.com/Embedded-Systems/How-To/CRC-Calculation-C-Code */
 
@@ -71,5 +73,5 @@ static inline void crc16(unsigned char *buf, int len, unsigned char *result) {
     data = (int)(reflect(buf[byte], 8)) ^ (remainder >> 8);
     remainder = (unsigned short int)(table_crc16[data] ^ (remainder << 8));
   }
-  *(unsigned short int *) result = (unsigned short int)(reflect(remainder, 16) ^ final_xor_value);
+  return (unsigned short int)(reflect(remainder, 16) ^ final_xor_value);
 }
