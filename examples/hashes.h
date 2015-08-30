@@ -13,7 +13,7 @@ unsigned int reflect(unsigned int data, int nBits) {
      * If the LSB bit is set, set the reflection of it.
      */
     if (data & 0x01) {
-      reflection |= (1 << ((nBits - 1) - bit));
+      reflection |= (unsigned int)(1 << ((nBits - 1) - bit));
     }
     data = (data >> 1);
   }
@@ -68,8 +68,8 @@ static inline void crc16(unsigned char *buf, int len, unsigned char *result) {
   unsigned short int final_xor_value = 0x0000;
   int data;
   for(byte = 0; byte < len; byte++) {
-    data = reflect(buf[byte], 8) ^ (remainder >> 8);
-    remainder = table_crc16[data] ^ (remainder << 8);
+    data = (int)(reflect(buf[byte], 8)) ^ (remainder >> 8);
+    remainder = (unsigned short int)(table_crc16[data] ^ (remainder << 8));
   }
-  *(unsigned short int *) result = (reflect(remainder, 16) ^ final_xor_value);
+  *(unsigned short int *) result = (unsigned short int)(reflect(remainder, 16) ^ final_xor_value);
 }
