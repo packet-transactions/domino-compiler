@@ -1,10 +1,10 @@
 #define TARGET   5
 #define INTERVAL 100
 
-int first_above_time;
-int dropping;
-int drop_next;
-int count;
+int first_above_time = 0;
+int dropping = 0;
+int drop_next = 0;
+int count = 0;
 
 struct Packet {
   int tick;
