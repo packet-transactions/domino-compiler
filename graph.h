@@ -104,10 +104,10 @@ class Graph {
  private:
   /// Dfs properties, auxiliary data structure for Depth First Search
   struct DfsProps {
-    NodeType parent;
-    int discovery_time;
-    int finish_time;
-    enum class Color {WHITE, BLACK, GRAY} color;
+    NodeType parent = NodeType();
+    int discovery_time = -1;
+    int finish_time = -1;
+    enum class Color {WHITE, BLACK, GRAY} color = Color::WHITE;
   };
 
   /// Return from DFS visit: Current time after visiting, and vector of visited nodes
@@ -128,8 +128,13 @@ class Graph {
   /// Initialize DFS map for all nodes using node_set_
   DfsPropMap init_dfs_map() const {
     DfsPropMap ret;
-    for (const auto & node : node_set_)
-      ret[node] = {NodeType(), -1, -1, DfsProps::Color::WHITE};
+    for (const auto & node : node_set_) {
+      ret[node] = DfsProps();
+      ret[node].parent         = NodeType();
+      ret[node].discovery_time = -1;
+      ret[node].finish_time    = -1;
+      ret[node].color          = DfsProps::Color::WHITE;
+    }
     return ret;
   }
 
