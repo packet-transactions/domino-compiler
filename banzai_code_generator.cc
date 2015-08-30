@@ -95,14 +95,16 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       if (isa<IntegerLiteral>(var_decl->getInit())) {
         init_scalar_values[clang_value_decl_printer(var_decl)] = static_cast<int>(std::stoi(clang_stmt_printer(var_decl->getInit())));
       } else {
-        assert(isa<InitListExpr>(var_decl->getInit()));
+        assert_exception(isa<InitListExpr>(var_decl->getInit()));
         const auto * underlying_type = var_decl->getType().getTypePtrOrNull();
         assert_exception(underlying_type != nullptr);
         if (not isa<ConstantArrayType>(underlying_type)) {
           throw std::logic_error("Can handle only arrays whose sizes are known at compile time");
         }
+        assert_exception(dyn_cast<InitListExpr>(var_decl->getInit())->getNumInits() == 1);
         uint64_t array_size = dyn_cast<ConstantArrayType>(underlying_type)->getSize().getZExtValue();
-        std::cerr << "Array declaration with size " << array_size
+        std::cerr << "Array declaration of array " << clang_value_decl_printer(var_decl)
+                  << " with size " << array_size
                   << " and initial value " << std::stoi(clang_stmt_printer(dyn_cast<InitListExpr>(var_decl->getInit())->getInit(0)))
                   << std::endl;
         init_array_values[clang_value_decl_printer(var_decl)]  = std::make_pair(
