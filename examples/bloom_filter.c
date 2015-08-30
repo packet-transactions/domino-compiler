@@ -1,3 +1,5 @@
+#include "hashes.h" // For all the hash functions we need
+
 struct Packet {
   int sport;
   int dport;
