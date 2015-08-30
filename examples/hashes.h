@@ -1,11 +1,7 @@
 /* generating from my Python script gen_crc_tables inspired from the C code at:
    http://www.barrgroup.com/Embedded-Systems/How-To/CRC-Calculation-C-Code */
 
-typedef unsigned short int  uint16_t;
-typedef unsigned int    uint32_t;
-typedef unsigned char   uint8_t;
-
-uint16_t table_crc16[256] = {
+unsigned short int table_crc16[256] = {
   0x0000, 0x8005, 0x800F, 0x000A, 0x801B, 0x001E, 0x0014, 0x8011,
   0x8033, 0x0036, 0x003C, 0x8039, 0x0028, 0x802D, 0x8027, 0x0022,
   0x8063, 0x0066, 0x006C, 0x8069, 0x0078, 0x807D, 0x8077, 0x0072,
@@ -43,8 +39,8 @@ uint16_t table_crc16[256] = {
 /* This code was adapted from:
    http://www.barrgroup.com/Embedded-Systems/How-To/CRC-Calculation-C-Code */
 
-uint32_t reflect(uint32_t data, int nBits) {
-  uint32_t  reflection = 0x00000000;
+unsigned int reflect(unsigned int data, int nBits) {
+  unsigned int  reflection = 0x00000000;
   int bit;
 
   /*
@@ -66,14 +62,14 @@ uint32_t reflect(uint32_t data, int nBits) {
 /* TODO: try to implement something a bit more generic that will cover
    programmable CRCs */
 
-static inline void crc16(uint8_t *buf, int len, uint8_t *result) {
+static inline void crc16(unsigned char *buf, int len, unsigned char *result) {
   int byte;
-  uint16_t remainder = 0x0000;
-  uint16_t final_xor_value = 0x0000;
+  unsigned short int remainder = 0x0000;
+  unsigned short int final_xor_value = 0x0000;
   int data;
   for(byte = 0; byte < len; byte++) {
     data = reflect(buf[byte], 8) ^ (remainder >> 8);
     remainder = table_crc16[data] ^ (remainder << 8);
   }
-  *(uint16_t *) result = (reflect(remainder, 16) ^ final_xor_value);
+  *(unsigned short int *) result = (reflect(remainder, 16) ^ final_xor_value);
 }
