@@ -90,6 +90,11 @@ class Graph {
   /// Strongly Connected Components (Kosaraju's algorithm)
   auto scc() const;
 
+  /// Condense a graph into a DAG by collapsing its strongly connected components
+  /// into larger meta nodes. Takes a function to order nodes within a strongly connected component for printing
+  Graph<std::vector<NodeType>> condensation(const std::function<bool(const NodeType & a, const NodeType & b)> & cmp) const;
+
+
   /// Critical path scheduling (This is almost folklore now: https://en.wikipedia.org/wiki/Critical_path_method)
   /// but goes back to Kelley and Walker (1959): http://dl.acm.org/citation.cfm?id=1460318
   /// We also assume that all edges between nodes are of length 1 meaning
@@ -314,6 +319,41 @@ auto Graph<NodeType>::scc() const {
     sccs.emplace_back(visited_nodes);
   }
   return sccs;
+}
+
+template <class NodeType>
+Graph<std::vector<NodeType>> Graph<NodeType>::condensation(const std::function<bool(const NodeType & a, const NodeType & b)> & cmp) const {
+  // Extract sccs of this graph
+  auto sccs = scc();
+
+  // Put statements within an SCC in the order specified by cmp
+  for (auto & scc : sccs) {
+    std::sort(scc.begin(), scc.end(), cmp);
+  }
+
+  // Graph condensation: Add SCCs as nodes
+  Graph<std::vector<NodeType>> condensed_graph([this] (const std::vector<NodeType> & node_vector)
+                                               { std::string ret;
+                                                 for (const auto & node : node_vector) ret += node_printer_(node) + "\n";
+                                                 return ret; });
+  for (uint32_t i = 0; i < sccs.size(); i++) {
+    condensed_graph.add_node(sccs.at(i));
+  }
+
+  // Graph condensation: Add edges between distinct SCCs
+  for (uint32_t i = 0; i < sccs.size(); i++) {
+    for (uint32_t j = 0; j < sccs.size(); j++) {
+      for (const auto & node_i : sccs.at(i)) {
+        for (const auto & node_j : sccs.at(j)) {
+          // If there's an edge between any two nodes in two different sccs in the original graph
+          if (exists_edge(node_i, node_j) and (i != j)) {
+            condensed_graph.add_edge(sccs.at(i), sccs.at(j));
+          }
+        }
+      }
+    }
+  }
+  return condensed_graph;
 }
 
 template <class NodeType>

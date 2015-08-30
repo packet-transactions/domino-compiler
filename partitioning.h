@@ -35,9 +35,6 @@ bool op_reads_var(const clang::BinaryOperator * op, const clang::Expr * var);
 /// Requiring op1 to be executed before op2?
 bool depends(const clang::BinaryOperator * op1, const clang::BinaryOperator * op2);
 
-/// Is there a dependence from scc1 to scc2 (because of their constituent operations?)
-bool scc_depends(const std::vector<const clang::BinaryOperator*> & scc1, const std::vector<const clang::BinaryOperator*> & scc2);
-
 /// Print out dependency graph once Stongly Connected Components
 /// have been condensed together to form a DAG.
 /// Also partition the code based on the dependency graph

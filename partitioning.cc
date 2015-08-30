@@ -76,15 +76,6 @@ bool depends(const BinaryOperator * op1, const BinaryOperator * op2) {
   return (op_reads_var(op2, op1->getLHS()));
 }
 
-bool scc_depends(const std::vector<const BinaryOperator*> & scc1, const std::vector<const BinaryOperator*> & scc2) {
-  for (const auto & op1 : scc1) {
-    for (const auto & op2 : scc2) {
-      if (depends(op1, op2)) return true;
-    }
-  }
-  return false;
-}
-
 std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStmt * function_body) {
   // Verify that it's in SSA
   // and append to a vector of const BinaryOperator *
@@ -123,28 +114,11 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
   }
   std::cerr << dep_graph << std::endl;
 
-  // Extract sccs
-  auto sccs = dep_graph.scc();
-  for (auto & scc : sccs) {
-    // Put statements within an SCC in program order
-    std::sort(scc.begin(), scc.end(), [] (const auto * op1, const auto * op2) {return op1->getLocStart() < op2->getLocStart();});
-  }
-
-  // Graph condensation: Add SCCs as nodes
-  Graph<InstBlock> condensed_graph(inst_block_printer, [] (const InstBlock & instblock) { return instblock.size() > 1 ? "red" : "white"; });
-
-  for (uint32_t i = 0; i < sccs.size(); i++) {
-    condensed_graph.add_node(sccs.at(i));
-  }
-
-  // Graph condensation: Add edges between SCCs
-  for (uint32_t i = 0; i < sccs.size(); i++) {
-    for (uint32_t j = 0; j < sccs.size(); j++) {
-      if (scc_depends(sccs.at(i), sccs.at(j)) and (i != j)) {
-        condensed_graph.add_edge(sccs.at(i), sccs.at(j));
-      }
-    }
-  }
+  // Condense (https://en.wikipedia.org/wiki/Strongly_connected_component)
+  // dep_graph after collapsing strongly connected components into one node
+  // Pass a function to order statements within the sccs
+  const auto & condensed_graph = dep_graph.condensation([] (const BinaryOperator * op1, const BinaryOperator * op2)
+                                                        {return op1->getLocStart() < op2->getLocStart();});
 
   // Partition condensed graph using critical path scheduling
   const auto & partitioning = condensed_graph.critical_path_schedule();
