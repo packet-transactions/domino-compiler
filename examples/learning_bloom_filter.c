@@ -1,3 +1,5 @@
+#include "hashes.h"
+
 struct Packet {
   int sport;
   int dport;
@@ -7,12 +9,6 @@ struct Packet {
 int filter1[256] = {1};
 int filter2[256] = {1};
 int filter3[256] = {1};
-
-int hash(int a, int b) {
-  int ret = (a * b) % 256;
-  if (ret < 0) ret = 0;
-  return ret;
-}
 
 void func(struct Packet pkt) {
   pkt.member = (filter1[hash(pkt.sport, pkt.dport)] &&

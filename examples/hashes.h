@@ -64,7 +64,7 @@ static inline unsigned short int crc16(unsigned char *buf, int len) {
     0x0220, 0x8225, 0x822F, 0x022A, 0x823B, 0x023E, 0x0234, 0x8231,
     0x8213, 0x0216, 0x021C, 0x8219, 0x0208, 0x820D, 0x8207, 0x0202
   };
-  
+
   int byte;
   unsigned short int remainder = 0x0000;
   unsigned short int final_xor_value = 0x0000;
@@ -74,4 +74,12 @@ static inline unsigned short int crc16(unsigned char *buf, int len) {
     remainder = (unsigned short int)(table_crc16[data] ^ (remainder << 8));
   }
   return (unsigned short int)(reflect(remainder, 16) ^ final_xor_value);
+}
+
+unsigned short int hash(int a, int b) {
+  // Pack a and b into a char buffer
+  unsigned char buf[2 * sizeof(int)];
+  *((int *)(&buf)) = a;
+  *((int *)((&buf) + sizeof(int))) = b;
+  return crc16(buf, 2 * sizeof(int));
 }

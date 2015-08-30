@@ -1,3 +1,5 @@
+#include "hashes.h"
+
 #define low_th 100
 #define hi_th  1000
 
@@ -30,14 +32,14 @@ int hash3(int a, int b) {
 }
 
 void func(struct Packet p) {
-  if (sketch_cnt_1[hash1(p.sport, p.dport)] > low_th && sketch_cnt_1[hash1(p.sport, p.dport)]< hi_th &&
-	    sketch_cnt_2[hash2(p.sport, p.dport)] > low_th && sketch_cnt_2[hash2(p.sport, p.dport)] < hi_th &&
-	    sketch_cnt_3[hash3(p.sport, p.dport)] > low_th && sketch_cnt_3[hash3(p.sport, p.dport)] < hi_th) {
+  if (sketch_cnt_1[hash(p.sport, p.dport)] > low_th && sketch_cnt_1[hash(p.sport, p.dport)]< hi_th &&
+	    sketch_cnt_2[hash(p.sport, p.dport)] > low_th && sketch_cnt_2[hash(p.sport, p.dport)] < hi_th &&
+	    sketch_cnt_3[hash(p.sport, p.dport)] > low_th && sketch_cnt_3[hash(p.sport, p.dport)] < hi_th) {
 		p.is_not_heavy_hitter = 0;
   }	else {
 		p.is_not_heavy_hitter = 1;
   }
-	sketch_cnt_1[hash1(p.sport, p.dport)] = sketch_cnt_1[hash1(p.sport, p.dport)] + 1;
-	sketch_cnt_2[hash2(p.sport, p.dport)] = sketch_cnt_2[hash2(p.sport, p.dport)] + 1;
-	sketch_cnt_3[hash3(p.sport, p.dport)] = sketch_cnt_3[hash3(p.sport, p.dport)] + 1;
+	sketch_cnt_1[hash(p.sport, p.dport)] = sketch_cnt_1[hash(p.sport, p.dport)] + 1;
+	sketch_cnt_2[hash(p.sport, p.dport)] = sketch_cnt_2[hash(p.sport, p.dport)] + 1;
+	sketch_cnt_3[hash(p.sport, p.dport)] = sketch_cnt_3[hash(p.sport, p.dport)] + 1;
 }
