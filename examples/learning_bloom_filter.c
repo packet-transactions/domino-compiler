@@ -6,9 +6,9 @@ struct Packet {
   int member;
 };
 
-int filter1[256] = {1};
-int filter2[256] = {1};
-int filter3[256] = {1};
+int filter1[256] = {0};
+int filter2[256] = {0};
+int filter3[256] = {0};
 
 void func(struct Packet pkt) {
   pkt.member = (filter1[hash(pkt.sport, pkt.dport) % 256] &&
