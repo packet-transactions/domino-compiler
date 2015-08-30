@@ -114,6 +114,8 @@ std::string BanzaiAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const 
     }
     ret.back() = ')';
     return ret;
+  } else if (isa<NullStmt>(stmt)) {
+    return "";
   } else {
     throw std::logic_error("rewrite_into_banzai_ops cannot handle stmt of type " + std::string(stmt->getStmtClassName()));
   }

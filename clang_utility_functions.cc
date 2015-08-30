@@ -140,7 +140,7 @@ std::set<std::string> gen_var_list(const Stmt * stmt, const VariableTypeSelector
     return (var_selector.at(VariableType::STATE_ARRAY))
           ? std::set<std::string>{clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(stmt)->getBase())}
           : std::set<std::string>();
-  } else if (isa<IntegerLiteral>(stmt)) {
+  } else if (isa<IntegerLiteral>(stmt) or isa<NullStmt>(stmt)) {
     return std::set<std::string>();
   } else if (isa<ParenExpr>(stmt)) {
     return gen_var_list(dyn_cast<ParenExpr>(stmt)->getSubExpr(), var_selector);
