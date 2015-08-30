@@ -289,7 +289,10 @@ auto Graph<NodeType>::dfs_forest(const Comparator & comparator) const {
   }
 
   for (const auto & pair : dfs_map) {
-    if (pair.second.parent != NodeType()) ret.add_edge(pair.second.parent, pair.first);
+    if (pair.second.parent != NodeType()) {
+      ret.add_edge(pair.second.parent, pair.first);
+      ret.add_edge(pair.first, pair.second.parent);
+    }
   }
   return ret;
 }
