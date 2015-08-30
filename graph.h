@@ -178,7 +178,7 @@ void Graph<NodeType>::add_edge(const NodeType & from_node, const NodeType & to_n
   // If edge already exists, return
   if (std::find(succ_map_.at(from_node).begin(), succ_map_.at(from_node).end(), to_node) != succ_map_.at(from_node).end()) {
     assert_exception(std::find(pred_map_.at(to_node).begin(), pred_map_.at(to_node).end(), from_node) != pred_map_.at(to_node).end());
-    std::cout << "Warning: edge already exists, ignoring add_edge command\n";
+    std::cerr << "// Warning: edge already exists, ignoring add_edge command\n";
     return;
   }
 
