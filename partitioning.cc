@@ -56,7 +56,7 @@ bool op_reads_var(const BinaryOperator * op, const Expr * var) {
   // All reads happen only on the RHS
   const auto read_vars = gen_var_list(op->getRHS());
 
-  return (std::find(read_vars.begin(), read_vars.end(), clang_stmt_printer(var)) != read_vars.end());
+  return (read_vars.find(clang_stmt_printer(var)) != read_vars.end());
 }
 
 bool depends(const BinaryOperator * op1, const BinaryOperator * op2) {
