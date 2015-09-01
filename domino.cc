@@ -5,6 +5,7 @@
 #include "stateful_flanks.h"
 #include "expr_flattener_handler.h"
 #include "strength_reducer.h"
+#include "algebraic_simplifier.h"
 #include "banzai_code_generator.h"
 #include "desugar_compound_assignment.h"
 #include "int_type_checker.h"
@@ -40,6 +41,7 @@ void populate_passes() {
   all_passes["int_type_checker"] = std::make_unique<SinglePass>(int_type_checker_transform);
   all_passes["desugar_comp_asgn"]= std::make_unique<SinglePass>(desugar_compound_assignment_transform);
   all_passes["if_converter"]     = std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1));
+  all_passes["algebra_simplify"] = std::make_unique<SinglePass>(algebraic_simplifier_transform);
   all_passes["strength_reducer"] = std::make_unique<SinglePass>(strength_reducer_transform);
   all_passes["expr_flattener"]   = std::make_unique<FixedPointPass>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1));
   all_passes["expr_propagater"]  = std::make_unique<SinglePass>(expr_prop_transform);
