@@ -27,12 +27,23 @@ Graph<const BinaryOperator *> handle_state_vars(const std::vector<const BinaryOp
     // and they appear by themselves (not as part of another expression)
     // Which is why we don't need to recursively traverse an AST to check for state vars
     if (isa<DeclRefExpr>(rhs) or isa<ArraySubscriptExpr>(rhs)) {
+      // Should see exactly one read to a state variable
+      assert_exception(state_reads.find(clang_stmt_printer(rhs)) == state_reads.end());
       state_reads[clang_stmt_printer(rhs)] = stmt;
     } else if (isa<DeclRefExpr>(lhs) or isa<ArraySubscriptExpr>(lhs)) {
+      // Should see exactly one write to a state variable
+      assert_exception(state_writes.find(clang_stmt_printer(lhs)) == state_writes.end());
       state_writes[clang_stmt_printer(lhs)] = stmt;
       const auto state_var = clang_stmt_printer(lhs);
       ret.add_edge(state_reads.at(state_var), state_writes.at(state_var));
       ret.add_edge(state_writes.at(state_var), state_reads.at(state_var));
+    }
+  }
+
+  // Check that there are pairs of reads and writes for every state variable
+  for (const auto & pair : state_reads) {
+    if (state_writes.find(pair.first) == state_writes.end()) {
+      throw std::logic_error(pair.first + " has a read that isn't paired with a write ");
     }
   }
   return ret;
