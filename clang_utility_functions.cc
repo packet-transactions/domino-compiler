@@ -191,7 +191,7 @@ std::string replace_vars(const clang::Expr * expr,
                          const std::map<std::string, std::string> & repl_map) {
   assert_exception(expr);
   if (isa<ParenExpr>(expr)) {
-    return replace_vars(dyn_cast<ParenExpr>(expr)->getSubExpr(), repl_map);
+    return "(" + replace_vars(dyn_cast<ParenExpr>(expr)->getSubExpr(), repl_map) + ")";
   } else if (isa<CastExpr>(expr)) {
     return replace_vars(dyn_cast<CastExpr>(expr)->getSubExpr(), repl_map);
   } else if (isa<UnaryOperator>(expr)) {
