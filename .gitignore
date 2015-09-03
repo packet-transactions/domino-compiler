@@ -42,3 +42,5 @@ echo_test
 if_converter_test
 strength_reducer_test
 expr_flattener_test
+tests/scc_test
+tests/complicated_scc_test
