@@ -17,7 +17,7 @@ struct Packet {
 int last_time [NUM_FLOWLETS] = {0};
 int saved_hop [NUM_FLOWLETS] = {0};
 
-void func(struct Packet pkt) {
+void flowlet(struct Packet pkt) {
   pkt.flow_hash = hash5(pkt.src_port, pkt.dst_port,
                         pkt.src_addr, pkt.dst_addr,
                         pkt.protocol);

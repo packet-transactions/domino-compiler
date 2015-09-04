@@ -13,12 +13,12 @@ int filter3[256] = {0};
 
 void func(struct Packet pkt) {
   if (pkt.bloom_op) {
-    pkt.member = (filter1[hash(pkt.sport, pkt.dport) % 256] &&
-                  filter2[hash(pkt.sport, pkt.dport) % 256] &&
-                  filter3[hash(pkt.sport, pkt.dport) % 256]);
+    pkt.member = (filter1[hash2(pkt.sport, pkt.dport) % 256] &&
+                  filter2[hash2(pkt.sport, pkt.dport) % 256] &&
+                  filter3[hash2(pkt.sport, pkt.dport) % 256]);
   } else {
-    filter1[hash(pkt.sport, pkt.dport) % 256] = 1;
-    filter2[hash(pkt.sport, pkt.dport) % 256] = 1;
-    filter3[hash(pkt.sport, pkt.dport) % 256] = 1;
+    filter1[hash2(pkt.sport, pkt.dport) % 256] = 1;
+    filter2[hash2(pkt.sport, pkt.dport) % 256] = 1;
+    filter3[hash2(pkt.sport, pkt.dport) % 256] = 1;
   }
 }

@@ -15,7 +15,7 @@ int last_time = 0;
 int saved_hop = 0;
 
 void func(struct Packet pkt) {
-  pkt.new_hop = hash(pkt.sport, pkt.dport);
+  pkt.new_hop = hash2(pkt.sport, pkt.dport);
   if (pkt.arrival_time - last_time > THRESHOLD) {
     saved_hop = pkt.new_hop;
   }

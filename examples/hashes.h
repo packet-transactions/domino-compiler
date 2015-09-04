@@ -76,7 +76,15 @@ static inline unsigned short int crc16(unsigned char *buf, int len) {
   return (unsigned short int)(reflect(remainder, 16) ^ final_xor_value);
 }
 
-// Hash up to 5 values
+// Hash two values
+unsigned short int hash2(int a, int b) {
+  unsigned char buf[2 * sizeof(int)];
+  *(int *)buf = a;
+  *((int *)(buf + sizeof(int))) = b;
+  return crc16(buf, 2 * sizeof(int));
+}
+
+// Hash five values
 unsigned short int hash5(int a, int b, int c, int d, int e) {
   // Pack a and b into a char buffer
   unsigned char buf[5 * sizeof(int)];
@@ -88,7 +96,7 @@ unsigned short int hash5(int a, int b, int c, int d, int e) {
   return crc16(buf, 5 * sizeof(int));
 }
 
-// Hash up to 6 values
+// Hash six values
 unsigned short int hash6(int a, int b, int c, int d, int e, int f) {
   // Pack a and b into a char buffer
   unsigned char buf[6 * sizeof(int)];
