@@ -77,7 +77,7 @@ static inline unsigned short int crc16(unsigned char *buf, int len) {
 }
 
 // Hash two values
-unsigned short int hash2(int a, int b) {
+int hash2(int a, int b) {
   unsigned char buf[2 * sizeof(int)];
   *(int *)buf = a;
   *((int *)(buf + sizeof(int))) = b;
@@ -85,7 +85,7 @@ unsigned short int hash2(int a, int b) {
 }
 
 // Hash five values
-unsigned short int hash5(int a, int b, int c, int d, int e) {
+int hash5(int a, int b, int c, int d, int e) {
   // Pack a and b into a char buffer
   unsigned char buf[5 * sizeof(int)];
   *((int *)(buf + 0 * sizeof(int))) = a;
@@ -97,7 +97,7 @@ unsigned short int hash5(int a, int b, int c, int d, int e) {
 }
 
 // Hash six values
-unsigned short int hash6(int a, int b, int c, int d, int e, int f) {
+int hash6(int a, int b, int c, int d, int e, int f) {
   // Pack a and b into a char buffer
   unsigned char buf[6 * sizeof(int)];
   *((int *)(buf + 0 * sizeof(int))) = a;
