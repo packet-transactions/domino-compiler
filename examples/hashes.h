@@ -76,10 +76,27 @@ static inline unsigned short int crc16(unsigned char *buf, int len) {
   return (unsigned short int)(reflect(remainder, 16) ^ final_xor_value);
 }
 
-unsigned short int hash(int a, int b) {
+// Hash up to 5 values
+unsigned short int hash5(int a, int b, int c, int d, int e) {
   // Pack a and b into a char buffer
-  unsigned char buf[2 * sizeof(int)];
-  *(int *)buf = a;
-  *((int *)(buf + sizeof(int))) = b;
-  return crc16(buf, 2 * sizeof(int));
+  unsigned char buf[5 * sizeof(int)];
+  *((int *)(buf + 0 * sizeof(int))) = a;
+  *((int *)(buf + 1 * sizeof(int))) = b;
+  *((int *)(buf + 2 * sizeof(int))) = c;
+  *((int *)(buf + 3 * sizeof(int))) = d;
+  *((int *)(buf + 4 * sizeof(int))) = e;
+  return crc16(buf, 5 * sizeof(int));
+}
+
+// Hash up to 6 values
+unsigned short int hash6(int a, int b, int c, int d, int e, int f) {
+  // Pack a and b into a char buffer
+  unsigned char buf[6 * sizeof(int)];
+  *((int *)(buf + 0 * sizeof(int))) = a;
+  *((int *)(buf + 1 * sizeof(int))) = b;
+  *((int *)(buf + 2 * sizeof(int))) = c;
+  *((int *)(buf + 3 * sizeof(int))) = d;
+  *((int *)(buf + 4 * sizeof(int))) = e;
+  *((int *)(buf + 5 * sizeof(int))) = f;
+  return crc16(buf, 6 * sizeof(int));
 }
