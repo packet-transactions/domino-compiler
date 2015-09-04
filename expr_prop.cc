@@ -12,6 +12,11 @@ std::string expr_prop_transform(const clang::TranslationUnitDecl * tu_decl) {
 }
 
 std::pair<std::string, std::vector<std::string>> expr_prop_fn_body(const CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
+  // Do not run if this is not in SSA
+  if (not is_in_ssa(function_body)) {
+    throw std::logic_error("Expression propagation can be run only after SSA. It relies on variables not being redefined\n");
+  }
+
   // Maintain map from variable name (packet or state variable)
   // to a string representing its expression, for expression propagation.
   std::map<std::string, std::string> var_to_expr;
