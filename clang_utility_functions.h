@@ -64,4 +64,7 @@ std::string gen_pkt_fields(const clang::TranslationUnitDecl * tu_decl);
 /// Replace a specific string with a new string within expr
 std::string replace_vars(const clang::Expr * expr, const std::map<std::string, std::string> & repl_map);
 
+/// Check if program is in SSA form
+bool is_in_ssa(const clang::CompoundStmt * compound_stmt);
+
 #endif  // CLANG_UTILITY_FUNCTIONS_H_

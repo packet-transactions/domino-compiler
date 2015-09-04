@@ -89,19 +89,16 @@ bool depends(const BinaryOperator * op1, const BinaryOperator * op2) {
 
 std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStmt * function_body) {
   // Verify that it's in SSA
-  // and append to a vector of const BinaryOperator *
+  if (not is_in_ssa(function_body)) {
+    throw std::logic_error("Partitioning will run only after program is in SSA form. This program isn't.");
+  }
+  // Append to a vector of const BinaryOperator *
   // in order of statement occurence.
-  std::set<std::string> assigned_vars;
   std::vector<const BinaryOperator *> stmt_vector;
   for (const auto * child : function_body->children()) {
     assert_exception(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
     assert_exception(bin_op->isAssignmentOp());
-    const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
-    const auto pair = assigned_vars.emplace(clang_stmt_printer(lhs));
-    if (pair.second == false) {
-      throw std::logic_error("Program not in SSA form\n");
-    }
     stmt_vector.emplace_back(bin_op);
   }
 

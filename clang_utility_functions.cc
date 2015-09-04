@@ -238,3 +238,18 @@ std::string replace_vars(const clang::Expr * expr,
     throw std::logic_error("replace_vars cannot handle expr " + std::string(clang_stmt_printer(expr)) + " of type " + std::string(expr->getStmtClassName()));
   }
 }
+
+bool is_in_ssa(const CompoundStmt * compound_stmt) {
+  std::set<std::string> assigned_vars;
+  for (const auto * child : compound_stmt->children()) {
+    assert_exception(isa<BinaryOperator>(child));
+    const auto * bin_op = dyn_cast<BinaryOperator>(child);
+    assert_exception(bin_op->isAssignmentOp());
+    const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
+    const auto pair = assigned_vars.emplace(clang_stmt_printer(lhs));
+    if (pair.second == false) {
+      return false;;
+    }
+  }
+  return true;
+}
