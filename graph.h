@@ -41,6 +41,9 @@ class Graph {
   /// Add node alone to existing graph, check that node doesn't already exist
   void add_node(const NodeType & node);
 
+  /// Remove node from existing graph, checking that it does exist
+  void remove_singleton_node(const NodeType & node);
+
   /// Add edge to existing graph, check that both from_node and to_node exist
   void add_edge(const NodeType & from_node, const NodeType & to_node);
 
@@ -163,6 +166,24 @@ void Graph<NodeType>::add_node(const NodeType & node) {
   node_set_.insert(node);
   succ_map_[node] = std::vector<NodeType>();
   pred_map_[node] = std::vector<NodeType>();
+}
+
+template <class NodeType>
+void Graph<NodeType>::remove_singleton_node(const NodeType & node) {
+  // Make sure node does exist
+  if (node_set_.find(node) == node_set_.end()) {
+    throw std::logic_error("Trying to remove a node that doesn't exist\n");
+  }
+
+  // Make sure node doesn't point to anyone else
+  // or isn't pointed to by anyone else
+  assert_exception(succ_map_.at(node).empty());
+  assert_exception(pred_map_.at(node).empty());
+
+  // Remove all traces of node
+  node_set_.erase(node);
+  succ_map_.erase(node);
+  pred_map_.erase(node);
 }
 
 template <class NodeType>

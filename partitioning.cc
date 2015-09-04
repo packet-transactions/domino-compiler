@@ -120,6 +120,19 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
       }
     }
   }
+
+  // Eliminate nodes with no outgoing or incoming edge
+  std::set<const BinaryOperator *> nodes_to_remove;
+  for (const auto & node : dep_graph.node_set()) {
+    if (dep_graph.pred_map().at(node).empty() and
+        dep_graph.succ_map().at(node).empty()) {
+      nodes_to_remove.emplace(node);
+    }
+  }
+  for (const auto & node : nodes_to_remove) {
+    dep_graph.remove_singleton_node(node);
+  }
+
   std::cerr << dep_graph << std::endl;
 
   // Condense (https://en.wikipedia.org/wiki/Strongly_connected_component)
