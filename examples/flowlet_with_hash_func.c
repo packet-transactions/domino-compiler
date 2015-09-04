@@ -1,6 +1,8 @@
 #define NUM_HOPS 10
 #define THRESHOLD 5
 
+#include "hashes.h"
+
 struct Packet {
   int sport;
   int dport;
@@ -8,10 +10,6 @@ struct Packet {
   int arrival_time;
   int next_hop;
 };
-
-int hash(int a, int b) {
-  return (a * b) % NUM_HOPS;
-}
 
 int last_time = 0;
 int saved_hop = 0;
