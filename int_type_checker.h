@@ -18,9 +18,4 @@ std::pair<std::string, std::vector<std::string>> int_type_check_body(const clang
 /// (in some ways, a poor man's version of Wconversion and Wsign-conversion)
 bool check_for_implicit_casts(const clang::Stmt* stmt);
 
-/// Checks that the index expression of an array is an unsigned int
-/// In the future, we could move to things like:
-/// Static checks that the array index falls within bounds using range analysis.
-/// Rewriting array indices using the modulo operator if it doesn't.
-
 #endif  // INT_TYPE_CHECKER_H_
