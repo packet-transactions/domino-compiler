@@ -22,6 +22,20 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
   // when replacing state variables with packet variables
   UniqueIdentifiers unique_identifiers(id_set);
 
+  // Run through function_body, storing all lhs->rhs mappings
+  // i.e. variable (packet, state scalar, or state array) to expression
+  typedef std::string VariableName;
+  typedef std::string Expression;
+  std::map<VariableName, Expression> var_expr_map;
+  for (const auto * child : function_body->children()) {
+    assert_exception(isa<BinaryOperator>(child));
+    const auto * bin_op = dyn_cast<BinaryOperator>(child);
+    assert_exception(bin_op->isAssignmentOp());
+    const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
+    const auto * rhs = bin_op->getRHS()->IgnoreParenImpCasts();
+    var_expr_map[clang_stmt_printer(lhs)] = clang_stmt_printer(rhs);
+  }
+
   // 1. Identify all stateful variables in the program.
   // 2. Create a read prologue for all of them: each state variable is read into a packet temporary.
   // 3. Create a write epilogue for all of them: the packet temporary from 2. is written back into state.
@@ -29,6 +43,7 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
   std::string read_prologue = "";
   std::string write_epilogue = "";
   std::map<std::string, std::string> state_var_table;
+  std::set<std::string> subscript_vars;
   for (const auto * child : function_body->children()) {
     assert_exception(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
@@ -52,7 +67,18 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
         new_decls.emplace_back(var_decl);
 
         const auto pkt_tmp_var   = pkt_name + "." + new_tmp_var;
+
+        // Read from a state variable into a packet temporary
+        // If it's an array, read index into a packet temporary and move to prologue too
+        if (isa<ArraySubscriptExpr>(lhs)) {
+          const auto subscript_var = clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(lhs)->getIdx());
+          subscript_vars.emplace(subscript_var);
+          read_prologue += subscript_var + " = " + var_expr_map.at(subscript_var) + ";";
+        }
+
         read_prologue += pkt_tmp_var + " = " + state_var + ";";
+
+        // Write back into state variable using a packet temporary
         write_epilogue += state_var + " = " + pkt_tmp_var + ";";
         state_var_table[state_var] = pkt_tmp_var;
       }
@@ -65,6 +91,11 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
      assert_exception(isa<BinaryOperator>(child));
      const auto * bin_op = dyn_cast<BinaryOperator>(child);
      assert_exception(bin_op->isAssignmentOp());
+
+     if (subscript_vars.find(clang_stmt_printer(bin_op->getLHS())) != subscript_vars.end()) {
+       // This is a subscript variable, it's already been moved into the prologue
+       continue;
+     }
 
      function_body_str +=   replace_vars(bin_op->getLHS(), state_var_table, {{VariableType::STATE_SCALAR, true}, {VariableType::STATE_ARRAY, true}, {VariableType::PACKET, false}}) + " = "
                           + replace_vars(bin_op->getRHS(), state_var_table, {{VariableType::STATE_SCALAR, true}, {VariableType::STATE_ARRAY, true}, {VariableType::PACKET, false}}) + ";";
