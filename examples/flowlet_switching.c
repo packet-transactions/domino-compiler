@@ -11,7 +11,8 @@ struct Packet {
   int new_hop;
   int arrival_time;
   int next_hop;
-  int flow_hash;
+  int last_time_idx;
+  int saved_hop_idx;
 };
 
 int last_time [NUM_FLOWLETS] = {0};
@@ -21,10 +22,16 @@ void flowlet(struct Packet pkt) {
   pkt.new_hop   = hash6(pkt.src_port, pkt.dst_port,
                         pkt.src_addr, pkt.dst_addr,
                         pkt.protocol, pkt.arrival_time);
-  if (pkt.arrival_time - last_time[hash5(pkt.src_port, pkt.dst_port, pkt.src_addr, pkt.dst_addr, pkt.protocol) % NUM_FLOWLETS] >
+  pkt.last_time_idx = hash5(pkt.src_port, pkt.dst_port,
+                            pkt.src_addr, pkt.dst_addr,
+                            pkt.protocol) % NUM_FLOWLETS;
+  pkt.saved_hop_idx = hash5(pkt.src_port, pkt.dst_port,
+                            pkt.src_addr, pkt.dst_addr,
+                            pkt.protocol) % NUM_FLOWLETS;
+  if (pkt.arrival_time - last_time[pkt.last_time_idx] >
       FLOWLET_THRESHOLD) {
-    saved_hop[hash5(pkt.src_port, pkt.dst_port, pkt.src_addr, pkt.dst_addr, pkt.protocol) % NUM_FLOWLETS] = pkt.new_hop;
+    saved_hop[pkt.saved_hop_idx] = pkt.new_hop;
   }
-  last_time[hash5(pkt.src_port, pkt.dst_port, pkt.src_addr, pkt.dst_addr, pkt.protocol) % NUM_FLOWLETS] = pkt.arrival_time;
-  pkt.next_hop = saved_hop[hash5(pkt.src_port, pkt.dst_port, pkt.src_addr, pkt.dst_addr, pkt.protocol) % NUM_FLOWLETS];
+  last_time[pkt.last_time_idx] = pkt.arrival_time;
+  pkt.next_hop = saved_hop[pkt.saved_hop_idx];
 }

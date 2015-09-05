@@ -8,17 +8,21 @@ struct Packet {
   int util;
   int path_id;
   int src;
+  int best_path_util_idx;
+  int best_path_idx;
 };
 
 int best_path_util[256] = {100}; // Utilization information for each destination, Initially at 100% for everyone.
 int best_path[256]      = {-1};  // Next hop / path information for each destination
 
 void func(struct Packet p) {
-  if (p.util < best_path_util[p.src % 256]) {
-    best_path_util[p.src % 256] = p.util;
-    best_path[p.src % 256] = p.path_id;
-  } else if (p.path_id == best_path[p.src % 256]) {
-    best_path_util[p.src % 256] = p.util;
+  p.best_path_util_idx = p.src % 256;
+  p.best_path_idx      = p.src % 256;
+  if (p.util < best_path_util[p.best_path_util_idx]) {
+    best_path_util[p.best_path_util_idx] = p.util;
+    best_path[p.best_path_idx] = p.path_id;
+  } else if (p.path_id == best_path[p.best_path_idx]) {
+    best_path_util[p.best_path_util_idx] = p.util;
     // TODO: I guess we aren't switching to another path in
     // case the utilization on the best path went up.
   }

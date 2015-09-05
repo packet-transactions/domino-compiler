@@ -5,20 +5,28 @@ struct Packet {
   int dport;
   int member;
   int bloom_op; // bloom_op = 1 is test, bloom_op = 0 is add
+  int filter1_idx;
+  int filter2_idx;
+  int filter3_idx;
 };
 
-int filter1[256] = {0};
-int filter2[256] = {0};
-int filter3[256] = {0};
+#define NUM_ENTRIES 256
+
+int filter1[NUM_ENTRIES] = {0};
+int filter2[NUM_ENTRIES] = {0};
+int filter3[NUM_ENTRIES] = {0};
 
 void func(struct Packet pkt) {
+  pkt.filter1_idx = hash2(pkt.sport, pkt.dport) % NUM_ENTRIES;
+  pkt.filter2_idx = hash2(pkt.sport, pkt.dport) % NUM_ENTRIES;
+  pkt.filter3_idx = hash2(pkt.sport, pkt.dport) % NUM_ENTRIES;
   if (pkt.bloom_op) {
-    pkt.member = (filter1[hash2(pkt.sport, pkt.dport) % 256] &&
-                  filter2[hash2(pkt.sport, pkt.dport) % 256] &&
-                  filter3[hash2(pkt.sport, pkt.dport) % 256]);
+    pkt.member = (filter1[pkt.filter1_idx] &&
+                  filter2[pkt.filter2_idx] &&
+                  filter3[pkt.filter3_idx]);
   } else {
-    filter1[hash2(pkt.sport, pkt.dport) % 256] = 1;
-    filter2[hash2(pkt.sport, pkt.dport) % 256] = 1;
-    filter3[hash2(pkt.sport, pkt.dport) % 256] = 1;
+    filter1[pkt.filter1_idx] = 1;
+    filter2[pkt.filter2_idx] = 1;
+    filter3[pkt.filter3_idx] = 1;
   }
 }
