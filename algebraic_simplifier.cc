@@ -83,9 +83,9 @@ std::string algebraic_simplify_stmt(const Stmt * stmt) {
     } else if (isa<IntegerLiteral>(cond_op->getCond()) and dyn_cast<IntegerLiteral>(cond_op->getCond())->getValue().getSExtValue() == 1) {
       return algebraic_simplify_stmt(cond_op->getFalseExpr());
     } else {
-      return   "(" + algebraic_simplify_stmt(cond_op->getCond()) + ") ? ("
-               + algebraic_simplify_stmt(cond_op->getTrueExpr()) + ") : ("
-               + algebraic_simplify_stmt(cond_op->getFalseExpr()) + ")";
+      return     algebraic_simplify_stmt(cond_op->getCond()) + " ? "
+               + algebraic_simplify_stmt(cond_op->getTrueExpr()) + " : "
+               + algebraic_simplify_stmt(cond_op->getFalseExpr());
     }
   } else if (isa<MemberExpr>(stmt) or isa<DeclRefExpr>(stmt) or isa<ArraySubscriptExpr>(stmt) or isa<IntegerLiteral>(stmt)) {
     return clang_stmt_printer(stmt);

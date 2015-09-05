@@ -62,9 +62,9 @@ std::string desugar_compound_assignments(const Stmt * stmt) {
     return desugar_compound_assignments(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + desugar_compound_assignments(bin_op->getRHS());
   } else if (isa<ConditionalOperator>(stmt)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(stmt);
-    return   "(" + desugar_compound_assignments(cond_op->getCond()) + ") ? ("
-             + desugar_compound_assignments(cond_op->getTrueExpr()) + ") : ("
-             + desugar_compound_assignments(cond_op->getFalseExpr()) + ")";
+    return     desugar_compound_assignments(cond_op->getCond()) + " ? "
+             + desugar_compound_assignments(cond_op->getTrueExpr()) + " : "
+             + desugar_compound_assignments(cond_op->getFalseExpr());
   } else if (isa<MemberExpr>(stmt) or isa<DeclRefExpr>(stmt) or isa<ArraySubscriptExpr>(stmt) or isa<IntegerLiteral>(stmt)) {
     return clang_stmt_printer(stmt);
   } else if (isa<ParenExpr>(stmt)) {

@@ -207,7 +207,7 @@ std::string replace_vars(const clang::Expr * expr,
     const auto true_str = replace_vars(cond_op->getTrueExpr(), repl_map);
     const auto false_str = replace_vars(cond_op->getFalseExpr(), repl_map);
 
-    return "(" + cond_str + ") ? (" + true_str + ") : (" + false_str + ")";
+    return cond_str + " ? " + true_str + " : " + false_str;
   } else if (isa<BinaryOperator>(expr)) {
     const auto * bin_op = dyn_cast<BinaryOperator>(expr);
     const auto lhs_str = replace_vars(bin_op->getLHS(), repl_map);
