@@ -9,8 +9,8 @@ struct Packet {
   int new_hop;
   int arrival_time;
   int next_hop;
-  int last_time_idx;
-  int saved_hop_idx;
+  int id0;
+  int id1;
 };
 
 int last_time [NUM_FLOWLETS] = {0};
@@ -18,12 +18,12 @@ int saved_hop [NUM_FLOWLETS] = {0};
 
 void flowlet(struct Packet pkt) {
   pkt.new_hop   = hash3(pkt.sport, pkt.dport, pkt.arrival_time) % NUM_HOPS;
-  pkt.last_time_idx = hash2(pkt.sport, pkt.dport) % NUM_FLOWLETS;
-  pkt.saved_hop_idx = hash2(pkt.sport, pkt.dport) % NUM_FLOWLETS;
-  if (pkt.arrival_time - last_time[pkt.last_time_idx] >
+  pkt.id1 = hash2(pkt.sport, pkt.dport) % NUM_FLOWLETS;
+  pkt.id0 = hash2(pkt.sport, pkt.dport) % NUM_FLOWLETS;
+  if (pkt.arrival_time - last_time[pkt.id1] >
       FLOWLET_THRESHOLD) {
-    saved_hop[pkt.saved_hop_idx] = pkt.new_hop;
+    saved_hop[pkt.id0] = pkt.new_hop;
   }
-  last_time[pkt.last_time_idx] = pkt.arrival_time;
-  pkt.next_hop = saved_hop[pkt.saved_hop_idx];
+  last_time[pkt.id1] = pkt.arrival_time;
+  pkt.next_hop = saved_hop[pkt.id0];
 }
