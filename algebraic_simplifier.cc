@@ -17,7 +17,7 @@ std::string algebraic_simplifier_transform(const clang::TranslationUnitDecl * tu
 
 std::pair<std::string, std::vector<std::string>> algebraic_simplify_helper(const clang::CompoundStmt * body,
                                                                            const std::string & pkt_name __attribute__((unused))) {
-  return std::make_pair(algebraic_simplify_stmt(body), std::vector<std::string>());
+  return std::make_pair("{" + algebraic_simplify_stmt(body) + "}", std::vector<std::string>());
 }
 
 static bool can_be_simplified(const BinaryOperator * bin_op) {

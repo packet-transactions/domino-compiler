@@ -24,7 +24,7 @@ std::pair<std::string, std::vector<std::string>> IfConversionHandler::if_convert
 
   // 1 is the C representation for true
   if_convert(output_,  new_decls_, "1", function_body, pkt_name);
-  return make_pair(output_, new_decls_);
+  return make_pair("{" + output_ + "}", new_decls_);
 }
 
 void IfConversionHandler::if_convert(std::string & current_stream,

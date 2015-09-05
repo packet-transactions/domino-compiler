@@ -55,5 +55,5 @@ std::pair<std::string, std::vector<std::string>> expr_prop_fn_body(const Compoun
       transformed_body += clang_stmt_printer(lhs) + "=" + clang_stmt_printer(rhs) + ";";
     }
   }
-  return std::make_pair(transformed_body, std::vector<std::string>());
+  return std::make_pair("{" + transformed_body + "}", std::vector<std::string>());
 }

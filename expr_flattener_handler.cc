@@ -41,7 +41,7 @@ ExprFlattenerHandler::flatten_body(const Stmt * function_body, const std::string
     new_decls.insert(new_decls.end(), ret.new_decls.begin(), ret.new_decls.end());
   }
 
-  return make_pair(output, new_decls);
+  return make_pair("{" + output + "}", new_decls);
 }
 
 bool ExprFlattenerHandler::is_atom(const clang::Expr * expr) const {

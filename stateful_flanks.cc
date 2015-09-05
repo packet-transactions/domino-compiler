@@ -70,7 +70,7 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
                           + replace_vars(bin_op->getRHS(), state_var_table) + ";";
   }
 
-  return std::make_pair(read_prologue + "\n\n" +  function_body_str + "\n\n" + write_epilogue, new_decls);
+  return std::make_pair("{" + read_prologue + "\n\n" +  function_body_str + "\n\n" + write_epilogue + "}", new_decls);
 }
 
 std::string stateful_flank_transform(const TranslationUnitDecl * tu_decl) {

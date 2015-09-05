@@ -62,8 +62,8 @@ std::string pkt_func_transform(const TranslationUnitDecl * tu_decl,
       // Rewrite function with new body
       pkt_func_str += function_decl->getReturnType().getAsString() + " " +
                       function_decl->getNameInfo().getName().getAsString() +
-                      "( " + pkt_type + " " +  pkt_name + ") { " +
-                      transformed_body + "}\n";
+                      "( " + pkt_type + " " +  pkt_name + ") " +
+                      transformed_body;
     } else if (isa<RecordDecl>(child_decl)) {
       // Open struct definition
       assert_exception(dyn_cast<RecordDecl>(child_decl)->isStruct());

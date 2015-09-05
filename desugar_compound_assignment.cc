@@ -17,7 +17,7 @@ std::string desugar_compound_assignment_transform(const TranslationUnitDecl * tu
 
 std::pair<std::string, std::vector<std::string>> desugar_compound_assignment_helper(const clang::CompoundStmt * body,
                                                                                     const std::string & pkt_name __attribute__((unused))) {
-  return std::make_pair(desugar_compound_assignments(body), std::vector<std::string>());
+  return std::make_pair("{" + desugar_compound_assignments(body) + "}", std::vector<std::string>());
 }
 
 BinaryOperator::Opcode get_underlying_op(const BinaryOperator::Opcode & comp_asgn_op) {
