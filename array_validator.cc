@@ -54,7 +54,8 @@ bool check_array_subscript_expr(const Stmt * stmt) {
     return true;
   } else if (isa<ArraySubscriptExpr>(stmt)) {
     const auto * array_op = dyn_cast<ArraySubscriptExpr>(stmt);
-    bool check = isa<DeclRefExpr>(array_op->getIdx());
+    assert_exception(isa<ImplicitCastExpr>(array_op->getIdx()));
+    bool check = isa<MemberExpr>(dyn_cast<ImplicitCastExpr>(array_op->getIdx())->getSubExpr());
     if (check == false) {
       throw std::logic_error("Only packet fields are allowed as array indices.\n"
                              "The expression " + clang_stmt_printer(array_op) + "\n" +
