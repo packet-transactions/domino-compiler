@@ -17,7 +17,7 @@ std::string redundancy_remover_transform(const clang::TranslationUnitDecl * tu_d
 
 std::pair<std::string, std::vector<std::string>> redundancy_remover_helper(const clang::CompoundStmt * body,
                                                                            const std::string & pkt_name __attribute__((unused))) {
-  return std::make_pair(redundancy_remover_stmt(body), std::vector<std::string>());
+  return std::make_pair("{" + redundancy_remover_stmt(body) + "}", std::vector<std::string>());
 }
 
 std::string redundancy_remover_stmt(const Stmt * stmt) {
@@ -51,7 +51,12 @@ std::string redundancy_remover_stmt(const Stmt * stmt) {
     return redundancy_remover_stmt(array_op->getBase()) + "[" + redundancy_remover_stmt(array_op->getIdx()) + "]";
   } else if (isa<ParenExpr>(stmt)) {
     const auto * paren_expr = dyn_cast<ParenExpr>(stmt);
-    if (isa<ParenExpr>(paren_expr->getSubExpr())) return clang_stmt_printer(paren_expr->getSubExpr());
+    if (isa<ParenExpr>(paren_expr->getSubExpr()) or
+        isa<DeclRefExpr>(paren_expr->getSubExpr()) or
+        isa<MemberExpr>(paren_expr->getSubExpr()) or
+        isa<IntegerLiteral>(paren_expr->getSubExpr())) {
+      return clang_stmt_printer(paren_expr->getSubExpr());
+    }
     else return "(" + redundancy_remover_stmt(paren_expr->getSubExpr()) + ")";
   } else if (isa<UnaryOperator>(stmt)) {
     const auto * un_op = dyn_cast<UnaryOperator>(stmt);

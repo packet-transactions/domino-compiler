@@ -42,7 +42,7 @@ void populate_passes() {
   // We need to explicitly call populate_passes instead of using an initializer list
   // to populate PassMap all_passes because initializer lists don't play well with move-only
   // types like unique_ptrs (http://stackoverflow.com/questions/9618268/initializing-container-of-unique-ptrs-from-initializer-list-fails-with-gcc-4-7)
-  all_passes["redundancy_remover"]=[] () { return std::make_unique<SinglePass>(redundancy_remover_transform); };
+  all_passes["redundancy_remover"]=[] () { return std::make_unique<FixedPointPass>(redundancy_remover_transform); };
   all_passes["array_validator"]  = [] () { return std::make_unique<SinglePass>(array_validator_transform); };
   all_passes["int_type_checker"] = [] () { return std::make_unique<SinglePass>(int_type_checker_transform); };
   all_passes["desugar_comp_asgn"]= [] () { return std::make_unique<SinglePass>(desugar_compound_assignment_transform); };
