@@ -54,7 +54,11 @@ bool op_reads_var(const BinaryOperator * op, const Expr * var) {
   assert_exception(var);
 
   // All reads happen only on the RHS
-  const auto read_vars = gen_var_list(op->getRHS());
+  // We only check packet variables here because handle_state_vars
+  // takes care of state variables.
+  const auto read_vars = gen_var_list(op->getRHS(), {{VariableType::PACKET, true},
+                                                     {VariableType::STATE_SCALAR, false},
+                                                     {VariableType::STATE_ARRAY, false}});
 
   return (read_vars.find(clang_stmt_printer(var)) != read_vars.end());
 }

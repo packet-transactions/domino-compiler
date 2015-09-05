@@ -146,9 +146,13 @@ std::set<std::string> gen_var_list(const Stmt * stmt, const VariableTypeSelector
     // We return array name here, not array name subscript index.
     // We assume that the array name is a unique identifier because
     // per-packet we only ever access one address in the array.
-    return (var_selector.at(VariableType::STATE_ARRAY))
-          ? std::set<std::string>{clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(stmt)->getBase())}
-          : std::set<std::string>();
+    if (var_selector.at(VariableType::STATE_ARRAY)) {
+      return std::set<std::string>{clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(stmt)->getBase())};
+    } else if (var_selector.at(VariableType::PACKET)) {
+      return std::set<std::string>{clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(stmt)->getIdx())};
+    } else {
+      return std::set<std::string>();
+    }
   } else if (isa<IntegerLiteral>(stmt) or isa<NullStmt>(stmt)) {
     return std::set<std::string>();
   } else if (isa<ParenExpr>(stmt)) {
