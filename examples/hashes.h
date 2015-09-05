@@ -84,6 +84,15 @@ int hash2(int a, int b) {
   return crc16(buf, 2 * sizeof(int));
 }
 
+// Hash three values
+int hash3(int a, int b, int c) {
+  unsigned char buf[3 * sizeof(int)];
+  *(int *)buf = a;
+  *((int *)(buf + sizeof(int))) = b;
+  *((int *)(buf + 2 * sizeof(int))) = c;
+  return crc16(buf, 3 * sizeof(int));
+}
+
 // Hash five values
 int hash5(int a, int b, int c, int d, int e) {
   // Pack a and b into a char buffer
