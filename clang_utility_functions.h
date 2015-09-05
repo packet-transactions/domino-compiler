@@ -61,8 +61,15 @@ std::string generate_scalar_func_def(const clang::FunctionDecl * func_decl);
 /// by first calling identifier_census and then serializing the result
 std::string gen_pkt_fields(const clang::TranslationUnitDecl * tu_decl);
 
+/// Replace a particular variable
+/// using a replacement map
+std::string replace_var_helper(const clang::Expr * expr, const std::map<std::string, std::string> & repl_map);
+
 /// Replace a specific string with a new string within expr
-std::string replace_vars(const clang::Expr * expr, const std::map<std::string, std::string> & repl_map);
+/// Using var_selector to determine which variables to replace
+std::string replace_vars(const clang::Expr * expr,
+                         const std::map<std::string, std::string> & repl_map,
+                         const VariableTypeSelector & var_selector);
 
 /// Check if program is in SSA form
 bool is_in_ssa(const clang::CompoundStmt * compound_stmt);

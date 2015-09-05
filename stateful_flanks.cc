@@ -66,8 +66,8 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
      const auto * bin_op = dyn_cast<BinaryOperator>(child);
      assert_exception(bin_op->isAssignmentOp());
 
-     function_body_str +=   replace_vars(bin_op->getLHS(), state_var_table) + " = "
-                          + replace_vars(bin_op->getRHS(), state_var_table) + ";";
+     function_body_str +=   replace_vars(bin_op->getLHS(), state_var_table, {{VariableType::STATE_SCALAR, true}, {VariableType::STATE_ARRAY, true}, {VariableType::PACKET, false}}) + " = "
+                          + replace_vars(bin_op->getRHS(), state_var_table, {{VariableType::STATE_SCALAR, true}, {VariableType::STATE_ARRAY, true}, {VariableType::PACKET, false}}) + ";";
   }
 
   return std::make_pair("{" + read_prologue + "\n\n" +  function_body_str + "\n\n" + write_epilogue + "}", new_decls);

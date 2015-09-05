@@ -56,6 +56,15 @@ bool is_packet_func(const clang::FunctionDecl * func_decl) {
          and func_decl->getParamDecl(0)->getType().getAsString() == "struct Packet";
 }
 
+std::string replace_var_helper(const Expr * expr, const std::map<std::string, std::string> & repl_map) {
+  const std::string var_name = clang_stmt_printer(expr);
+  if (repl_map.find(var_name) != repl_map.end()) {
+    return repl_map.at(var_name);
+  } else {
+    return var_name;
+  }
+}
+
 std::set<std::string> identifier_census(const clang::TranslationUnitDecl * decl, const VariableTypeSelector & var_selector) {
   std::set<std::string> identifiers = {};
   assert_exception(decl != nullptr);
@@ -188,46 +197,48 @@ std::string gen_pkt_fields(const TranslationUnitDecl * tu_decl) {
 }
 
 std::string replace_vars(const clang::Expr * expr,
-                         const std::map<std::string, std::string> & repl_map) {
+                         const std::map<std::string, std::string> & repl_map,
+                         const VariableTypeSelector & var_selector) {
   assert_exception(expr);
   if (isa<ParenExpr>(expr)) {
-    return "(" + replace_vars(dyn_cast<ParenExpr>(expr)->getSubExpr(), repl_map) + ")";
+    return "(" + replace_vars(dyn_cast<ParenExpr>(expr)->getSubExpr(), repl_map, var_selector) + ")";
   } else if (isa<CastExpr>(expr)) {
-    return replace_vars(dyn_cast<CastExpr>(expr)->getSubExpr(), repl_map);
+    return replace_vars(dyn_cast<CastExpr>(expr)->getSubExpr(), repl_map, var_selector);
   } else if (isa<UnaryOperator>(expr)) {
     const auto * un_op = dyn_cast<UnaryOperator>(expr);
     assert_exception(un_op->isArithmeticOp());
     const auto opcode_str = std::string(UnaryOperator::getOpcodeStr(un_op->getOpcode()));
     assert_exception(opcode_str == "!");
-    return opcode_str + replace_vars(un_op->getSubExpr(), repl_map);
+    return opcode_str + replace_vars(un_op->getSubExpr(), repl_map, var_selector);
   } else if (isa<ConditionalOperator>(expr)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(expr);
 
-    const auto cond_str = replace_vars(cond_op->getCond(), repl_map);
-    const auto true_str = replace_vars(cond_op->getTrueExpr(), repl_map);
-    const auto false_str = replace_vars(cond_op->getFalseExpr(), repl_map);
+    const auto cond_str = replace_vars(cond_op->getCond(), repl_map, var_selector);
+    const auto true_str = replace_vars(cond_op->getTrueExpr(), repl_map, var_selector);
+    const auto false_str = replace_vars(cond_op->getFalseExpr(), repl_map, var_selector);
 
     return cond_str + " ? " + true_str + " : " + false_str;
   } else if (isa<BinaryOperator>(expr)) {
     const auto * bin_op = dyn_cast<BinaryOperator>(expr);
-    const auto lhs_str = replace_vars(bin_op->getLHS(), repl_map);
-    const auto rhs_str = replace_vars(bin_op->getRHS(), repl_map);
+    const auto lhs_str = replace_vars(bin_op->getLHS(), repl_map, var_selector);
+    const auto rhs_str = replace_vars(bin_op->getRHS(), repl_map, var_selector);
     return lhs_str + std::string(BinaryOperator::getOpcodeStr(bin_op->getOpcode())) + rhs_str;
-  } else if (isa<DeclRefExpr>(expr) or isa<MemberExpr>(expr) or isa<ArraySubscriptExpr>(expr)) {
-    // All DeclRefExpr are stateful scalars
-    // All MemberExpr are packet variables
-    // All ArraySubscriptExpr are stateful arrays
-    const std::string var_name = clang_stmt_printer(expr);
-    if (repl_map.find(var_name) != repl_map.end()) {
-      return repl_map.at(var_name);
-    } else {
-      return var_name;
-    }
+  } else if (isa<DeclRefExpr>(expr)) {
+    if (var_selector.at(VariableType::STATE_SCALAR)) return replace_var_helper(expr, repl_map);
+    else return clang_stmt_printer(expr);
+  } else if (isa<MemberExpr>(expr)) {
+    if (var_selector.at(VariableType::PACKET)) return replace_var_helper(expr, repl_map);
+    else return clang_stmt_printer(expr);
+  } else if (isa<ArraySubscriptExpr>(expr)) {
+    const auto * array_op = dyn_cast<ArraySubscriptExpr>(expr);
+    if (var_selector.at(VariableType::STATE_ARRAY)) return replace_var_helper(expr, repl_map);
+    else if (var_selector.at(VariableType::PACKET)) return clang_stmt_printer(array_op->getBase()) + "[" + replace_vars(array_op->getIdx(), repl_map, var_selector) + "]";
+    else return clang_stmt_printer(expr);
   } else if (isa<CallExpr>(expr)) {
     const auto * call_expr = dyn_cast<CallExpr>(expr);
     std::string ret = clang_stmt_printer(call_expr->getCallee()) + "(";
     for (const auto * child : call_expr->arguments()) {
-      const auto child_str = replace_vars(child, repl_map);
+      const auto child_str = replace_vars(child, repl_map, var_selector);
       ret += child_str + ",";
     }
     ret.back() = ')';
