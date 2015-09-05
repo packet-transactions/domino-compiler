@@ -16,6 +16,9 @@ std::string array_validator_transform(const TranslationUnitDecl * tu_decl) {
 std::pair<std::string, std::vector<std::string>> array_validate_body(const clang::CompoundStmt * function_body, const std::string & pkt_name __attribute__((unused))) {
   const auto check = check_array_subscript_expr(function_body);
   assert_exception(check);
+  // TODO: Check that the array subscript expr isn't ever reassigned.
+  // We need to do this soon because otherwise, stateful_flanks will
+  // end up with painful input that it won't know how to handle.
   return std::make_pair(clang_stmt_printer(function_body), std::vector<std::string>());
 }
 
