@@ -16,8 +16,8 @@ int best_path_util[256] = {100}; // Utilization information for each destination
 int best_path[256]      = {-1};  // Next hop / path information for each destination
 
 void func(struct Packet p) {
-  p.best_path_util_idx = p.src % 256;
-  p.best_path_idx      = p.src % 256;
+  p.best_path_util_idx = p.src < 0 ? 0 : p.src % 256;
+  p.best_path_idx      = p.src < 0 ? 0 : p.src % 256;
   if (p.util < best_path_util[p.best_path_util_idx]) {
     best_path_util[p.best_path_util_idx] = p.util;
     best_path[p.best_path_idx] = p.path_id;
