@@ -20,7 +20,7 @@ int saved_hop [NUM_FLOWLETS] = {0};
 void flowlet(struct Packet pkt) {
   pkt.new_hop = hash3(pkt.sport,
                       pkt.dport,
-                      pkt.arrival);
+                      pkt.arrival)
                 % NUM_HOPS;
 
   pkt.idl = hash2(pkt.sport,
@@ -31,7 +31,7 @@ void flowlet(struct Packet pkt) {
                   pkt.dport)
             % NUM_FLOWLETS;
 
-  if (pkt.arrival_time -
+  if (pkt.arrival -
       last_time[pkt.idl] >
       FLOWLET_THRESHOLD) {
     saved_hop[pkt.ids] = pkt.new_hop;
