@@ -10,8 +10,8 @@ struct Packet {
   int new_hop;
   int arrival;
   int next_hop;
-  int idl; // index into last_time
-  int ids; // index into saved_hop
+  int idl;
+  int ids;
 };
 
 int last_time [NUM_FLOWLETS] = {0};
