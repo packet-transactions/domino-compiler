@@ -35,6 +35,9 @@ Graph<const BinaryOperator *> handle_state_vars(const std::vector<const BinaryOp
       assert_exception(state_writes.find(clang_stmt_printer(lhs)) == state_writes.end());
       state_writes[clang_stmt_printer(lhs)] = stmt;
       const auto state_var = clang_stmt_printer(lhs);
+      // Check state_var exists in both maps
+      assert_exception(state_reads.find(state_var) != state_reads.end());
+      assert_exception(state_writes.find(state_var) != state_writes.end());
       ret.add_edge(state_reads.at(state_var), state_writes.at(state_var));
       ret.add_edge(state_writes.at(state_var), state_reads.at(state_var));
     }
