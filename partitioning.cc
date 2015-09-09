@@ -5,6 +5,7 @@
 #include "util.h"
 #include "clang_utility_functions.h"
 #include "unique_identifiers.h"
+#include "set_idioms.h"
 
 using namespace clang;
 
@@ -56,12 +57,20 @@ bool op_reads_var(const BinaryOperator * op, const Expr * var) {
   assert_exception(op);
   assert_exception(var);
 
-  // All reads happen only on the RHS
   // We only check packet variables here because handle_state_vars
   // takes care of state variables.
-  const auto read_vars = gen_var_list(op->getRHS(), {{VariableType::PACKET, true},
-                                                     {VariableType::STATE_SCALAR, false},
-                                                     {VariableType::STATE_ARRAY, false}});
+  auto read_vars = gen_var_list(op->getRHS(), {{VariableType::PACKET, true},
+                                               {VariableType::STATE_SCALAR, false},
+                                               {VariableType::STATE_ARRAY, false}});
+
+  // If the LHS is an array subscript expression, we need to check inside the subscript as well
+  if (isa<ArraySubscriptExpr>(op->getLHS())) {
+    const auto * array_op = dyn_cast<ArraySubscriptExpr>(op->getLHS());
+    const auto read_vars_lhs = gen_var_list(array_op->getIdx(), {{VariableType::PACKET, true},
+                                                                {VariableType::STATE_SCALAR, false},
+                                                                {VariableType::STATE_ARRAY, false}});
+    read_vars = read_vars + read_vars_lhs;
+  }
 
   return (read_vars.find(clang_stmt_printer(var)) != read_vars.end());
 }
