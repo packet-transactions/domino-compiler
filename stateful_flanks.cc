@@ -69,17 +69,29 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
         const auto pkt_tmp_var   = pkt_name + "." + new_tmp_var;
 
         // Read from a state variable into a packet temporary
-        // If it's an array, read index into a packet temporary and move to prologue too
+        // If it's an array, read index into a newly created packet temporary and move to prologue too
         if (isa<ArraySubscriptExpr>(lhs)) {
+          assert_exception(isa<MemberExpr>(dyn_cast<ArraySubscriptExpr>(lhs)->getIdx()->IgnoreParenImpCasts()));
           const auto subscript_var = clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(lhs)->getIdx());
           subscript_vars.emplace(subscript_var);
-          read_prologue += subscript_var + " = " + var_expr_map.at(subscript_var) + ";";
+          const auto pkt_field_in_subscript = dyn_cast<MemberExpr>(dyn_cast<ArraySubscriptExpr>(lhs)->getIdx()->IgnoreParenImpCasts())->getMemberDecl()->getNameAsString();
+
+          //  Create a temporary variable for subscript_var
+          const auto new_tmp_var_for_subscript = unique_identifiers.get_unique_identifier(pkt_field_in_subscript);
+          const auto subscript_var_decl        = "int " + new_tmp_var_for_subscript + ";";
+          new_decls.emplace_back(subscript_var_decl);
+
+          // Prefix it with "packet."
+          const auto pkt_subscript_var   = pkt_name + "." + new_tmp_var_for_subscript;
+
+          // Create read and write flanks for it
+          read_prologue += pkt_subscript_var + " = " + var_expr_map.at(subscript_var) + ";";
+          read_prologue += pkt_tmp_var + " = " + replace_subscript_expr(dyn_cast<ArraySubscriptExpr>(lhs), pkt_subscript_var) + ";";
+          write_epilogue += replace_subscript_expr(dyn_cast<ArraySubscriptExpr>(lhs), pkt_subscript_var) + " = " + pkt_tmp_var + ";";
+        } else {
+          read_prologue += pkt_tmp_var + " = " + state_var + ";";
+          write_epilogue += state_var + " = " + pkt_tmp_var + ";";
         }
-
-        read_prologue += pkt_tmp_var + " = " + state_var + ";";
-
-        // Write back into state variable using a packet temporary
-        write_epilogue += state_var + " = " + pkt_tmp_var + ";";
         state_var_table[state_var] = pkt_tmp_var;
       }
     }
@@ -102,6 +114,12 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
   }
 
   return std::make_pair("{" + read_prologue + "\n\n" +  function_body_str + "\n\n" + write_epilogue + "}", new_decls);
+}
+
+std::string replace_subscript_expr(const ArraySubscriptExpr * array_op, const std::string & new_subscript) {
+  assert_exception(array_op);
+  assert_exception(isa<MemberExpr>(array_op->getIdx()->IgnoreParenImpCasts()));
+  return clang_stmt_printer(array_op->getBase()) + "[" + new_subscript + "]";
 }
 
 std::string stateful_flank_transform(const TranslationUnitDecl * tu_decl) {
