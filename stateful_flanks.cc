@@ -1,5 +1,6 @@
 #include "stateful_flanks.h"
 
+#include <iostream>
 #include <functional>
 
 #include "third_party/assert_exception.h"
@@ -82,12 +83,15 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
           new_decls.emplace_back(subscript_var_decl);
 
           // Prefix it with "packet."
-          const auto pkt_subscript_var   = pkt_name + "." + new_tmp_var_for_subscript;
+          const auto new_subscript_var   = pkt_name + "." + new_tmp_var_for_subscript;
 
           // Create read and write flanks for it
-          read_prologue += pkt_subscript_var + " = " + var_expr_map.at(subscript_var) + ";";
-          read_prologue += pkt_tmp_var + " = " + replace_subscript_expr(dyn_cast<ArraySubscriptExpr>(lhs), pkt_subscript_var) + ";";
-          write_epilogue += replace_subscript_expr(dyn_cast<ArraySubscriptExpr>(lhs), pkt_subscript_var) + " = " + pkt_tmp_var + ";";
+          read_prologue += new_subscript_var + " = " + var_expr_map.at(subscript_var) + ";";
+          read_prologue += pkt_tmp_var + " = " + replace_subscript_expr(dyn_cast<ArraySubscriptExpr>(lhs), new_subscript_var) + ";";
+          write_epilogue += replace_subscript_expr(dyn_cast<ArraySubscriptExpr>(lhs), new_subscript_var) + " = " + pkt_tmp_var + ";";
+
+          // Print out the rename of subscript_var for jayhawk to use
+          std::cerr << "// " << pkt_field_in_subscript << " " << new_tmp_var_for_subscript << std::endl;
         } else {
           read_prologue += pkt_tmp_var + " = " + state_var + ";";
           write_epilogue += state_var + " = " + pkt_tmp_var + ";";
