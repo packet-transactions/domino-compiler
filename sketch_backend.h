@@ -24,7 +24,8 @@ std::string sketch_backend_transform(const clang::TranslationUnitDecl * tu_decl)
 
 /// Transfrom a Stmt representing a function body
 /// into a SKETCH specification.
-std::string create_sketch_spec(const clang::Stmt * function_body);
+std::string create_sketch_spec(const clang::Stmt * function_body,
+                               const std::string & spec_name);
 
 /// Collect all state variable expressions recursively from a clang::Stmt
 /// TODO: This is very similar to gen_var_list with a few minor differences.

@@ -9,16 +9,17 @@ using namespace clang;
 
 std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
   std::string ret;
+  uint8_t count = 0;
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     // Transform only packet functions into SKETCH specifications
     if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
-      ret += (create_sketch_spec(dyn_cast<FunctionDecl>(child_decl)->getBody()));
+      ret += create_sketch_spec((dyn_cast<FunctionDecl>(child_decl)->getBody()), "spec" + std::to_string(++count));
     }
   }
   return ret;
 }
 
-std::string create_sketch_spec(const Stmt * function_body) {
+std::string create_sketch_spec(const Stmt * function_body, const std::string & spec_name) {
   // Store all MemberExpr from the function_body.
   // This gives us all packet fields seen in function_body
   std::set<PktField> all_pkt_fields = gen_var_list(function_body,
@@ -78,7 +79,7 @@ std::string create_sketch_spec(const Stmt * function_body) {
   }
 
   // Add function signature
-  std::string sketch_spec_signature = "void spec(";
+  std::string sketch_spec_signature = "void " + spec_name + "(";
   bool empty = true;
   for (const auto & arg : state_var_args + pkt_var_args) {
     empty = false;
