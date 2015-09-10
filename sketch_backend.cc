@@ -83,7 +83,7 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
   bool empty = true;
   for (const auto & arg : state_var_args + pkt_var_args) {
     empty = false;
-    sketch_spec_signature += "int " + arg + ",";
+    sketch_spec_signature += "ref int " + arg + ",";
   }
   if (empty) sketch_spec_signature += ")";
   else sketch_spec_signature.back() = ')';
