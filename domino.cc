@@ -11,6 +11,7 @@
 #include "int_type_checker.h"
 #include "array_validator.h"
 #include "redundancy_remover.h"
+#include "sketch_backend.h"
 
 #include <utility>
 #include <iostream>
@@ -42,6 +43,7 @@ void populate_passes() {
   // We need to explicitly call populate_passes instead of using an initializer list
   // to populate PassMap all_passes because initializer lists don't play well with move-only
   // types like unique_ptrs (http://stackoverflow.com/questions/9618268/initializing-container-of-unique-ptrs-from-initializer-list-fails-with-gcc-4-7)
+  all_passes["sketch_backend"]    =[] () { return std::make_unique<SinglePass>(sketch_backend_transform); };
   all_passes["redundancy_remover"]=[] () { return std::make_unique<FixedPointPass>(redundancy_remover_transform); };
   all_passes["array_validator"]  = [] () { return std::make_unique<SinglePass>(array_validator_transform); };
   all_passes["int_type_checker"] = [] () { return std::make_unique<SinglePass>(int_type_checker_transform); };
