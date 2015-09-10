@@ -10,6 +10,7 @@ using namespace clang;
 std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
   std::string ret;
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
+    // Transform only packet functions into SKETCH specifications
     if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       ret += (create_sketch_spec(dyn_cast<FunctionDecl>(child_decl)->getBody()));
     }
@@ -19,13 +20,14 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
 
 std::string create_sketch_spec(const Stmt * function_body) {
   // Store all MemberExpr from the function_body.
-  // This gives all packet fields seen in function_body
+  // This gives us all packet fields seen in function_body
   std::set<PktField> all_pkt_fields = gen_var_list(function_body,
                                                    {{VariableType::PACKET, true},
                                                     {VariableType::STATE_SCALAR, false},
                                                     {VariableType::STATE_ARRAY, false}});
 
-  // Store all fields that are written into
+  // Store all fields that are written into,
+  // i.e. anything that occurs on the lhs
   std::set<PktField> defined_fields;
   for (const auto * stmt : function_body->children()) {
     assert_exception(isa<BinaryOperator>(stmt));
@@ -43,6 +45,7 @@ std::string create_sketch_spec(const Stmt * function_body) {
   // Create unique names for all fields in incoming_fields.
   std::map<PktField, ScalarVarName> rename_map;
   uint8_t count = 0;
+  // Create a set of packet variable arguments to construct the sketch spec signature
   std::set<std::string> pkt_var_args;
   for (const auto & field : incoming_fields) {
     rename_map[field] = "pkt_" + std::to_string(++count);
@@ -52,10 +55,14 @@ std::string create_sketch_spec(const Stmt * function_body) {
   // Conjoin object name with field to create scalar variables
   // for all packet fields that are defined in the body
   // i.e. change p.x to p_x
+  // Also track the names of all defined packet fields to create
+  // declarations for them later (the set defined_vars does this)
+  std::set<ScalarVarName> defined_vars;
   for (const auto & field : defined_fields) {
     std::string conjoined_field = field;
     std::replace(conjoined_field.begin(), conjoined_field.end(), '.', '_');
     rename_map[field] = conjoined_field;
+    defined_vars.emplace(conjoined_field);
   }
 
   // Collect all state variables seen in the function body
@@ -63,6 +70,7 @@ std::string create_sketch_spec(const Stmt * function_body) {
 
   // Create unique names for all state variables
   count = 0;
+  // Create a set of state variable arguments to construct the sketch spec signature
   std::set<std::string> state_var_args;
   for (const auto & state_ref : state_refs) {
     rename_map[state_ref] = "state_" + std::to_string(++count);
@@ -79,8 +87,14 @@ std::string create_sketch_spec(const Stmt * function_body) {
   if (empty) sketch_spec_signature += ")";
   else sketch_spec_signature.back() = ')';
 
+  // Add declarations for defined packet fields
+  std::string declaration_stub = "";
+  for (const auto & var : defined_vars) {
+    declaration_stub += "int " + var + ";" + "\n";
+  }
+
   // Now, go through the function_body, renaming everything in the process.
-  std::string sketch_spec_body = "{\n";
+  std::string sketch_spec_body = "";
   for (const auto * child : function_body->children()) {
     assert_exception(isa<BinaryOperator>(child));
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
@@ -92,8 +106,8 @@ std::string create_sketch_spec(const Stmt * function_body) {
                                     {{VariableType::STATE_SCALAR, true}, {VariableType::STATE_ARRAY, true}, {VariableType::PACKET, true}})
                         + ";\n";
   }
-  sketch_spec_body += "}";
-  return sketch_spec_signature + "\n" + sketch_spec_body;
+
+  return sketch_spec_signature + "{" + declaration_stub + sketch_spec_body + "}\n";
 }
 
 std::set<std::string> collect_state_vars(const Stmt * stmt) {
