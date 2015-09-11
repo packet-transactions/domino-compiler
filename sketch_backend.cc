@@ -53,7 +53,7 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
       sketch_temp_file.write(sketch_contents);
       int rand_seed = rand();
       try {
-        run({"/home/anirudh/sketch-1.6.9/sketch-frontend/sketch", "--slv-seed=" + std::to_string(rand_seed), "--fe-no-output-print", "--bnd-inbits=32", "--bnd-cbits=5", sketch_temp_file.name()});
+        run({"/home/anirudh/sketch-1.6.9/sketch-frontend/sketch", "--slv-seed=" + std::to_string(rand_seed), "--fe-no-output-print", "--bnd-inbits=30", "--bnd-cbits=5", sketch_temp_file.name()});
         std::ofstream out("/tmp/success.sk");
         out << sketch_contents;
         out.close();
