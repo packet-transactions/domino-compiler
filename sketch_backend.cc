@@ -10,34 +10,30 @@
 
 using namespace clang;
 
-static const std::string spec_args = "(ref int state_1, ref int state_2, int pkt_1, int pkt_2, int pkt_3, int pkt_4, int pkt_5)";
+static const std::string sketch_struct = ""
+"struct StateResult {\n"
+"  int result_state_1;\n"
+"  int result_state_2;\n"
+"}\n";
+
+static const std::string sketch_return_epilogue =""
+"  StateResult ret = new StateResult();\n"
+"  ret.result_state_1 = state_1;\n"
+"  ret.result_state_2 = state_2;\n"
+"  return ret;\n"
+"";
+
+static const std::string spec_args = "(int state_1, int state_2, int pkt_1, int pkt_2, int pkt_3, int pkt_4, int pkt_5)";
 
 static const std::string sketch_harness =""
 "harness void main" + spec_args + " {\n"
-"  // Store old values\n"
-"  int old_state_1 = state_1;\n"
-"  int old_state_2 = state_2;\n"
+"  StateResult spec_result = codelet(state_1, state_2, pkt_1, pkt_2, pkt_3, pkt_4, pkt_5);\n"
 "\n"
-"  // Execute codelet on old values\n"
-"  codelet(state_1, state_2, pkt_1, pkt_2, pkt_3, pkt_4, pkt_5);\n"
+"  StateResult impl_result = atom_template(state_1, state_2, pkt_1, pkt_2, pkt_3, pkt_4, pkt_5);\n"
 "\n"
-"  // Store spec values\n"
-"  int spec_state_1 = state_1;\n"
-"  int spec_state_2 = state_2;\n"
-"\n"
-"  // Restore old values for execution\n"
-"  state_1 = old_state_1;\n"
-"  state_2 = old_state_2;\n"
-"\n"
-"  // Execute implementation\n"
-"  atom_template(state_1, state_2, pkt_1, pkt_2, pkt_3, pkt_4, pkt_5);\n"
-"\n"
-"  // Store impl values\n"
-"  int impl_state_1 = state_1;\n"
-"  int impl_state_2 = state_2;\n"
-"\n"
-"  assert(impl_state_1 == spec_state_1);\n"
-"  assert(impl_state_2 == spec_state_2);\n"
+"  // Assert values\n"
+"  assert(spec_result.result_state_1 == impl_result.result_state_1);\n"
+"  assert(spec_result.result_state_2 == impl_result.result_state_2);\n"
 "}\n"
 "";
 
@@ -47,7 +43,8 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
     if (isa<FunctionDecl>(child_decl) and
         (is_packet_func(dyn_cast<FunctionDecl>(child_decl))) and
         (not collect_state_vars(dyn_cast<FunctionDecl>(child_decl)->getBody()).empty())) {
-      std::string sketch_contents = file_to_str(std::string(getenv("ATOM_TEMPLATE"))) +
+      std::string sketch_contents = sketch_struct +
+                                    file_to_str(std::string(getenv("ATOM_TEMPLATE"))) +
                                     create_sketch_spec((dyn_cast<FunctionDecl>(child_decl)->getBody()), "codelet") +
                                     sketch_harness;
       TempFile sketch_temp_file("/tmp/sketch", ".sk");
@@ -162,7 +159,7 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
   // two state variables and five packet variables because
   // that should suffice for everything we need.
   // Worst case: something goes unused, which shouldn't affect correctness.
-  std::string sketch_spec_signature = "void " +
+  std::string sketch_spec_signature = "StateResult " +
                                       spec_name +
                                       spec_args;
 
@@ -186,7 +183,7 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
                         + ";\n";
   }
 
-  return sketch_spec_signature + "{" + declaration_stub + sketch_spec_body + "}\n";
+  return sketch_spec_signature + "{" + declaration_stub + sketch_spec_body +  sketch_return_epilogue + "}\n";
 }
 
 std::set<std::string> collect_state_vars(const Stmt * stmt) {
