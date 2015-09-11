@@ -138,6 +138,22 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
     defined_vars.emplace(conjoined_field);
   }
 
+  // Rename any predicate field to predicate field != 0,
+  // otherwise Sketch will whine
+  for (const auto * stmt : function_body->children()) {
+    assert_exception(isa<BinaryOperator>(stmt));
+    const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
+    assert_exception(bin_op->isAssignmentOp());
+    if (isa<ConditionalOperator>(bin_op->getRHS())) {
+      const auto * cond_op = dyn_cast<ConditionalOperator>(bin_op->getRHS());
+      assert_exception(isa<MemberExpr>(cond_op->getCond()->IgnoreParenImpCasts()));
+      const auto * member_op  = dyn_cast<MemberExpr>(cond_op->getCond()->IgnoreParenImpCasts());
+      assert_exception(rename_map.find(clang_stmt_printer(member_op)) != rename_map.end());
+      const auto old_value = rename_map.at(clang_stmt_printer(member_op));
+      rename_map.at(clang_stmt_printer(member_op)) = "(" + old_value + " != 0)";
+    }
+  }
+
   // Add function signature
   // TODO: We are hard coding a function signature that includes
   // two state variables and five packet variables because
