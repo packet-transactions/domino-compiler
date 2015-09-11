@@ -50,7 +50,7 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
       TempFile sketch_temp_file("/tmp/sketch", ".sk");
       sketch_temp_file.write(sketch_contents);
       try {
-        run({"/home/anirudh/sketch-1.6.9/sketch-frontend/sketch", "--bnd-inbits=32", "--bnd-cbits=16", sketch_temp_file.name()});
+        run({"/home/anirudh/sketch-1.6.9/sketch-frontend/sketch", "--bnd-inbits=32", "--bnd-cbits=5", sketch_temp_file.name()});
       } catch (const std::exception & e) {
         throw std::logic_error("Running sketch failed on the input " + sketch_contents + "\n");
       }
