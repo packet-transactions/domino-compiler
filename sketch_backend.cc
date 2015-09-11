@@ -156,7 +156,7 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
     assert_exception(isa<BinaryOperator>(stmt));
     const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
     assert_exception(bin_op->isAssignmentOp());
-    if (isa<ConditionalOperator>(bin_op->getRHS())) {
+    if (isa<ConditionalOperator>(bin_op->getRHS()->IgnoreParenImpCasts())) {
       const auto * cond_op = dyn_cast<ConditionalOperator>(bin_op->getRHS());
       assert_exception(isa<MemberExpr>(cond_op->getCond()->IgnoreParenImpCasts()));
       const auto * member_op  = dyn_cast<MemberExpr>(cond_op->getCond()->IgnoreParenImpCasts());
