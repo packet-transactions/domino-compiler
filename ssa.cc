@@ -30,7 +30,7 @@ std::pair<std::string, std::vector<std::string>> ssa_rewrite_fn_body(const Compo
   UniqueIdentifiers unique_identifiers(id_set);
 
   // All indices where every packet variable is defined/written/is on the LHS.
-  // We choosen to rename ALL definitions/writes of a packet variable
+  // We choose to rename ALL definitions/writes of a packet variable
   // rather than just the redefinitions because there might
   // be reads preceding the first definition/write
   // and it's correct to rename all definitions.
