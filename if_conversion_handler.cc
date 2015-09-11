@@ -54,8 +54,7 @@ void IfConversionHandler::if_convert(std::string & current_stream,
     // Add assignment to new packet temporary here,
     // predicating it with the current predicate
     const auto pkt_cond_variable = pkt_name + "." + cond_variable;
-    current_stream += pkt_cond_variable + " = (" + predicate + " ? (" + clang_stmt_printer(if_stmt->getCond()) + ") :  "
-                                        + pkt_cond_variable + ");";
+    current_stream += pkt_cond_variable + " = (" + predicate + " ? (" + clang_stmt_printer(if_stmt->getCond()) + ") : 0);";
 
     // Create predicates for if and else block
     auto pred_within_if_block = "(" + predicate + " && " + pkt_cond_variable + ")";
