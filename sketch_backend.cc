@@ -51,13 +51,18 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
                                     sketch_harness;
       TempFile sketch_temp_file("/tmp/sketch", ".sk");
       sketch_temp_file.write(sketch_contents);
+      int rand_seed = rand();
       try {
-        run({"/home/anirudh/sketch-1.6.9/sketch-frontend/sketch", "--bnd-inbits=32", "--bnd-cbits=5", sketch_temp_file.name()});
+        run({"/home/anirudh/sketch-1.6.9/sketch-frontend/sketch", "--slv-seed=" + std::to_string(rand_seed), "--fe-no-output-print", "--bnd-inbits=32", "--bnd-cbits=5", sketch_temp_file.name()});
+        std::ofstream out("/tmp/success.sk");
+        out << sketch_contents;
+        out.close();
+        std::cerr << "Sketch succeeded with random seed" << rand_seed << ", input sketch available at /tmp/success.sk" << std::endl;
       } catch (const std::exception & e) {
         std::ofstream out("/tmp/debug.sk");
         out << sketch_contents;
         out.close();
-        throw std::logic_error("Sketch failed to find a configuration, input available at /tmp/debug.sk");
+        throw std::logic_error("Sketch failed to find a configuration, with random seed " + std::to_string(rand_seed) + ", input available at /tmp/debug.sk");
       }
     }
   }
