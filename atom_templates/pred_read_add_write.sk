@@ -26,6 +26,9 @@ StateResult atom_template(int state_1, int state_2, int pkt_1, int pkt_2, int pk
   } else if (??) {
     bit predicate = rel_op(pkt_2, ??, ??);
     if (predicate) state_1 += pkt_1;
+  } else if (??) {
+    bit predicate = rel_op(pkt_1, ??, ??);
+    if (predicate) state_1 += ??;
   }
   StateResult ret = new StateResult();
   ret.result_state_1 = state_1;
