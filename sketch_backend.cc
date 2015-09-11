@@ -1,4 +1,5 @@
 #include "sketch_backend.h"
+#include "util.h"
 
 #include "third_party/assert_exception.h"
 
@@ -40,13 +41,14 @@ static const std::string sketch_harness =""
 
 std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
   std::string ret;
-  uint8_t count = 0;
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     // Transform only packet functions into SKETCH specifications
     if (isa<FunctionDecl>(child_decl) and
         (is_packet_func(dyn_cast<FunctionDecl>(child_decl))) and
         (not collect_state_vars(dyn_cast<FunctionDecl>(child_decl)->getBody()).empty())) {
-      ret += create_sketch_spec((dyn_cast<FunctionDecl>(child_decl)->getBody()), "spec" + std::to_string(++count));
+      ret += file_to_str(std::string(getenv("ATOM_TEMPLATE"))) +
+             create_sketch_spec((dyn_cast<FunctionDecl>(child_decl)->getBody()), "codelet") +
+             sketch_harness;
     }
   }
   return ret;
