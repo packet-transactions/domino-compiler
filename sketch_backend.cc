@@ -163,6 +163,19 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
       assert_exception(rename_map.find(clang_stmt_printer(member_op)) != rename_map.end());
       const auto old_value = rename_map.at(clang_stmt_printer(member_op));
       right_rename_map[clang_stmt_printer(member_op)] = "(" + old_value + " != 0)";
+    } else if (isa<BinaryOperator>(bin_op->getRHS()->IgnoreParenImpCasts())) {
+      const auto * rhs_bin_op = dyn_cast<BinaryOperator>(bin_op->getRHS()->IgnoreParenImpCasts());
+      if (rhs_bin_op->isLogicalOp()) {
+        // Get lhs and rhs of this op
+        const auto * left_operand = rhs_bin_op->getLHS()->IgnoreParenImpCasts();
+        const auto * right_operand = rhs_bin_op->getRHS()->IgnoreParenImpCasts();
+        assert_exception(isa<MemberExpr>(left_operand));
+        assert_exception(isa<MemberExpr>(right_operand));
+        assert_exception(rename_map.find(clang_stmt_printer(left_operand)) != rename_map.end());
+        assert_exception(rename_map.find(clang_stmt_printer(right_operand))!= rename_map.end());
+        right_rename_map[clang_stmt_printer(left_operand)] = "(" + rename_map.at(clang_stmt_printer(left_operand)) + "!= 0)";
+        right_rename_map[clang_stmt_printer(right_operand)] = "(" + rename_map.at(clang_stmt_printer(right_operand)) + "!= 0)";
+      }
     }
   }
 
