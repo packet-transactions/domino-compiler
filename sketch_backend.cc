@@ -96,18 +96,13 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
   }
 
   // Add function signature
-  std::string sketch_spec_signature = "void " + spec_name + "(";
-  bool empty = true;
-  for (const auto & arg : state_var_args) {
-    empty = false;
-    sketch_spec_signature += "ref int " + arg + ",";
-  }
-  for (const auto & arg : pkt_var_args) {
-    empty = false;
-    sketch_spec_signature += "int " + arg + ",";
-  }
-  if (empty) sketch_spec_signature += ")";
-  else sketch_spec_signature.back() = ')';
+  // TODO: We are hard coding a function signature that includes
+  // two state variables and five packet variables because
+  // that should suffice for everything we need.
+  // Worst case: something goes unused, which shouldn't affect correctness.
+  std::string sketch_spec_signature = "void " +
+                                      spec_name +
+                                      "(ref int state_1, ref int state_2, int pkt_1, int pkt_2, int pkt_3, int pkt_4, int pkt_5)";
 
   // Add declarations for defined packet fields
   std::string declaration_stub = "";
