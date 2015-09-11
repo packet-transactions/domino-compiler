@@ -1,3 +1,7 @@
 void atom_template(ref int state_1, ref int state_2, int pkt_1, int pkt_2, int pkt_3, int pkt_4, int pkt_5) {
-  state_1 = ??;
+  if (??) {
+    state_1 = ??;
+  } else {
+    state_1 = pkt_1;
+  }
 }
