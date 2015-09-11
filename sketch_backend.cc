@@ -39,9 +39,26 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
     }
   }
 
-  // Subtract defined_fields from all_pkt_fields to get incoming fields
+  // Store all fields thate are part of array subscripts
+  // i.e. anything that occurs within square brackets
+  std::set<PktField> array_fields;
+  for (const auto * stmt : function_body->children()) {
+    assert_exception(isa<BinaryOperator>(stmt));
+    const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
+    assert_exception(bin_op->isAssignmentOp());
+    // ArraySubscriptExprs show up directly on the LHS or RHS
+    // They don't show up as part of expression because they
+    // are hoisted out of code in the stateful flanks pass.
+    if (isa<ArraySubscriptExpr>(bin_op->getRHS())) {
+      array_fields.emplace(clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(bin_op->getRHS())->getIdx()));
+    } else if (isa<ArraySubscriptExpr>(bin_op->getLHS())) {
+      array_fields.emplace(clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(bin_op->getLHS())->getIdx()));
+    }
+  }
+
+  // Subtract defined_fields and array_fields from all_pkt_fields to get incoming fields
   // that are set by someone else before getting into this function body
-  std::set<PktField> incoming_fields = all_pkt_fields - defined_fields;
+  std::set<PktField> incoming_fields = all_pkt_fields - defined_fields - array_fields;
 
   // Create unique names for all fields in incoming_fields.
   std::map<PktField, ScalarVarName> rename_map;
