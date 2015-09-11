@@ -43,7 +43,9 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
   uint8_t count = 0;
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     // Transform only packet functions into SKETCH specifications
-    if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
+    if (isa<FunctionDecl>(child_decl) and
+        (is_packet_func(dyn_cast<FunctionDecl>(child_decl))) and
+        (not collect_state_vars(dyn_cast<FunctionDecl>(child_decl)->getBody()).empty())) {
       ret += create_sketch_spec((dyn_cast<FunctionDecl>(child_decl)->getBody()), "spec" + std::to_string(++count));
     }
   }
@@ -51,6 +53,22 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
 }
 
 std::string create_sketch_spec(const Stmt * function_body, const std::string & spec_name) {
+  // Map for renames when creating sketch spec
+  std::map<std::string, std::string> rename_map;
+
+  // Collect all state variables seen in the function body
+  std::set<std::string> state_refs = collect_state_vars(function_body);
+
+  assert(not state_refs.empty());
+
+  // Create unique names for all state variables
+  uint8_t count = 0;
+  // Create a set of state variable arguments to construct the sketch spec signature
+  for (const auto & state_ref : state_refs) {
+    rename_map[state_ref] = "state_" + std::to_string(++count);
+  }
+
+
   // Store all MemberExpr from the function_body.
   // This gives us all packet fields seen in function_body
   std::set<PktField> all_pkt_fields = gen_var_list(function_body,
@@ -92,13 +110,9 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
   std::set<PktField> incoming_fields = all_pkt_fields - defined_fields - array_fields;
 
   // Create unique names for all fields in incoming_fields.
-  std::map<PktField, ScalarVarName> rename_map;
-  uint8_t count = 0;
-  // Create a set of packet variable arguments to construct the sketch spec signature
-  std::set<std::string> pkt_var_args;
+  count = 0;
   for (const auto & field : incoming_fields) {
     rename_map[field] = "pkt_" + std::to_string(++count);
-    pkt_var_args.emplace(rename_map.at(field));
   }
 
   // Conjoin object name with field to create scalar variables
@@ -112,18 +126,6 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
     std::replace(conjoined_field.begin(), conjoined_field.end(), '.', '_');
     rename_map[field] = conjoined_field;
     defined_vars.emplace(conjoined_field);
-  }
-
-  // Collect all state variables seen in the function body
-  std::set<std::string> state_refs = collect_state_vars(function_body);
-
-  // Create unique names for all state variables
-  count = 0;
-  // Create a set of state variable arguments to construct the sketch spec signature
-  std::set<std::string> state_var_args;
-  for (const auto & state_ref : state_refs) {
-    rename_map[state_ref] = "state_" + std::to_string(++count);
-    state_var_args.emplace(rename_map.at(state_ref));
   }
 
   // Add function signature
