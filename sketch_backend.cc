@@ -1,6 +1,8 @@
 #include "sketch_backend.h"
 #include "util.h"
 
+#include "third_party/temp_file.hh"
+#include "third_party/system_runner.hh"
 #include "third_party/assert_exception.h"
 
 #include "clang_utility_functions.h"
@@ -40,18 +42,23 @@ static const std::string sketch_harness =""
 "";
 
 std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
-  std::string ret;
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     // Transform only packet functions into SKETCH specifications
     if (isa<FunctionDecl>(child_decl) and
         (is_packet_func(dyn_cast<FunctionDecl>(child_decl))) and
         (not collect_state_vars(dyn_cast<FunctionDecl>(child_decl)->getBody()).empty())) {
-      ret += file_to_str(std::string(getenv("ATOM_TEMPLATE"))) +
-             create_sketch_spec((dyn_cast<FunctionDecl>(child_decl)->getBody()), "codelet") +
-             sketch_harness;
+      std::string sketch_contents = file_to_str(std::string(getenv("ATOM_TEMPLATE"))) +
+                                    create_sketch_spec((dyn_cast<FunctionDecl>(child_decl)->getBody()), "codelet") +
+                                    sketch_harness;
+      TempFile sketch_temp_file("/tmp/sketch", ".sk");
+      sketch_temp_file.write(sketch_contents);
+      run({"/home/anirudh/sketch-1.6.9/sketch-frontend/sketch", sketch_temp_file.name()});
     }
   }
-  return ret;
+  // All the work is done by sketch, this is just perfunctory
+  // to make sure the domino top-level doesn't complain about not
+  // returning a string.
+  return "DONE";
 }
 
 std::string create_sketch_spec(const Stmt * function_body, const std::string & spec_name) {
