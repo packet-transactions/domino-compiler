@@ -98,7 +98,7 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
     }
   }
 
-  // Store all fields thate are part of array subscripts
+  // Store all fields that are part of array subscripts
   // i.e. anything that occurs within square brackets
   std::set<PktField> array_fields;
   for (const auto * stmt : function_body->children()) {
