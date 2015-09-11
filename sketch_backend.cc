@@ -52,7 +52,7 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
       try {
         run({"/home/anirudh/sketch-1.6.9/sketch-frontend/sketch", "--bnd-inbits=32", "--bnd-cbits=5", sketch_temp_file.name()});
       } catch (const std::exception & e) {
-        std::cerr << "Running sketch failed on the input " << sketch_contents << "\n";
+        std::cerr << "Running sketch failed on the input\n" << sketch_contents << "\n";
         throw std::logic_error("Sketch failed to find a configuration");
       }
     }
