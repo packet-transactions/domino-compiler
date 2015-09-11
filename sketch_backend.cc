@@ -150,6 +150,8 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
 
   // Rename any predicate field to predicate field != 0,
   // otherwise Sketch will whine
+  // This is cringe-worthy, but I am doing it anyway. TODO: Fix up later.
+  std::map<std::string, std::string> right_rename_map = rename_map;
   for (const auto * stmt : function_body->children()) {
     assert_exception(isa<BinaryOperator>(stmt));
     const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
@@ -160,7 +162,7 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
       const auto * member_op  = dyn_cast<MemberExpr>(cond_op->getCond()->IgnoreParenImpCasts());
       assert_exception(rename_map.find(clang_stmt_printer(member_op)) != rename_map.end());
       const auto old_value = rename_map.at(clang_stmt_printer(member_op));
-      rename_map.at(clang_stmt_printer(member_op)) = "(" + old_value + " != 0)";
+      right_rename_map[clang_stmt_printer(member_op)] = "(" + old_value + " != 0)";
     }
   }
 
@@ -188,7 +190,7 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
     sketch_spec_body += replace_vars(bin_op->getLHS(), rename_map,
                                      {{VariableType::STATE_SCALAR, true}, {VariableType::STATE_ARRAY, true}, {VariableType::PACKET, true}})
                         + "=" +
-                        replace_vars(bin_op->getRHS(), rename_map,
+                        replace_vars(bin_op->getRHS(), right_rename_map,
                                     {{VariableType::STATE_SCALAR, true}, {VariableType::STATE_ARRAY, true}, {VariableType::PACKET, true}})
                         + ";\n";
   }
