@@ -7,6 +7,37 @@
 
 using namespace clang;
 
+static const std::string spec_args = "(ref int state_1, ref int state_2, int pkt_1, int pkt_2, int pkt_3, int pkt_4, int pkt_5)";
+
+static const std::string sketch_harness =""
+"harness void main" + spec_args + " {\n"
+"  // Store old values\n"
+"  int old_state_1 = state_1;\n"
+"  int old_state_2 = state_2;\n"
+"\n"
+"  // Execute codelet on old values\n"
+"  codelet(state_1, state_2, pkt_1, pkt_2, pkt_3, pkt_4, pkt_5);\n"
+"\n"
+"  // Store spec values\n"
+"  int spec_state_1 = state_1;\n"
+"  int spec_state_2 = state_2;\n"
+"\n"
+"  // Restore old values for execution\n"
+"  state_1 = old_state_1;\n"
+"  state_2 = old_state_2;\n"
+"\n"
+"  // Execute implementation\n"
+"  atom_template(state_1, state_2, pkt_1, pkt_2, pkt_3, pkt_4, pkt_5);\n"
+"\n"
+"  // Store impl values\n"
+"  int impl_state_1 = state_1;\n"
+"  int impl_state_2 = state_2;\n"
+"\n"
+"  assert(impl_state_1 == spec_state_1);\n"
+"  assert(impl_state_2 == spec_state_2);\n"
+"}\n"
+"";
+
 std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
   std::string ret;
   uint8_t count = 0;
@@ -102,7 +133,7 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
   // Worst case: something goes unused, which shouldn't affect correctness.
   std::string sketch_spec_signature = "void " +
                                       spec_name +
-                                      "(ref int state_1, ref int state_2, int pkt_1, int pkt_2, int pkt_3, int pkt_4, int pkt_5)";
+                                      spec_args;
 
   // Add declarations for defined packet fields
   std::string declaration_stub = "";
