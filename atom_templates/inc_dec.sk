@@ -1,9 +1,0 @@
-include "muxes.sk";
-
-StateResult atom_template(int state_1, int state_2, int pkt_1, int pkt_2, int pkt_3, int pkt_4, int pkt_5) {
-  state_1 = mux3(state_1, pkt_1, ??) + mux2(1, 0);
-  StateResult ret = new StateResult();
-  ret.result_state_1 = state_1;
-  ret.result_state_2 = state_2;
-  return ret;
-}
