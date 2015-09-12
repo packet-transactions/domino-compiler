@@ -57,12 +57,12 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
         std::ofstream out("/tmp/success.sk");
         out << sketch_contents;
         out.close();
-        std::cerr << "Sketch succeeded with random seed" << rand_seed << ", input sketch available at /tmp/success.sk" << std::endl;
+        std::cerr << "Sketch succeeded with random seed " << rand_seed << " , input sketch available at /tmp/success.sk" << std::endl;
       } catch (const std::exception & e) {
         std::ofstream out("/tmp/debug.sk");
         out << sketch_contents;
         out.close();
-        throw std::logic_error("Sketch failed to find a configuration, with random seed " + std::to_string(rand_seed) + ", input available at /tmp/debug.sk");
+        std::cerr << "Sketch failed to find a configuration, with random seed " << rand_seed << " , input available at /tmp/debug.sk" << std::endl;
       }
     }
   }
