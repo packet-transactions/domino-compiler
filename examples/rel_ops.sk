@@ -1,0 +1,13 @@
+generator bit rel_op(int operand1, int operand2) {
+  int opcode = ??(2);
+  if (opcode == 0) {
+    return operand1 != operand2;
+  } else if (opcode == 1) {
+    return operand1 < operand2;
+  } else if (opcode == 2) {
+    return operand1 > operand2;
+  } else {
+    assert(opcode == 3);
+    return operand1 == operand2;
+  }
+}

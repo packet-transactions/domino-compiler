@@ -1,63 +1,17 @@
-bit rel_op(int operand1, int operand2, int opcode) {
-  if (opcode == 1) {
-    return operand1 != operand2;
-  } else if (opcode == 2) {
-    return operand1 < operand2;
-  } else if (opcode == 3) {
-    return operand1 > operand2;
-  } else if (opcode == 4) {
-    return operand1 == operand2;
-  } else {
-    assert(false);
-  }
-}
-
-generator int mux2(int op1, int op2) {
-  if (??) return op1;
-  else return op2;
-}
-
-generator int mux3(int op1, int op2, int op3) {
-  if (??) return op1;
-  else if (??) return op2;
-  else return op3;
-}
+include "rel_ops.sk";
+include "muxes.sk";
 
 StateResult atom_template(int state_1, int state_2, int pkt_1, int pkt_2, int pkt_3, int pkt_4, int pkt_5) {
-  if (??) {
-    state_1 = ??;
-  } else if (??) {
-    state_1 = pkt_1;
-  } else if (??) {
-    state_1 += ??;
-  } else if (??) {
-    state_1 -= ??;
-  } else if (??) {
-    bit predicate = rel_op(pkt_1, ??, ??);
-    if (predicate) state_1 += pkt_1;
-  } else if (??) {
-    state_1 += pkt_1;
-  } else if (??) {
-    bit predicate = rel_op(pkt_2, ??, ??);
-    if (predicate) state_1 += pkt_1;
-  } else if (??) {
-    bit predicate = rel_op(pkt_1, ??, ??);
-    if (predicate) state_1 += ??;
-  } else if (??) {
-    bit predicate = rel_op(pkt_1, state_1, ??);
-    if (predicate) state_1 += ??;
-    else state_1 = ??;
-  } else if (??) {
-    bit pred1 = rel_op(mux2(pkt_1, pkt_2), mux2(state_1, state_2), ??);
-    bit pred2 = rel_op(mux2(pkt_1, pkt_2), mux2(state_1, state_2), ??);
-    if (pred1) {
-      state_1 = mux3(pkt_1, pkt_2, state_1);
-      state_2 = mux3(pkt_1, pkt_2, state_2);
-    } else if (pred2) {
-      state_1 = mux3(pkt_1, pkt_2, state_1);
-      state_2 = mux3(pkt_1, pkt_2, state_2);
-    }
+  bit pred1 = rel_op(mux3(pkt_1, pkt_2, ??), mux3(state_1, state_2, ??));
+  bit pred2 = rel_op(mux3(pkt_1, pkt_2, ??), mux3(state_1, state_2, ??));
+  if (pred1) {
+    state_1 = mux4(state_1, pkt_1, pkt_2, ??) + mux3(??, pkt_1, pkt_2);
+    state_2 = mux4(state_2, pkt_1, pkt_2, ??) + mux3(??, pkt_1, pkt_2);
+  } else if (pred2) {
+    state_1 = mux4(state_1, pkt_1, pkt_2, ??) + mux3(??, pkt_1, pkt_2);
+    state_2 = mux4(state_2, pkt_1, pkt_2, ??) + mux3(??, pkt_1, pkt_2);
   }
+
   StateResult ret = new StateResult();
   ret.result_state_1 = state_1;
   ret.result_state_2 = state_2;
