@@ -14,6 +14,8 @@
 using namespace clang;
 
 std::string clang_stmt_printer(const clang::Stmt * stmt) {
+  assert_exception(stmt != nullptr);
+
   // Required for pretty printing
   clang::LangOptions LangOpts;
   LangOpts.CPlusPlus = true;
