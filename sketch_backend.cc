@@ -177,6 +177,14 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
         right_rename_map[clang_stmt_printer(left_operand)] = "(" + rename_map.at(clang_stmt_printer(left_operand)) + "!= 0)";
         right_rename_map[clang_stmt_printer(right_operand)] = "(" + rename_map.at(clang_stmt_printer(right_operand)) + "!= 0)";
       }
+    } else if (isa<UnaryOperator>(bin_op->getRHS()->IgnoreParenImpCasts())) {
+      const auto * rhs_un_op = dyn_cast<UnaryOperator>(bin_op->getRHS()->IgnoreParenImpCasts());
+      assert_exception(rhs_un_op->isArithmeticOp());
+      const auto opcode_str = std::string(UnaryOperator::getOpcodeStr(rhs_un_op->getOpcode()));
+      assert_exception(opcode_str == "!");
+      const auto * single_operand = rhs_un_op->getSubExpr()->IgnoreParenImpCasts();
+      assert_exception(isa<MemberExpr>(single_operand));
+      right_rename_map[clang_stmt_printer(single_operand)] = "(" + rename_map.at(clang_stmt_printer(single_operand)) + "!= 0)";
     }
   }
 
