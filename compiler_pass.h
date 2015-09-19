@@ -158,6 +158,27 @@ class FixedPointPass : public CompilerPass {
   Transformer transformer_;
 };
 
+// Set of passes that are to be run in a particular order
+class CompoundPass : public CompilerPass {
+ public:
+  /// Construct a CompoundPass
+  CompoundPass(const std::vector<Transformer> & t_transforms)
+    : transforms_(t_transforms) {}
+
+  /// Execute CompoundPass object
+  std::string operator() (const std::string & string_to_parse) final override {
+    std::string output = string_to_parse;
+    for (const auto & transform : transforms_) {
+      output = SinglePass(transform)(output);
+    }
+    return output;
+  }
+
+ private:
+  /// Store t_transorms for future use
+  std::vector<Transformer> transforms_;
+};
+
 // Vector of Transform functions, each transform function runs within a CompilerPass
 typedef  std::vector<CompilerPass *> TransformVector;
 
