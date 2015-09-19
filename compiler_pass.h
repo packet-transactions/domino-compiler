@@ -136,18 +136,19 @@ std::string SinglePass::operator()(const std::string & string_to_parse) {
 }
 
 // Run a SinglePass repeatedly until the output converges to a fixed point
+template <class PassType, class ArgType>
 class FixedPointPass : public CompilerPass {
  public:
   /// Construct a FixedPointPass
-  FixedPointPass(const Transformer & t_transformer)
-      : transformer_(t_transformer) {}
+  FixedPointPass(const ArgType & arg)
+      : arg_(arg) {}
 
   /// Execute FixedPointPass object
   std::string operator() (const std::string & string_to_parse) final override {
     std::string old_output = string_to_parse;
     std::string new_output = "";
     while (true) {
-      new_output = SinglePass(transformer_)(old_output);
+      new_output = PassType(arg_)(old_output);
       if (new_output == old_output) break;
       old_output = new_output;
     }
@@ -155,8 +156,10 @@ class FixedPointPass : public CompilerPass {
   }
 
  private:
-  /// Store t_transformer for future use
-  Transformer transformer_;
+  /// Store argument to pass for future use
+  /// TODO: Figure out how to store a parameter pack in the future.
+  /// Or maybe don't do something that crazy ...
+  ArgType arg_;
 };
 
 // Set of passes that are to be run in a particular order

@@ -45,16 +45,16 @@ void populate_passes() {
   // We need to explicitly call populate_passes instead of using an initializer list
   // to populate PassMap all_passes because initializer lists don't play well with move-only
   // types like unique_ptrs (http://stackoverflow.com/questions/9618268/initializing-container-of-unique-ptrs-from-initializer-list-fails-with-gcc-4-7)
-  all_passes["cse"]               =[] () { return std::make_unique<CompoundPass>(std::vector<Transformer>({csi_transform, cse_transform})); };
+  all_passes["cse"]               =[] () { return std::make_unique<FixedPointPass<CompoundPass, std::vector<Transformer>>>(std::vector<Transformer>({csi_transform, cse_transform})); };
   all_passes["sketch_backend"]    =[] () { return std::make_unique<SinglePass>(sketch_backend_transform); };
-  all_passes["redundancy_remover"]=[] () { return std::make_unique<FixedPointPass>(redundancy_remover_transform); };
+  all_passes["redundancy_remover"]=[] () { return std::make_unique<FixedPointPass<SinglePass, Transformer>>(redundancy_remover_transform); };
   all_passes["array_validator"]  = [] () { return std::make_unique<SinglePass>(array_validator_transform); };
   all_passes["int_type_checker"] = [] () { return std::make_unique<SinglePass>(int_type_checker_transform); };
   all_passes["desugar_comp_asgn"]= [] () { return std::make_unique<SinglePass>(desugar_compound_assignment_transform); };
   all_passes["if_converter"]     = [] () { return std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)); };
   all_passes["algebra_simplify"] = [] () { return std::make_unique<SinglePass>(algebraic_simplifier_transform); };
   all_passes["strength_reducer"] = [] () { return std::make_unique<SinglePass>(strength_reducer_transform); };
-  all_passes["expr_flattener"]   = [] () { return std::make_unique<FixedPointPass>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1)); };
+  all_passes["expr_flattener"]   = [] () { return std::make_unique<FixedPointPass<SinglePass, Transformer>>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1)); };
   all_passes["expr_propagater"]  = [] () { return std::make_unique<SinglePass>(expr_prop_transform); };
   all_passes["stateful_flanks"]  = [] () { return std::make_unique<SinglePass>(stateful_flank_transform); };
   all_passes["ssa"]              = [] () { return std::make_unique<SinglePass>(ssa_transform); };
