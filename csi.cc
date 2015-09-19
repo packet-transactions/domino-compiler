@@ -33,6 +33,7 @@ std::pair<std::string, std::vector<std::string>> csi_body(const clang::CompoundS
     const auto * bin_op = dyn_cast<BinaryOperator>(child);
     assert_exception(bin_op->isAssignmentOp());
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
+    // Consider only packet variables.
     if (isa<MemberExpr>(lhs)) {
       assert_exception(var_map.find(clang_stmt_printer(dyn_cast<MemberExpr>(lhs))) == var_map.end());
       var_map[clang_stmt_printer(dyn_cast<MemberExpr>(lhs))] = bin_op->getRHS()->IgnoreParenImpCasts();
@@ -40,7 +41,7 @@ std::pair<std::string, std::vector<std::string>> csi_body(const clang::CompoundS
   }
 
   // Now check for equality among all MemberExprs.
-  // Scan MemberExprs in lexical order
+  // Scan MemberExprs in lexical order so that we can identify the last of them.
   // Add equal MemberExprs to a vector of vectors to create equivalence partitions.
   std::vector<std::vector<std::string>> partitions;
   for (const auto * child : function_body->children()) {
@@ -51,9 +52,9 @@ std::pair<std::string, std::vector<std::string>> csi_body(const clang::CompoundS
     const auto * lhs = bin_op->getLHS()->IgnoreParenImpCasts();
     const std::string pkt_var = clang_stmt_printer(lhs);
 
-    // Check if this packet variable to equal to all packet variables
-    // in any given equivalence partition. If so, add it to that partition
-    // If not, create a new partition.
+    // Check if this packet variable to equal to any packet variable
+    // in any equivalence partition. If so, add it to that partition
+    // If no such partition exists, create a new partition.
     bool found_partition = false;
     for (auto & partition : partitions) {
       if (std::find_if(partition.begin(), partition.end(),
@@ -71,12 +72,12 @@ std::pair<std::string, std::vector<std::string>> csi_body(const clang::CompoundS
     }
   }
 
-  // Now use one variable for each partition, by creating a replacement map for the rest.
+  // Now use one exemplar variable for each partition, by creating a replacement map for the rest.
+  // We pick the last one in lexical order to preserve SSAs renames
   std::map<std::string, std::string> repl_map;
   for (const auto & partition : partitions) {
     if (partition.size() > 1) {
-      // Modify replacements,
-      // so that all variables in the equivalence class
+      // Set it up so that all variables in the equivalence class
       // are renamed to the last variable (this preserves the SSA renames for jayhawk).
       std::string repl_candidate = partition.back();
       for (const auto & pkt_var : partition) {
@@ -103,11 +104,14 @@ std::pair<std::string, std::vector<std::string>> csi_body(const clang::CompoundS
 bool check_pkt_var(const std::string & pkt1, const std::string & pkt2,
                    const VarMap & var_map) {
   if (pkt1 == pkt2) {
+    // Base case, string comparison
     return true;
   } else if ((var_map.find(pkt1) != var_map.end()) and (var_map.find(pkt2) != var_map.end())) {
+    // Recursion (strictly this is mutual recursion because check_expr calls check_bin_op or check_un_op,
+    // which then calls check_pkt_var.
     return check_expr(var_map.at(pkt1), var_map.at(pkt2), var_map);
   } else {
-    // If either doesn't exist in var maps (its an input variable), just return false.
+    // If either doesn't exist in var maps (it's an input variable), just return false.
     return false;
   }
 }
@@ -117,11 +121,12 @@ bool check_expr(const Expr * expr1, const Expr * expr2,
   if (isa<BinaryOperator>(expr1) and isa<BinaryOperator>(expr2)) {
     return check_bin_op(dyn_cast<BinaryOperator>(expr1), dyn_cast<BinaryOperator>(expr2), var_map);
   } else if (isa<IntegerLiteral>(expr1) and isa<IntegerLiteral>(expr2)) {
-    return clang_stmt_printer(expr1) == clang_stmt_printer(expr2); // TODO: This string compare is a hack, but should work.
+    // TODO: This string compare is a hack, but should work.
+    return clang_stmt_printer(expr1) == clang_stmt_printer(expr2);
   } else if (isa<UnaryOperator>(expr1) and isa<UnaryOperator>(expr2)) {
     return check_un_op(dyn_cast<UnaryOperator>(expr1), dyn_cast<UnaryOperator>(expr2), var_map);
   } else {
-    // TODO: We don't check conditional ops for equality right now.
+    // TODO: We don't check conditional ops or CallExprs for equality right now.
     // This is correct, although pessimal.
     return false;
   }
@@ -132,7 +137,7 @@ bool check_un_op(const UnaryOperator * un1, const UnaryOperator * un2,
   // If opcode isn't equal return right away
   if (un1->getOpcode() != un2->getOpcode()) return false;
 
-  // Extract argument
+  // Extract arguments
   const auto * un1_sub_expr = un1->getSubExpr()->IgnoreParenImpCasts();
   const auto * un2_sub_expr = un2->getSubExpr()->IgnoreParenImpCasts();
   assert_exception(isa<MemberExpr>(un1_sub_expr) or isa<IntegerLiteral>(un1_sub_expr));
@@ -164,7 +169,7 @@ bool check_bin_op(const BinaryOperator * bin1, const BinaryOperator * bin2,
     return check_pkt_var(clang_stmt_printer(dyn_cast<MemberExpr>(lhs1)), clang_stmt_printer(dyn_cast<MemberExpr>(lhs2)), var_map) and
            check_pkt_var(clang_stmt_printer(dyn_cast<MemberExpr>(rhs1)), clang_stmt_printer(dyn_cast<MemberExpr>(rhs2)), var_map);
   } else {
-    // TODO: Conservatively just return false here.
+    // Conservatively return false here.
     return false;
   }
 }
