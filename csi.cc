@@ -154,13 +154,13 @@ bool check_bin_op(const BinaryOperator * bin1, const BinaryOperator * bin2,
   // Extract arguments
   const auto * lhs1 = bin1->getLHS()->IgnoreParenImpCasts();
   const auto * lhs2 = bin2->getLHS()->IgnoreParenImpCasts();
-  assert_exception(isa<MemberExpr>(lhs1) or isa<IntegerLiteral>(lhs1));
-  assert_exception(isa<MemberExpr>(lhs2) or isa<IntegerLiteral>(lhs2));
+  assert_exception(isa<MemberExpr>(lhs1) or isa<IntegerLiteral>(lhs1) or isa<CallExpr>(lhs1) or isa<ArraySubscriptExpr>(lhs1));
+  assert_exception(isa<MemberExpr>(lhs2) or isa<IntegerLiteral>(lhs2) or isa<CallExpr>(lhs2) or isa<ArraySubscriptExpr>(lhs2));
 
   const auto * rhs1 = bin1->getRHS()->IgnoreParenImpCasts();
   const auto * rhs2 = bin2->getRHS()->IgnoreParenImpCasts();
-  assert_exception(isa<MemberExpr>(rhs1) or isa<IntegerLiteral>(rhs1));
-  assert_exception(isa<MemberExpr>(rhs2) or isa<IntegerLiteral>(rhs2));
+  assert_exception(isa<MemberExpr>(rhs1) or isa<IntegerLiteral>(rhs1) or isa<CallExpr>(rhs1) or isa<ArraySubscriptExpr>(rhs1));
+  assert_exception(isa<MemberExpr>(rhs2) or isa<IntegerLiteral>(rhs2) or isa<CallExpr>(rhs2) or isa<ArraySubscriptExpr>(rhs2));
 
   if ((clang_stmt_printer(lhs1) == clang_stmt_printer(lhs2)) and
       (clang_stmt_printer(rhs1) == clang_stmt_printer(rhs2))) {
