@@ -138,11 +138,9 @@ bool check_un_op(const UnaryOperator * un1, const UnaryOperator * un2,
   assert_exception(isa<MemberExpr>(un1_sub_expr) or isa<IntegerLiteral>(un1_sub_expr));
   assert_exception(isa<MemberExpr>(un2_sub_expr) or isa<IntegerLiteral>(un2_sub_expr));
 
-  // Check for trivial equality
-  if (clang_stmt_printer(un1_sub_expr) == clang_stmt_printer(un2_sub_expr)) return true;
   // Recursively check for equality
-  else if (isa<MemberExpr>(un1_sub_expr) and isa<MemberExpr>(un2_sub_expr)) return check_pkt_var(clang_stmt_printer(un1_sub_expr), clang_stmt_printer(un2_sub_expr), var_map);
-  // Conservativel return false
+  if (isa<MemberExpr>(un1_sub_expr) and isa<MemberExpr>(un2_sub_expr)) return check_pkt_var(clang_stmt_printer(un1_sub_expr), clang_stmt_printer(un2_sub_expr), var_map);
+  // Conservatively return false
   else return false;
 }
 
@@ -162,10 +160,7 @@ bool check_bin_op(const BinaryOperator * bin1, const BinaryOperator * bin2,
   assert_exception(isa<MemberExpr>(rhs1) or isa<IntegerLiteral>(rhs1) or isa<CallExpr>(rhs1) or isa<ArraySubscriptExpr>(rhs1));
   assert_exception(isa<MemberExpr>(rhs2) or isa<IntegerLiteral>(rhs2) or isa<CallExpr>(rhs2) or isa<ArraySubscriptExpr>(rhs2));
 
-  if ((clang_stmt_printer(lhs1) == clang_stmt_printer(lhs2)) and
-      (clang_stmt_printer(rhs1) == clang_stmt_printer(rhs2))) {
-    return true;
-  } else if (isa<MemberExpr>(lhs1) and isa<MemberExpr>(lhs2) and isa<MemberExpr>(rhs1) and isa<MemberExpr>(rhs2)) {
+  if (isa<MemberExpr>(lhs1) and isa<MemberExpr>(lhs2) and isa<MemberExpr>(rhs1) and isa<MemberExpr>(rhs2)) {
     return check_pkt_var(clang_stmt_printer(dyn_cast<MemberExpr>(lhs1)), clang_stmt_printer(dyn_cast<MemberExpr>(lhs2)), var_map) and
            check_pkt_var(clang_stmt_printer(dyn_cast<MemberExpr>(rhs1)), clang_stmt_printer(dyn_cast<MemberExpr>(rhs2)), var_map);
   } else {
