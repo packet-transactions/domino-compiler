@@ -27,6 +27,9 @@
 #include "clang_utility_functions.h"
 
 
+/// Convenience typedef for transforming a translation unit
+typedef std::function<std::string(const clang::TranslationUnitDecl *)> Transformer;
+
 /// Abstract base class for a pass of the Clang compiler,
 /// a function object that takes a string corresponding to a translation unit
 /// and returns another string as another translation unit.
@@ -36,8 +39,6 @@
 /// best to treat ASTs as intermediate read-only form.
 class CompilerPass {
  public:
-  typedef std::function<std::string(const clang::TranslationUnitDecl *)> Transformer;
-
   /// Run the compiler pass on a string and return a new string
   virtual std::string operator()(const std::string &) = 0;
 
