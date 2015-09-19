@@ -174,6 +174,9 @@ bool check_bin_op(const BinaryOperator * bin1, const BinaryOperator * bin2,
   } else if (isa<IntegerLiteral>(lhs1) and isa<IntegerLiteral>(lhs2) and isa<MemberExpr>(rhs1) and isa<MemberExpr>(rhs2)) {
     return (clang_stmt_printer(lhs1) == clang_stmt_printer(lhs2)) and
            check_pkt_var(clang_stmt_printer(dyn_cast<MemberExpr>(rhs1)), clang_stmt_printer(dyn_cast<MemberExpr>(rhs2)), var_map);
+  } else if (isa<IntegerLiteral>(lhs1) and isa<IntegerLiteral>(lhs2) and isa<IntegerLiteral>(rhs1) and isa<IntegerLiteral>(rhs2)) {
+    return (clang_stmt_printer(lhs1) == clang_stmt_printer(lhs2)) and
+           (clang_stmt_printer(rhs1) == clang_stmt_printer(rhs2));
   } else {
     return false;
   }
