@@ -33,6 +33,10 @@ bool check_pkt_var(const std::string & pkt1, const std::string & pkt2,
 bool check_expr(const clang::Expr * expr1, const clang::Expr * expr2,
                 const VarMap & var_map);
 
+/// Check if two function call expressions are equal recursively
+/// by calling check_pkt_var on corresponding pairs of arguments.
+bool check_call_expr(const clang::CallExpr * ce1, const clang::CallExpr * ce2,
+                     const VarMap & var_map);
 
 /// Check if two unary operators are equal recursively
 /// by calling check_pkt_var on the sub expression of the unary operator

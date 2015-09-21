@@ -125,11 +125,46 @@ bool check_expr(const Expr * expr1, const Expr * expr2,
     return clang_stmt_printer(expr1) == clang_stmt_printer(expr2);
   } else if (isa<UnaryOperator>(expr1) and isa<UnaryOperator>(expr2)) {
     return check_un_op(dyn_cast<UnaryOperator>(expr1), dyn_cast<UnaryOperator>(expr2), var_map);
+  } else if (isa<CallExpr>(expr1) and isa<CallExpr>(expr2)) {
+    return check_call_expr(dyn_cast<CallExpr>(expr1), dyn_cast<CallExpr>(expr2), var_map);
   } else {
-    // TODO: We don't check conditional ops or CallExprs for equality right now.
+    // TODO: We don't check conditional ops for equality right now.
     // This is correct, although pessimal.
     return false;
   }
+}
+
+bool check_call_expr(const CallExpr * ce1, const CallExpr * ce2,
+                     const VarMap & var_map) {
+  unsigned int num_args1 = ce1->getNumArgs();
+  unsigned int num_args2 = ce2->getNumArgs();
+
+  // If number of arguments isn't the same, return right away.
+  if (num_args1 != num_args2) {
+    return false;
+  }
+
+  // If function names aren't the same, return right away.
+  if (clang_stmt_printer(ce1->getCallee()) != clang_stmt_printer(ce2->getCallee())) {
+    return false;
+  }
+
+  assert_exception(num_args1 == num_args2);
+  for (uint8_t i = 0; i < num_args1; i++) {
+    const auto * arg1 = ce1->getArg(i)->IgnoreParenImpCasts();
+    assert_exception(isa<MemberExpr>(arg1));
+
+    const auto * arg2 = ce2->getArg(i)->IgnoreParenImpCasts();
+    assert_exception(isa<MemberExpr>(arg2));
+
+    if (not check_pkt_var(clang_stmt_printer(arg1), clang_stmt_printer(arg2),
+                          var_map)) {
+      return false;
+    }
+  }
+
+  // Everything checks out
+  return true;
 }
 
 bool check_un_op(const UnaryOperator * un1, const UnaryOperator * un2,
