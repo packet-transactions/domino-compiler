@@ -200,6 +200,10 @@ bool check_bin_op(const BinaryOperator * bin1, const BinaryOperator * bin2,
   assert_exception(isa<MemberExpr>(rhs1) or isa<IntegerLiteral>(rhs1) or isa<CallExpr>(rhs1) or isa<ArraySubscriptExpr>(rhs1));
   assert_exception(isa<MemberExpr>(rhs2) or isa<IntegerLiteral>(rhs2) or isa<CallExpr>(rhs2) or isa<ArraySubscriptExpr>(rhs2));
 
+  // Make sure the arguments are of the same type
+  if (std::string(lhs1->getStmtClassName()) != std::string(lhs2->getStmtClassName())) return false;
+  if (std::string(rhs1->getStmtClassName()) != std::string(rhs2->getStmtClassName())) return false;
+
   if (isa<MemberExpr>(lhs1) and isa<MemberExpr>(lhs2) and isa<MemberExpr>(rhs1) and isa<MemberExpr>(rhs2)) {
     return check_pkt_var(clang_stmt_printer(dyn_cast<MemberExpr>(lhs1)), clang_stmt_printer(dyn_cast<MemberExpr>(lhs2)), var_map) and
            check_pkt_var(clang_stmt_printer(dyn_cast<MemberExpr>(rhs1)), clang_stmt_printer(dyn_cast<MemberExpr>(rhs2)), var_map);
@@ -211,6 +215,9 @@ bool check_bin_op(const BinaryOperator * bin1, const BinaryOperator * bin2,
            check_pkt_var(clang_stmt_printer(dyn_cast<MemberExpr>(rhs1)), clang_stmt_printer(dyn_cast<MemberExpr>(rhs2)), var_map);
   } else if (isa<IntegerLiteral>(lhs1) and isa<IntegerLiteral>(lhs2) and isa<IntegerLiteral>(rhs1) and isa<IntegerLiteral>(rhs2)) {
     return (clang_stmt_printer(lhs1) == clang_stmt_printer(lhs2)) and
+           (clang_stmt_printer(rhs1) == clang_stmt_printer(rhs2));
+  } else if (isa<CallExpr>(lhs1) and isa<CallExpr>(lhs2) and isa<IntegerLiteral>(rhs1) and isa<IntegerLiteral>(rhs2)) {
+    return check_call_expr(dyn_cast<CallExpr>(lhs1), dyn_cast<CallExpr>(lhs2), var_map) and
            (clang_stmt_printer(rhs1) == clang_stmt_printer(rhs2));
   } else {
     return false;
