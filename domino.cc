@@ -14,6 +14,7 @@
 #include "sketch_backend.h"
 #include "cse.h"
 #include "csi.h"
+#include "gen_used_fields.h"
 
 #include <utility>
 #include <iostream>
@@ -62,7 +63,7 @@ void populate_passes() {
   all_passes["banzai_source"]    = [] () { return std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::SOURCE), _1)); };
   all_passes["banzai_binary"]    = [] () { return std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::BINARY), _1)); };
   all_passes["echo"]             = [] () { return std::make_unique<SinglePass>(clang_decl_printer); };
-  all_passes["gen_pkt_fields"]   = [] () { return std::make_unique<SinglePass>(gen_pkt_fields); };
+  all_passes["gen_used_fields"]   = [] () { return std::make_unique<SinglePass>(gen_used_field_transform); };
 }
 
 PassFunctor get_pass_functor(const std::string & pass_name, const PassFactory & pass_factory) {
