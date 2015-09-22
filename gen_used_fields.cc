@@ -6,6 +6,7 @@
 
 #include "clang_utility_functions.h"
 #include "pkt_func_transform.h"
+#include "util.h"
 
 using namespace clang;
 
@@ -37,7 +38,9 @@ std::string gen_used_field_body(const clang::CompoundStmt * function_body,
                                       {VariableType::STATE_ARRAY, false}});
   std::string ret = "";
   for (const auto & var : var_list) {
-    ret += var + "\n";
+    std::vector<std::string> splits = split(var, "\\.");
+    assert_exception(splits.size() == 2);
+    ret += splits.at(1) + "\n";
   }
   return ret;
 }
