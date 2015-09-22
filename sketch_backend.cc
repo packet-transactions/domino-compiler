@@ -222,7 +222,7 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
 
 std::set<std::string> collect_state_vars(const Stmt * stmt) {
   // Recursively scan stmt to generate a set of strings representing
-  // either packet fields or state variables used within stmt
+  // state variables used within stmt
   assert_exception(stmt);
   std::set<std::string> ret;
   if (isa<CompoundStmt>(stmt)) {
