@@ -168,6 +168,7 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
                 { if (atom_bodies.find(pair.second) == atom_bodies.end()) atom_bodies[pair.second] = std::vector<InstBlock>();
                   atom_bodies.at(pair.second).emplace_back(pair.first); });
 
+
   // Draw pipeline
   uint32_t max_stage_id = 0;
   uint32_t max_atom_id  = 0;
@@ -248,8 +249,7 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
       // Transform function body
       const auto atom_bodies = generate_partitions(dyn_cast<CompoundStmt>(function_decl->getBody()));
 
-      // Create atom functions with new bodies, encode stage_id and atom_id within function body
-      // Also store these atom function bodies as strings for the call to draw_pipeline below
+      // Create atom functions with new bodies, encode stage_id and atom_id within function signature.
       for (const auto & body_pair : atom_bodies) {
         uint32_t atom_id = 0;
         const uint32_t stage_id = body_pair.first;
