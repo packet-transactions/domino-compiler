@@ -90,6 +90,14 @@ class Graph {
             std::find(pred_map_.at(b).begin(), pred_map_.at(b).end(), a) != pred_map_.at(b).end());
   }
 
+  /// Check if there is a directed path from a to b
+  bool exists_path(const NodeType & a, const NodeType & b) const {
+    auto dfs_prop_map = init_dfs_map();
+    std::vector<NodeType> visited_nodes;
+    std::tie(std::ignore, visited_nodes) = dfs_visit(a, dfs_prop_map, 0);
+    return std::find(visited_nodes.begin(), visited_nodes.end(), b) != visited_nodes.end();
+  }
+
   /// Strongly Connected Components (Kosaraju's algorithm)
   auto scc() const;
 
