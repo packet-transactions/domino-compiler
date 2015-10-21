@@ -105,6 +105,8 @@ std::string SinglePass::operator()(const std::string & string_to_parse) {
   // managing the various objects needed to run the compiler.
   clang::CompilerInstance TheCompInst;
   TheCompInst.createDiagnostics(& simple_diag_, false);
+  TheCompInst.getDiagnostics().setEnableAllWarnings(true);
+  TheCompInst.getDiagnostics().setWarningsAsErrors(true);
   TheCompInst.getLangOpts().CPlusPlus = 0;
 
   // Initialize target info with the default triple for our platform.
