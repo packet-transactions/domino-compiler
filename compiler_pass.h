@@ -108,6 +108,7 @@ std::string SinglePass::operator()(const std::string & string_to_parse) {
   TheCompInst.getDiagnostics().setEnableAllWarnings(true);
   TheCompInst.getDiagnostics().setWarningsAsErrors(true);
   TheCompInst.getLangOpts().CPlusPlus = 0;
+  TheCompInst.getLangOpts().LineComment = 1;
 
   // Initialize target info with the default triple for our platform.
   auto TO = std::make_shared<clang::TargetOptions>();
