@@ -85,14 +85,15 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       if (not var_decl->hasInit()) {
         throw std::logic_error("All state variables must have an initializer in domino: " + clang_value_decl_printer(var_decl)+ " doesn't");
       }
-      if ((not isa<IntegerLiteral>(var_decl->getInit())) and (not isa<InitListExpr>(var_decl->getInit()))) {
+      if ((not isa<IntegerLiteral>(var_decl->getInit())) and (not isa<InitListExpr>(var_decl->getInit())) and (not isa<UnaryOperator>(var_decl->getInit()))) {
         throw std::logic_error("Only integers or initializer lists can be used to initialize state variables: "
                                + clang_value_decl_printer(var_decl)
                                + " uses "
                                + clang_stmt_printer(var_decl->getInit())
                                + " of type " + std::string(var_decl->getInit()->getStmtClassName()) );
       }
-      if (isa<IntegerLiteral>(var_decl->getInit())) {
+
+      if (isa<IntegerLiteral>(var_decl->getInit()) or isa<UnaryOperator>(var_decl->getInit())) {
         init_scalar_values[clang_value_decl_printer(var_decl)] = static_cast<int>(std::stoi(clang_stmt_printer(var_decl->getInit())));
       } else {
         assert_exception(isa<InitListExpr>(var_decl->getInit()));
