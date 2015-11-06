@@ -3,4 +3,4 @@
 3. ./autogen.sh
 4. ./configure
 5. make
-6. ./compile.sh filename
+6. make check

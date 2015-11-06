@@ -1,0 +1,14 @@
+language: cpp
+sudo: required
+services: docker
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.9
+    - libllvm-dev
+    - libclang-3.4-dev
+
+script: "./autogen.sh && ./configure CXX='g++-4.9' && make"
