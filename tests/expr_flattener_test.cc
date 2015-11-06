@@ -10,7 +10,7 @@
 using std::placeholders::_1;
 
 void test_expr_flattener(const std::string & input, const std::string & expected_output) {
-  auto expr_flattener_pass = FixedPointPass(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1));
+  auto expr_flattener_pass = FixedPointPass<SinglePass, Transformer>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1));
   const auto output = expr_flattener_pass(input);
   std::cerr << "Actual output is " << output << std::endl;
   std::cerr << "Expected output is " << expected_output << std::endl;

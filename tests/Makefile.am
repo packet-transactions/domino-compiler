@@ -11,13 +11,12 @@ CLANG_LLVM_LIBS = -lclangAST -lclangAnalysis -lclangBasic -lclangDriver -lclangE
 LDADD = $(CLANG_LLVM_LIBS) $(srcdir)/../third_party/libgtest.a $(srcdir)/../libdomino.a $(srcdir)/../third_party/libmahimahi.a
 
 # Define unit tests
-TESTS = echo_test if_converter_test strength_reducer_test expr_flattener_test scc_test complicated_scc_test
+TESTS = echo_test if_converter_test expr_flattener_test scc_test complicated_scc_test
 check_PROGRAMS = $(TESTS)
 
 # domino tests
 echo_test_SOURCES = echo_test.cc
 if_converter_test_SOURCES = if_converter_test.cc
-strength_reducer_test_SOURCES = strength_reducer_test.cc
 expr_flattener_test_SOURCES = expr_flattener_test.cc
 scc_test_SOURCES = scc_test.cc
 complicated_scc_test_SOURCES = complicated_scc_test.cc

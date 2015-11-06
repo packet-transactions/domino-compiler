@@ -4,7 +4,6 @@
 #include "partitioning.h"
 #include "stateful_flanks.h"
 #include "expr_flattener_handler.h"
-#include "strength_reducer.h"
 #include "algebraic_simplifier.h"
 #include "banzai_code_generator.h"
 #include "desugar_compound_assignment.h"
@@ -56,7 +55,6 @@ void populate_passes() {
   all_passes["desugar_comp_asgn"]= [] () { return std::make_unique<SinglePass>(desugar_compound_assignment_transform); };
   all_passes["if_converter"]     = [] () { return std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)); };
   all_passes["algebra_simplify"] = [] () { return std::make_unique<SinglePass>(algebraic_simplifier_transform); };
-  all_passes["strength_reducer"] = [] () { return std::make_unique<SinglePass>(strength_reducer_transform); };
   all_passes["expr_flattener"]   = [] () { return std::make_unique<FixedPointPass<SinglePass, Transformer>>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1)); };
   all_passes["expr_propagater"]  = [] () { return std::make_unique<SinglePass>(expr_prop_transform); };
   all_passes["stateful_flanks"]  = [] () { return std::make_unique<SinglePass>(stateful_flank_transform); };
