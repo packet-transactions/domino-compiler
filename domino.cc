@@ -16,6 +16,8 @@
 #include "csi.h"
 #include "gen_used_fields.h"
 
+#include <csignal>
+
 #include <utility>
 #include <iostream>
 #include <set>
@@ -84,6 +86,9 @@ std::string all_passes_as_string(const PassFactory & pass_factory) {
 
 int main(int argc, const char **argv) {
   try {
+    // Block out SIGINT, because we can't handle it properly
+    signal(SIGINT, SIG_IGN);
+
     // Populate all passes
     populate_passes();
 
