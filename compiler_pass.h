@@ -104,9 +104,8 @@ std::string SinglePass::operator()(const std::string & string_to_parse) {
   // clang::CompilerInstance will hold the instance of the Clang compiler for us,
   // managing the various objects needed to run the compiler.
   clang::CompilerInstance TheCompInst;
+  TheCompInst.getDiagnosticOpts().Warnings.emplace_back("all");
   TheCompInst.createDiagnostics(& simple_diag_, false);
-  TheCompInst.getDiagnostics().setEnableAllWarnings(true);
-  TheCompInst.getDiagnostics().setWarningsAsErrors(true);
   TheCompInst.getLangOpts().CPlusPlus = 0;
   TheCompInst.getLangOpts().LineComment = 1;
 
