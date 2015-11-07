@@ -2,7 +2,8 @@ SUBDIRS = third_party . tests
 
 AM_CXXFLAGS = $(PICKY_CXXFLAGS)
 AM_CPPFLAGS = -isystem /usr/lib/llvm-3.5/include/
-AM_LDFLAGS = $(LLVM_LDFLAGS)
+AM_LDFLAGS = -L/usr/lib/llvm-3.5/lib
+
 # There are some strange circular deps within clang requiring us to list libraries twice
 # https://github.com/eliben/llvm-clang-samples/blob/master/Makefile#L71
 CLANG_LLVM_LIBS = -lclangAST -lclangAnalysis -lclangBasic -lclangDriver -lclangEdit -lclangFrontend -lclangFrontendTool -lclangLex -lclangParse -lclangSema -lclangSerialization\

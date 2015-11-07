@@ -13,10 +13,6 @@ CPPFLAGS="-std=c++14 -pthread"
 PICKY_CXXFLAGS="-pedantic -Wconversion -Wsign-conversion -Wall -Wextra -Weffc++ -Werror -fno-default-inline"
 AC_SUBST([PICKY_CXXFLAGS])
 
-# Add llvm ldflags
-LLVM_LDFLAGS=`llvm-config --ldflags`
-AC_SUBST([LLVM_LDFLAGS])
-
 # Checks for header files.
 AC_LANG_PUSH(C++)
 
@@ -35,11 +31,6 @@ utility vector], [], [AC_MSG_ERROR([Missing header file])])
 # Check for banzai headers
 AC_CHECK_HEADERS([pipeline.h stage.h field_container.h atom.h packet.h packet_latches.h],
                  [], [AC_MSG_ERROR([Missing header files for banzai target machine])])
-
-# Check for clang
-AC_PATH_PROG([CLANG], [clang], [])
-AS_IF([test x"$CLANG" = x],
-[AC_MSG_ERROR([cannot find clang])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T

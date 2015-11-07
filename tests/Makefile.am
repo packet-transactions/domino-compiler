@@ -1,6 +1,6 @@
 AM_CPPFLAGS =  -isystem /usr/lib/llvm-3.5/include
 AM_CXXFLAGS = $(PICKY_CXXFLAGS) -isystem $(srcdir)/../third_party/ -pthread
-AM_LDFLAGS = $(LLVM_LDFLAGS)
+AM_LDFLAGS = -L/usr/lib/llvm-3.5/lib
 
 # There are some strange circular deps within clang requiring us to list libraries twice
 # https://github.com/eliben/llvm-clang-samples/blob/master/Makefile#L71
