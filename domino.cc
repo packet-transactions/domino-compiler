@@ -9,6 +9,7 @@
 #include "desugar_compound_assignment.h"
 #include "int_type_checker.h"
 #include "array_validator.h"
+#include "validator.h"
 #include "redundancy_remover.h"
 #include "sketch_backend.h"
 #include "cse.h"
@@ -51,6 +52,7 @@ void populate_passes() {
   all_passes["sketch_backend"]    =[] () { return std::make_unique<SinglePass>(sketch_backend_transform); };
   all_passes["redundancy_remover"]=[] () { return std::make_unique<FixedPointPass<SinglePass, Transformer>>(redundancy_remover_transform); };
   all_passes["array_validator"]  = [] () { return std::make_unique<SinglePass>(array_validator_transform); };
+  all_passes["validator"]        = [] () { return std::make_unique<SinglePass>(validator_transform); };
   all_passes["int_type_checker"] = [] () { return std::make_unique<SinglePass>(int_type_checker_transform); };
   all_passes["desugar_comp_asgn"]= [] () { return std::make_unique<SinglePass>(desugar_compound_assignment_transform); };
   all_passes["if_converter"]     = [] () { return std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)); };
