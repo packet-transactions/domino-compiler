@@ -6,6 +6,8 @@
 #include "expr_flattener_handler.h"
 #include "algebraic_simplifier.h"
 #include "banzai_code_generator.h"
+#include "p4_backend.h"
+#include "bool_to_int.h"
 #include "desugar_compound_assignment.h"
 #include "int_type_checker.h"
 #include "array_validator.h"
@@ -57,12 +59,14 @@ void populate_passes() {
   all_passes["desugar_comp_asgn"]= [] () { return std::make_unique<SinglePass>(desugar_compound_assignment_transform); };
   all_passes["if_converter"]     = [] () { return std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)); };
   all_passes["algebra_simplify"] = [] () { return std::make_unique<SinglePass>(algebraic_simplifier_transform); };
+  all_passes["bool_to_int"]      = [] () { return std::make_unique<SinglePass>(bool_to_int_transform); };
   all_passes["expr_flattener"]   = [] () { return std::make_unique<FixedPointPass<SinglePass, Transformer>>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1)); };
   all_passes["expr_propagater"]  = [] () { return std::make_unique<SinglePass>(expr_prop_transform); };
   all_passes["stateful_flanks"]  = [] () { return std::make_unique<SinglePass>(stateful_flank_transform); };
   all_passes["ssa"]              = [] () { return std::make_unique<SinglePass>(ssa_transform); };
   all_passes["partitioning"]     = [] () { return std::make_unique<SinglePass>(partitioning_transform); };
   all_passes["banzai_source"]    = [] () { return std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::SOURCE), _1)); };
+  all_passes["p4_source"]        = [] () { return std::make_unique<SinglePass>(std::bind(& P4CodeGenerator::transform_translation_unit, P4CodeGenerator(), _1)); };
   all_passes["banzai_binary"]    = [] () { return std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::BINARY), _1)); };
   all_passes["echo"]             = [] () { return std::make_unique<SinglePass>(clang_decl_printer); };
   all_passes["gen_used_fields"]   = [] () { return std::make_unique<SinglePass>(gen_used_field_transform); };
