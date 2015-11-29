@@ -1,22 +1,26 @@
 #ifndef ALGEBRAIC_SIMPLIFIER_H_
 #define ALGEBRAIC_SIMPLIFIER_H_
 
-#include <set>
-#include <vector>
-#include <string>
-#include "clang/AST/Stmt.h"
-#include "clang/AST/Decl.h"
+#include "ast_visitor.h"
 
-/// Entry point from SinglePass,
-/// which immediately delegates to algebraic_simplify_helper
-std::string algebraic_simplifier_transform(const clang::TranslationUnitDecl * tu_decl);
+class AlgebraicSimplifier : public AstVisitor {
+ protected:
+  /// Simplify a binary operator using
+  /// algebraic rewrite rules.
+  virtual std::string ast_visit_bin_op(const clang::BinaryOperator * bin_op) override;
 
-// helper function to initiate recursive call of algebraic_simplify_stmt
-// on function body
-std::pair<std::string, std::vector<std::string>> algebraic_simplify_helper(const clang::CompoundStmt * body,
-                                                                           const std::string & pkt_name __attribute__((unused)));
+  /// Simplify a conditional operator using
+  /// algebraic rewrite rules.
+  virtual std::string ast_visit_cond_op(const clang::ConditionalOperator * cond_op) override;
 
-// Recurse on stmt and continue simplifying using algebraic rewrite rules
-std::string algebraic_simplify_stmt(const clang::Stmt * stmt);
+ private:
+  /// Check whether a bin_op can be simplified
+  /// i.e. one of its arguments is a constant
+  bool can_be_simplified(const clang::BinaryOperator * bin_op) const;
+
+  /// Simplify a bin op where the LHS and RHS are both simple
+// i.e. IntegerLiteral, MemberExpr, or DeclRefExpr
+  std::string simplify_simple_bin_op(const clang::BinaryOperator * bin_op) const;
+};
 
 #endif // ALGEBRAIC_SIMPLIFIER_H_

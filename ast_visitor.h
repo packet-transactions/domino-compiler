@@ -49,13 +49,16 @@ class AstVisitor {
   /// Visit a unary operator (-2 or ! false)
   virtual std::string ast_visit_un_op(const clang::UnaryOperator * un_op);
 
+  /// Visit a node (clang::Stmt) recursively
+  /// This is protected so that derived classes can call it recursively,
+  /// but not virtual because the grammar is fixed and ast_visit simply
+  /// captures a walk down the AST
+  std::string ast_visit(const clang::Stmt * stmt);
+
  private:
   /// Wrapper around recursive function ast_visit_helper
   std::pair<std::string, std::vector<std::string>> ast_visit_helper(const clang::CompoundStmt * body,
                                                                     const std::string & pkt_name __attribute__((unused)));
-
-  /// Visit a node (clang::Stmt) recursively
-  std::string ast_visit(const clang::Stmt * stmt);
 };
 
 #endif // AST_VISITOR_H_
