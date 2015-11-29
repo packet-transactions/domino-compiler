@@ -122,6 +122,8 @@ std::string AstVisitor::ast_visit(const Stmt * stmt) {
     return ast_visit_implicit_cast(dyn_cast<ImplicitCastExpr>(stmt));
   } else if (isa<CallExpr>(stmt)) {
     return ast_visit_func_call(dyn_cast<CallExpr>(stmt));
+  } else if (isa<NullStmt>(stmt)) {
+    return ";";
   } else {
     throw std::logic_error("ast_visit error: the statement\n"
                            + clang_stmt_printer(stmt)
