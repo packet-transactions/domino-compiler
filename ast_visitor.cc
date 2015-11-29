@@ -90,6 +90,11 @@ std::string AstVisitor::ast_visit_un_op(const UnaryOperator * un_op) {
   return opcode_str + ast_visit(un_op->getSubExpr());
 }
 
+std::string AstVisitor::ast_visit_implicit_cast(const ImplicitCastExpr * implicit_cast) {
+  assert_exception(implicit_cast);
+  return ast_visit(implicit_cast->getSubExpr());
+}
+
 std::string AstVisitor::ast_visit(const Stmt * stmt) {
   assert_exception(stmt);
   std::string ret;
@@ -114,7 +119,7 @@ std::string AstVisitor::ast_visit(const Stmt * stmt) {
   } else if (isa<UnaryOperator>(stmt)) {
     return ast_visit_un_op(dyn_cast<UnaryOperator>(stmt));
   } else if (isa<ImplicitCastExpr>(stmt)) {
-    return ast_visit(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr());
+    return ast_visit_implicit_cast(dyn_cast<ImplicitCastExpr>(stmt));
   } else if (isa<CallExpr>(stmt)) {
     return ast_visit_func_call(dyn_cast<CallExpr>(stmt));
   } else {

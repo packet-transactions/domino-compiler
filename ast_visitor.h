@@ -49,6 +49,12 @@ class AstVisitor {
   /// Visit a unary operator (-2 or ! false)
   virtual std::string ast_visit_un_op(const clang::UnaryOperator * un_op);
 
+  /// Visit an implicit cast node,
+  /// These captures casts such as LValue to RValue
+  /// and casts between integers types,
+  /// which happen implicitly in the C standard
+  virtual std::string ast_visit_implicit_cast(const clang::ImplicitCastExpr * implicit_cast);
+
   /// Visit a node (clang::Stmt) recursively
   /// This is protected so that derived classes can call it recursively,
   /// but not virtual because the grammar is fixed and ast_visit simply

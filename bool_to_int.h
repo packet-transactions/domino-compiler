@@ -1,9 +1,9 @@
 #ifndef BOOL_TO_INT_H_
 #define BOOL_TO_INT_H_
 
-#include "clang/AST/Expr.h"
-
 #include "ast_visitor.h"
+
+#include "clang/AST/Expr.h"
 
 #include "third_party/assert_exception.h"
 #include "clang_utility_functions.h"
@@ -23,4 +23,5 @@ class BoolToInt : public AstVisitor {
              + ast_visit(cond_op->getFalseExpr());
   }
 };
+
 #endif // BOOL_TO_INT_H_
