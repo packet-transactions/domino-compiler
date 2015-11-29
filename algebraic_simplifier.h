@@ -7,11 +7,11 @@ class AlgebraicSimplifier : public AstVisitor {
  protected:
   /// Simplify a binary operator using
   /// algebraic rewrite rules.
-  virtual std::string ast_visit_bin_op(const clang::BinaryOperator * bin_op) override;
+  std::string ast_visit_bin_op(const clang::BinaryOperator * bin_op) override;
 
   /// Simplify a conditional operator using
   /// algebraic rewrite rules.
-  virtual std::string ast_visit_cond_op(const clang::ConditionalOperator * cond_op) override;
+  std::string ast_visit_cond_op(const clang::ConditionalOperator * cond_op) override;
 
  private:
   /// Check whether a bin_op can be simplified

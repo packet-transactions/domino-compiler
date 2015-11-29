@@ -56,7 +56,7 @@ void populate_passes() {
   all_passes["array_validator"]  = [] () { return std::make_unique<SinglePass>(array_validator_transform); };
   all_passes["validator"]        = [] () { return std::make_unique<SinglePass>(std::bind(& Validator::ast_visit_transform, Validator(), _1)); };
   all_passes["int_type_checker"] = [] () { return std::make_unique<SinglePass>(int_type_checker_transform); };
-  all_passes["desugar_comp_asgn"]= [] () { return std::make_unique<SinglePass>(desugar_compound_assignment_transform); };
+  all_passes["desugar_comp_asgn"]= [] () { return std::make_unique<SinglePass>(std::bind(& DesugarCompAssignment::ast_visit_transform, DesugarCompAssignment(), _1)); };
   all_passes["if_converter"]     = [] () { return std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)); };
   all_passes["algebra_simplify"] = [] () { return std::make_unique<SinglePass>(std::bind(& AlgebraicSimplifier::ast_visit_transform, AlgebraicSimplifier(), _1)); };
   all_passes["bool_to_int"]      = [] () { return std::make_unique<SinglePass>(bool_to_int_transform); };
