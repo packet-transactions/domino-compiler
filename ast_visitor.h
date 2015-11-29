@@ -15,7 +15,7 @@ class AstVisitor {
   std::string ast_visit_transform(const clang::TranslationUnitDecl * tu_decl);
 
   /// Need destructor to be virtual and accessible, g++ whines otherwise
-  virtual ~AstVisitor();
+  virtual ~AstVisitor() {};
 
  /// Virtual methods for each node type
  protected:
