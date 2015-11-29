@@ -59,7 +59,7 @@ void populate_passes() {
   all_passes["desugar_comp_asgn"]= [] () { return std::make_unique<SinglePass>(std::bind(& DesugarCompAssignment::ast_visit_transform, DesugarCompAssignment(), _1)); };
   all_passes["if_converter"]     = [] () { return std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)); };
   all_passes["algebra_simplify"] = [] () { return std::make_unique<SinglePass>(std::bind(& AlgebraicSimplifier::ast_visit_transform, AlgebraicSimplifier(), _1)); };
-  all_passes["bool_to_int"]      = [] () { return std::make_unique<SinglePass>(bool_to_int_transform); };
+  all_passes["bool_to_int"]      = [] () { return std::make_unique<SinglePass>(std::bind(& BoolToInt::ast_visit_transform, BoolToInt(), _1));};
   all_passes["expr_flattener"]   = [] () { return std::make_unique<FixedPointPass<SinglePass, Transformer>>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1)); };
   all_passes["expr_propagater"]  = [] () { return std::make_unique<SinglePass>(expr_prop_transform); };
   all_passes["stateful_flanks"]  = [] () { return std::make_unique<SinglePass>(stateful_flank_transform); };

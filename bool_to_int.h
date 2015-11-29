@@ -1,22 +1,26 @@
 #ifndef BOOL_TO_INT_H_
 #define BOOL_TO_INT_H_
 
-#include <set>
-#include <vector>
-#include <string>
-#include "clang/AST/Stmt.h"
-#include "clang/AST/Decl.h"
+#include "clang/AST/Expr.h"
 
-/// Entry point from SinglePass,
-/// which immediately delegates to bool_to_int_helper
-std::string bool_to_int_transform(const clang::TranslationUnitDecl * tu_decl);
+#include "ast_visitor.h"
 
-// helper function to initiate recursive call of bool_to_int_stmt
-// on function body
-std::pair<std::string, std::vector<std::string>> bool_to_int_helper(const clang::CompoundStmt * body,
-                                                                    const std::string & pkt_name __attribute__((unused)));
+#include "third_party/assert_exception.h"
+#include "clang_utility_functions.h"
 
-// Recurse on stmt and continue simplifying using bool_to_int rules
-std::string bool_to_int_stmt(const clang::Stmt * stmt);
-
+/// Convert bools of the form pkt.tmp ? x : y
+/// to (pkt.tmp != 0) ? x = y
+class BoolToInt : public AstVisitor {
+ protected:
+  /// Touch only conditonal operators, leave the
+  /// rest to the base class AstVisitor
+  std::string ast_visit_cond_op(const clang::ConditionalOperator * cond_op) override {
+    assert_exception(cond_op);
+    // Make sure the condition within cond_op is a MemberExpr
+    assert_exception(clang::isa<clang::MemberExpr>(cond_op->getCond()->IgnoreParenImpCasts()));
+    return     "(" + clang_stmt_printer(cond_op->getCond()) + " != 0) ? "
+             + ast_visit(cond_op->getTrueExpr()) + " : "
+             + ast_visit(cond_op->getFalseExpr());
+  }
+};
 #endif // BOOL_TO_INT_H_
