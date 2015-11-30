@@ -18,8 +18,8 @@ class ArrayValidator : public AstVisitor {
   /// Touch only array subscript operator
   std::string ast_visit_array_subscript_expr(const clang::ArraySubscriptExpr * array_subscript_expr) override {
     assert_exception(array_subscript_expr);
-    assert_exception(clang::isa<clang::ImplicitCastExpr>(array_subscript_expr->getIdx()));
-    bool check = clang::isa<clang::MemberExpr>(clang::dyn_cast<clang::ImplicitCastExpr>(array_subscript_expr->getIdx())->getSubExpr());
+    bool check = clang::isa<clang::ImplicitCastExpr>(array_subscript_expr->getIdx()) and
+                 clang::isa<clang::MemberExpr>(clang::dyn_cast<clang::ImplicitCastExpr>(array_subscript_expr->getIdx())->getSubExpr());
     if (check == false) {
       throw std::logic_error("Only packet fields are allowed as array indices.\n"
                              "The expression " + clang_stmt_printer(array_subscript_expr) + "\n" +
