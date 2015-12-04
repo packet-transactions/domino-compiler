@@ -1,5 +1,5 @@
-#ifndef BANZAI_CODE_GENERATOR_H_
-#define BANZAI_CODE_GENERATOR_H_
+#ifndef PISA_CODE_GENERATOR_H_
+#define PISA_CODE_GENERATOR_H_
 
 #include <set>
 #include <string>
@@ -62,9 +62,9 @@ class PISACodeGenerator {
 
   /// Turn banzai program into a shared library,
   /// by compiling with g++ and then turning the .o file into a .so library
-  PISALibString gen_lib_as_string(const PISAProgram & banzai_program) const;
+  PISALibString gen_lib_as_string(const PISAProgram & pisa_program) const;
 
   const CodeGenerationType code_generation_type_;
 };
 
-#endif  // BANZAI_CODE_GENERATOR_H_
+#endif  // PISA_CODE_GENERATOR_H_

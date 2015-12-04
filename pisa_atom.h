@@ -32,7 +32,7 @@ class PISAAtom {
   static const std::string STATE_ARRAY_IDENTIFIER;
 
   /// Construct a PISAAtom from a clang::Stmt
-  /// by calling rewrite_into_banzai_ops to generate the body,
+  /// by calling rewrite_into_pisa_ops to generate the body,
   /// prepending a function signature,
   /// and then adding state initializers
   PISAAtom(const clang::Stmt * stmt,
@@ -61,7 +61,7 @@ class PISAAtom {
   /// Transform a given clang::Stmt into banzai ops, by replacing
   /// field = expr with state("field") or pkt("field") = expr as the 
   /// case may be.
-  std::string rewrite_into_banzai_ops(const clang::Stmt * stmt) const;
+  std::string rewrite_into_pisa_ops(const clang::Stmt * stmt) const;
 
   /// The name of the atom
   std::string name_;

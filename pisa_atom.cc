@@ -16,7 +16,7 @@ PISAAtom::PISAAtom(const clang::Stmt * stmt,
                        const ScalarInitializer & scalar_initializer,
                        const ArrayInitializer  & array_initializer)
     : name_(t_name),
-      function_body_(rewrite_into_banzai_ops(stmt)),
+      function_body_(rewrite_into_pisa_ops(stmt)),
       function_definition_("[] (Packet  & " + PACKET_IDENTIFIER       + " __attribute__((unused)), " +
                            "StateScalar & " + STATE_SCALAR_IDENTIFIER + " __attribute__((unused)), " +
                            "StateArray  & " + STATE_ARRAY_IDENTIFIER  + " __attribute__((unused))) {\n" +
@@ -55,30 +55,30 @@ std::string PISAAtom::array_init_string(const VariableSet & state_arrays_used, c
   return array_init_str;
 }
 
-std::string PISAAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const {
+std::string PISAAtom::rewrite_into_pisa_ops(const clang::Stmt * stmt) const {
   assert_exception(stmt);
 
   if(isa<CompoundStmt>(stmt)) {
     std::string ret;
     for (const auto & child : stmt->children())
-      ret += rewrite_into_banzai_ops(child) + ";";
+      ret += rewrite_into_pisa_ops(child) + ";";
     return ret;
   } else if (isa<IfStmt>(stmt)) {
     const auto * if_stmt = dyn_cast<IfStmt>(stmt);
     std::string ret;
-    ret += "if (" + rewrite_into_banzai_ops(if_stmt->getCond()) + ") {" + rewrite_into_banzai_ops(if_stmt->getThen()) + "; }";
+    ret += "if (" + rewrite_into_pisa_ops(if_stmt->getCond()) + ") {" + rewrite_into_pisa_ops(if_stmt->getThen()) + "; }";
     if (if_stmt->getElse() != nullptr) {
-      ret += "else {" + rewrite_into_banzai_ops(if_stmt->getElse()) + "; }";
+      ret += "else {" + rewrite_into_pisa_ops(if_stmt->getElse()) + "; }";
     }
     return ret;
   } else if (isa<BinaryOperator>(stmt)) {
     const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
-    return rewrite_into_banzai_ops(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + rewrite_into_banzai_ops(bin_op->getRHS());
+    return rewrite_into_pisa_ops(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + rewrite_into_pisa_ops(bin_op->getRHS());
   } else if (isa<ConditionalOperator>(stmt)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(stmt);
-    return     rewrite_into_banzai_ops(cond_op->getCond()) + " ? "
-             + rewrite_into_banzai_ops(cond_op->getTrueExpr()) + " : "
-             + rewrite_into_banzai_ops(cond_op->getFalseExpr());
+    return     rewrite_into_pisa_ops(cond_op->getCond()) + " ? "
+             + rewrite_into_pisa_ops(cond_op->getTrueExpr()) + " : "
+             + rewrite_into_pisa_ops(cond_op->getFalseExpr());
   } else if (isa<MemberExpr>(stmt)) {
     const auto * member_expr = dyn_cast<MemberExpr>(stmt);
     // All packet fields are of the type p(...) in banzai
@@ -92,24 +92,24 @@ std::string PISAAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const {
   } else if (isa<ArraySubscriptExpr>(stmt)) {
     const auto * array_expr = dyn_cast<ArraySubscriptExpr>(stmt);
     return   STATE_ARRAY_IDENTIFIER + "(\"" + clang_stmt_printer(array_expr->getBase()) + "\")"
-             + ".at(static_cast<uint64_t>(" + rewrite_into_banzai_ops(array_expr->getIdx()) + "))";
+             + ".at(static_cast<uint64_t>(" + rewrite_into_pisa_ops(array_expr->getIdx()) + "))";
   } else if (isa<IntegerLiteral>(stmt)) {
     return clang_stmt_printer(stmt);
   } else if (isa<ParenExpr>(stmt)) {
-    return "(" + rewrite_into_banzai_ops(dyn_cast<ParenExpr>(stmt)->getSubExpr()) + ")";
+    return "(" + rewrite_into_pisa_ops(dyn_cast<ParenExpr>(stmt)->getSubExpr()) + ")";
   } else if (isa<UnaryOperator>(stmt)) {
     const auto * un_op = dyn_cast<UnaryOperator>(stmt);
     assert_exception(un_op->isArithmeticOp());
     const auto opcode_str = std::string(UnaryOperator::getOpcodeStr(un_op->getOpcode()));
     assert_exception(opcode_str == "!");
-    return opcode_str + rewrite_into_banzai_ops(un_op->getSubExpr());
+    return opcode_str + rewrite_into_pisa_ops(un_op->getSubExpr());
   } else if (isa<ImplicitCastExpr>(stmt)) {
-    return rewrite_into_banzai_ops(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr());
+    return rewrite_into_pisa_ops(dyn_cast<ImplicitCastExpr>(stmt)->getSubExpr());
   } else if (isa<CallExpr>(stmt)) {
     const auto * call_expr = dyn_cast<CallExpr>(stmt);
     std::string ret = clang_stmt_printer(call_expr->getCallee()) + "(";
     for (const auto * child : call_expr->arguments()) {
-      const auto child_str = rewrite_into_banzai_ops(child);
+      const auto child_str = rewrite_into_pisa_ops(child);
       ret += child_str + ",";
     }
     ret.back() = ')';
@@ -117,6 +117,6 @@ std::string PISAAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const {
   } else if (isa<NullStmt>(stmt)) {
     return "";
   } else {
-    throw std::logic_error("rewrite_into_banzai_ops cannot handle stmt of type " + std::string(stmt->getStmtClassName()));
+    throw std::logic_error("rewrite_into_pisa_ops cannot handle stmt of type " + std::string(stmt->getStmtClassName()));
   }
 }
