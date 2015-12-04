@@ -10,7 +10,7 @@
 #include "pisa_atom.h"
 #include "unique_identifiers.h"
 
-/// Simple code generation for banzai, our fake pipelined switch
+/// Simple code generation for pisa, our fake pipelined switch
 /// architecture that executes atoms in parallel in each stage,
 /// where an atom is a function that takes a packet and returns
 /// a new one, while modifying some internal state.
@@ -24,7 +24,7 @@ class PISACodeGenerator {
 
   /// Type of code generation: source or binary
   /// The source is useful for debugging bugs in domino's PISACodeGenerator
-  /// the binary is useful for running the output within banzai
+  /// the binary is useful for running the output within pisa
   enum class CodeGenerationType { SOURCE, BINARY };
 
   /// Constructor taking code generation option as argument
@@ -39,7 +39,7 @@ class PISACodeGenerator {
   /// We use this to lay the atoms out in a pipeline
   typedef std::map<StageId, std::vector<PISAAtom>> AtomPositions;
 
-  /// Transform a translation unit into banzai atoms, useful for fuzzing
+  /// Transform a translation unit into pisa atoms, useful for fuzzing
   /// initial passes in the compiler, well, everything except the last pass
   PISAProgram transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const;
 
@@ -60,7 +60,7 @@ class PISACodeGenerator {
   /// before packet functions.
   int get_order(const clang::Decl * decl) const;
 
-  /// Turn banzai program into a shared library,
+  /// Turn pisa program into a shared library,
   /// by compiling with g++ and then turning the .o file into a .so library
   PISALibString gen_lib_as_string(const PISAProgram & pisa_program) const;
 

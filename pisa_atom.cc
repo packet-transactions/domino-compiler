@@ -81,11 +81,11 @@ std::string PISAAtom::rewrite_into_pisa_ops(const clang::Stmt * stmt) const {
              + rewrite_into_pisa_ops(cond_op->getFalseExpr());
   } else if (isa<MemberExpr>(stmt)) {
     const auto * member_expr = dyn_cast<MemberExpr>(stmt);
-    // All packet fields are of the type p(...) in banzai
+    // All packet fields are of the type p(...) in pisa
     // N.B. the PISA code overloads the () operator.
     return   PACKET_IDENTIFIER + "(\"" + clang_value_decl_printer(member_expr->getMemberDecl()) + "\")";
   } else if (isa<DeclRefExpr>(stmt)) {
-    // All state variables are of the type s(...) in banzai
+    // All state variables are of the type s(...) in pisa
     // N.B. Again by overloading the () operator
     const auto * decl_expr = dyn_cast<DeclRefExpr>(stmt);
     return   STATE_SCALAR_IDENTIFIER + "(\"" + clang_value_decl_printer(decl_expr->getDecl()) + "\")";

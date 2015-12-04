@@ -4,7 +4,7 @@
 #include <set>
 #include <string>
 #include <map>
-#include <field_container.h> // for banzai's FieldContainer::FieldType
+#include <field_container.h> // for pisa's FieldContainer::FieldType
 
 #include "clang/AST/Stmt.h"
 
@@ -22,13 +22,13 @@ class PISAAtom {
   typedef std::map<VariableName, std::pair<ArraySize, ScalarValue>> ArrayInitializer;
   typedef std::set<VariableName> VariableSet;
 
-  /// Packet identifier when generating banzai code
+  /// Packet identifier when generating pisa code
   static const std::string PACKET_IDENTIFIER;
 
-  /// State scalar identifier when generating banzai code
+  /// State scalar identifier when generating pisa code
   static const std::string STATE_SCALAR_IDENTIFIER;
 
-  /// State array identifier when generating banzai code
+  /// State array identifier when generating pisa code
   static const std::string STATE_ARRAY_IDENTIFIER;
 
   /// Construct a PISAAtom from a clang::Stmt
@@ -58,7 +58,7 @@ class PISAAtom {
   std::string array_init_string(const std::set<std::string> & array_vars_used,
                                 const ArrayInitializer & array_initializer) const;
 
-  /// Transform a given clang::Stmt into banzai ops, by replacing
+  /// Transform a given clang::Stmt into pisa ops, by replacing
   /// field = expr with state("field") or pkt("field") = expr as the 
   /// case may be.
   std::string rewrite_into_pisa_ops(const clang::Stmt * stmt) const;
