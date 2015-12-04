@@ -1,4 +1,4 @@
-#include "banzai_code_generator.h"
+#include "pisa_code_generator.h"
 
 #include <string>
 #include <tuple>
@@ -17,7 +17,7 @@
 
 using namespace clang;
 
-BanzaiCodeGenerator::StageId BanzaiCodeGenerator::stage_id_from_name(const std::string & function_name) const {
+PISACodeGenerator::StageId PISACodeGenerator::stage_id_from_name(const std::string & function_name) const {
   // This is the place where we wrap all the encoding magic that lets us go
   // from a function name to its position within a pipeline
   if (function_name[0] != '_') {
@@ -33,17 +33,17 @@ BanzaiCodeGenerator::StageId BanzaiCodeGenerator::stage_id_from_name(const std::
   }
 }
 
-int BanzaiCodeGenerator::get_order(const Decl * decl) const {
+int PISACodeGenerator::get_order(const Decl * decl) const {
   if (isa<VarDecl>(decl)) return 1;
   else if (isa<RecordDecl>(decl)) return 2;
   else if (isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 3;
   else if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 4;
   else if (isa<TypedefDecl>(decl)) return 5;
   else {
-    throw std::logic_error("BanzaiCodeGenerator::get_order cannot handle decl " + clang_decl_printer(decl) + " of type " + std::string(decl->getDeclKindName()));
+    throw std::logic_error("PISACodeGenerator::get_order cannot handle decl " + clang_decl_printer(decl) + " of type " + std::string(decl->getDeclKindName()));
   }}
 
-BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const {
+PISACodeGenerator::PISAProgram PISACodeGenerator::transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const {
   // Accumulate all declarations
   std::vector<const Decl*> all_decls;
   for (const auto * decl : dyn_cast<DeclContext>(tu_decl)->decls())
@@ -66,10 +66,10 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
 
   // Storage for initial values of all state arrays
   // TODO: We assume all elements have the same value initially.
-  std::map<std::string, std::pair<BanzaiAtom::ArraySize, BanzaiAtom::ScalarValue>> init_array_values;
+  std::map<std::string, std::pair<PISAAtom::ArraySize, PISAAtom::ScalarValue>> init_array_values;
 
   // Storage for names of all packet fields for test packet generation
-  BanzaiPacketFieldSet packet_field_set;
+  PISAPacketFieldSet packet_field_set;
 
   // Positions for each atom.
   AtomPositions atom_defs;
@@ -117,13 +117,13 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
        packet_field_set.emplace(clang_value_decl_printer(dyn_cast<ValueDecl>(field_decl)));
     } else if (isa<FunctionDecl>(child_decl) and (not is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       // Pass through non-packet functions as such.
-      // If there is a function body, banzai will execute them as such,
+      // If there is a function body, PISA will execute them as such,
       // otherwise, it will complain with a loader error from dlsym
       scalar_func_decls += generate_scalar_func_def(dyn_cast<FunctionDecl>(child_decl));
     } else if (isa<FunctionDecl>(child_decl) and (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
       assert_exception(not packet_field_set.empty());
       const auto function_name = dyn_cast<FunctionDecl>(child_decl)->getNameInfo().getName().getAsString();
-      const BanzaiAtom banzai_atom(dyn_cast<FunctionDecl>(child_decl)->getBody(),
+      const PISAAtom pisa_atom(dyn_cast<FunctionDecl>(child_decl)->getBody(),
                                    function_name,
                                    init_scalar_values,
                                    init_array_values);
@@ -131,16 +131,16 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
       // Add to atom_defs object, track max_stage_id so far
       const auto stage_id = stage_id_from_name(function_name);
       if (atom_defs.find(stage_id) == atom_defs.end()) {
-        atom_defs[stage_id] = std::vector<BanzaiAtom>();
+        atom_defs[stage_id] = std::vector<PISAAtom>();
       }
-      atom_defs.at(stage_id).emplace_back(banzai_atom);
+      atom_defs.at(stage_id).emplace_back(pisa_atom);
       max_stage_id = std::max(max_stage_id, stage_id);
     } else {
       assert_exception(isa<TypedefDecl>(child_decl));
     }
   }
 
-  // Add include files for banzai (the equivalent of a target ABI)
+  // Add include files for PISA (the equivalent of a target ABI)
   ret += "#include \"packet.h\"\n";
   ret += "#include \"atom.h\"\n";
   ret += "#include \"pipeline.h\"\n";
@@ -178,22 +178,22 @@ BanzaiCodeGenerator::BanzaiProgram BanzaiCodeGenerator::transform_translation_un
   // Close extern C declaration
   ret += "}";
 
-  // Return banzai C++ code as such or turn it into a library
+  // Return PISA C++ code as such or turn it into a library
   return code_generation_type_ == CodeGenerationType::SOURCE ? ret
                                                              : gen_lib_as_string(ret);
 }
 
-BanzaiCodeGenerator::BanzaiLibString BanzaiCodeGenerator::gen_lib_as_string(const BanzaiCodeGenerator::BanzaiProgram & banzai_program) const {
-  // TempFile to hold banzai_program
-  TempFile banzai_prog_file("/tmp/banzai_prog", ".cc");
-  banzai_prog_file.write(banzai_program);
+PISACodeGenerator::PISALibString PISACodeGenerator::gen_lib_as_string(const PISACodeGenerator::PISAProgram & pisa_program) const {
+  // TempFile to hold pisa_program
+  TempFile pisa_prog_file("/tmp/pisa_prog", ".cc");
+  pisa_prog_file.write(pisa_program);
 
-  // Compile banzai_file into a .o file
-  TempFile object_file("/tmp/banzai_obj", ".o");
-  run({GPLUSPLUS, "-std=c++14", "-pedantic", "-Wconversion", "-Wsign-conversion", "-Wall", "-Wextra", "-Weffc++", "-Werror", "-fno-default-inline", "-g", "-c", banzai_prog_file.name(), "-fPIC", "-DPIC", "-o", object_file.name()});
+  // Compile pisa_file into a .o file
+  TempFile object_file("/tmp/pisa_obj", ".o");
+  run({GPLUSPLUS, "-std=c++14", "-pedantic", "-Wconversion", "-Wsign-conversion", "-Wall", "-Wextra", "-Weffc++", "-Werror", "-fno-default-inline", "-g", "-c", pisa_prog_file.name(), "-fPIC", "-DPIC", "-o", object_file.name()});
 
   // Turn that into a shared library
-  TempFile library_file("/tmp/libbanzai", ".so");
+  TempFile library_file("/tmp/libpisa", ".so");
   run({GPLUSPLUS, "-shared", "-o", library_file.name(), object_file.name()});
 
   // Return library file binary as a string

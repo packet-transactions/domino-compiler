@@ -5,7 +5,7 @@
 #include "stateful_flanks.h"
 #include "expr_flattener_handler.h"
 #include "algebraic_simplifier.h"
-#include "banzai_code_generator.h"
+#include "pisa_code_generator.h"
 #include "p4_backend.h"
 #include "bool_to_int.h"
 #include "desugar_compound_assignment.h"
@@ -65,9 +65,9 @@ void populate_passes() {
   all_passes["stateful_flanks"]  = [] () { return std::make_unique<SinglePass>(stateful_flank_transform); };
   all_passes["ssa"]              = [] () { return std::make_unique<SinglePass>(ssa_transform); };
   all_passes["partitioning"]     = [] () { return std::make_unique<SinglePass>(partitioning_transform); };
-  all_passes["banzai_source"]    = [] () { return std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::SOURCE), _1)); };
+  all_passes["pisa_source"]    = [] () { return std::make_unique<SinglePass>(std::bind(& PISACodeGenerator::transform_translation_unit, PISACodeGenerator(PISACodeGenerator::CodeGenerationType::SOURCE), _1)); };
   all_passes["p4_source"]        = [] () { return std::make_unique<SinglePass>(std::bind(& P4CodeGenerator::transform_translation_unit, P4CodeGenerator(), _1)); };
-  all_passes["banzai_binary"]    = [] () { return std::make_unique<SinglePass>(std::bind(& BanzaiCodeGenerator::transform_translation_unit, BanzaiCodeGenerator(BanzaiCodeGenerator::CodeGenerationType::BINARY), _1)); };
+  all_passes["pisa_binary"]    = [] () { return std::make_unique<SinglePass>(std::bind(& PISACodeGenerator::transform_translation_unit, PISACodeGenerator(PISACodeGenerator::CodeGenerationType::BINARY), _1)); };
   all_passes["echo"]             = [] () { return std::make_unique<SinglePass>(clang_decl_printer); };
   all_passes["gen_used_fields"]   = [] () { return std::make_unique<SinglePass>(gen_used_field_transform); };
 }

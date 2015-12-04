@@ -7,46 +7,46 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/Stmt.h"
 
-#include "banzai_atom.h"
+#include "pisa_atom.h"
 #include "unique_identifiers.h"
 
 /// Simple code generation for banzai, our fake pipelined switch
 /// architecture that executes atoms in parallel in each stage,
 /// where an atom is a function that takes a packet and returns
 /// a new one, while modifying some internal state.
-class BanzaiCodeGenerator {
+class PISACodeGenerator {
  public:
   /// Convenience typedefs
-  typedef std::set<std::string> BanzaiPacketFieldSet;
-  typedef std::string BanzaiProgram;
-  typedef std::string BanzaiLibString;
+  typedef std::set<std::string> PISAPacketFieldSet;
+  typedef std::string PISAProgram;
+  typedef std::string PISALibString;
   typedef uint32_t StageId;
 
   /// Type of code generation: source or binary
-  /// The source is useful for debugging bugs in domino's BanzaiCodeGenerator
+  /// The source is useful for debugging bugs in domino's PISACodeGenerator
   /// the binary is useful for running the output within banzai
   enum class CodeGenerationType { SOURCE, BINARY };
 
   /// Constructor taking code generation option as argument
-  BanzaiCodeGenerator(const CodeGenerationType & t_code_generation_type)
+  PISACodeGenerator(const CodeGenerationType & t_code_generation_type)
     : code_generation_type_(t_code_generation_type) {}
 
   /// Typedef for atom positions in a pipeline
   /// Map
   /// --> from the StageId of the stage into which the atom goes.
-  /// --> to all the BanzaiAtoms within that stage
+  /// --> to all the PISAAtoms within that stage
   /// --> (atom order in a stage is irrelevant because they execute in parallel)
   /// We use this to lay the atoms out in a pipeline
-  typedef std::map<StageId, std::vector<BanzaiAtom>> AtomPositions;
+  typedef std::map<StageId, std::vector<PISAAtom>> AtomPositions;
 
   /// Transform a translation unit into banzai atoms, useful for fuzzing
   /// initial passes in the compiler, well, everything except the last pass
-  BanzaiProgram transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const;
+  PISAProgram transform_translation_unit(const clang::TranslationUnitDecl * tu_decl) const;
 
  private:
   /// Get stage id from an atom's name.
   /// This is a hack: we are encoding the atom's position within the atom name.
-  /// With the hack, BanzaiCodeGenerator can generate code for a translation unit
+  /// With the hack, PISACodeGenerator can generate code for a translation unit
   /// with more than one packet function.
   /// Until the last pass, there is only 1 packet function in a translation unit.
   /// But after the last pass, partitioning, there are multiple functions,
@@ -62,7 +62,7 @@ class BanzaiCodeGenerator {
 
   /// Turn banzai program into a shared library,
   /// by compiling with g++ and then turning the .o file into a .so library
-  BanzaiLibString gen_lib_as_string(const BanzaiProgram & banzai_program) const;
+  PISALibString gen_lib_as_string(const PISAProgram & banzai_program) const;
 
   const CodeGenerationType code_generation_type_;
 };

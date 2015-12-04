@@ -1,5 +1,5 @@
-#ifndef BANZAI_ATOM_H_
-#define BANZAI_ATOM_H_
+#ifndef PISA_ATOM_H_
+#define PISA_ATOM_H_
 
 #include <set>
 #include <string>
@@ -8,12 +8,12 @@
 
 #include "clang/AST/Stmt.h"
 
-/// Store Banzai Atoms as strings that represent C++ code containing
+/// Store PISA Atoms as strings that represent C++ code containing
 /// 1. Atom name
 /// 2. Atom function signature
 /// 3. Atom function body.
 /// 4. Atom state initializers
-class BanzaiAtom {
+class PISAAtom {
  public:
   typedef int ScalarValue;
   typedef uint64_t ArraySize;
@@ -31,11 +31,11 @@ class BanzaiAtom {
   /// State array identifier when generating banzai code
   static const std::string STATE_ARRAY_IDENTIFIER;
 
-  /// Construct a BanzaiAtom from a clang::Stmt
+  /// Construct a PISAAtom from a clang::Stmt
   /// by calling rewrite_into_banzai_ops to generate the body,
   /// prepending a function signature,
   /// and then adding state initializers
-  BanzaiAtom(const clang::Stmt * stmt,
+  PISAAtom(const clang::Stmt * stmt,
              const std::string & t_atom_name,
              const ScalarInitializer & scalar_initializer,
              const ArrayInitializer  & array_initializer);
@@ -84,4 +84,4 @@ class BanzaiAtom {
   std::string atom_definition_;
 };
 
-#endif  // BANZAI_ATOM_H_
+#endif  // PISA_ATOM_H_

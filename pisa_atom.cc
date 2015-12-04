@@ -1,4 +1,4 @@
-#include "banzai_atom.h"
+#include "pisa_atom.h"
 
 #include "clang/AST/Expr.h"
 
@@ -7,11 +7,11 @@
 #include "clang_utility_functions.h"
 
 using namespace clang;
-const std::string BanzaiAtom::PACKET_IDENTIFIER = "packet";
-const std::string BanzaiAtom::STATE_SCALAR_IDENTIFIER  = "scalar";
-const std::string BanzaiAtom::STATE_ARRAY_IDENTIFIER = "array";
+const std::string PISAAtom::PACKET_IDENTIFIER = "packet";
+const std::string PISAAtom::STATE_SCALAR_IDENTIFIER  = "scalar";
+const std::string PISAAtom::STATE_ARRAY_IDENTIFIER = "array";
 
-BanzaiAtom::BanzaiAtom(const clang::Stmt * stmt,
+PISAAtom::PISAAtom(const clang::Stmt * stmt,
                        const std::string & t_name,
                        const ScalarInitializer & scalar_initializer,
                        const ArrayInitializer  & array_initializer)
@@ -28,7 +28,7 @@ BanzaiAtom::BanzaiAtom(const clang::Stmt * stmt,
                         + ", " + array_init_string(state_arrays_used_, array_initializer) + ");")
 {}
 
-std::string BanzaiAtom::scalar_init_string(const VariableSet & state_scalars_used, const ScalarInitializer & scalar_initializer) const {
+std::string PISAAtom::scalar_init_string(const VariableSet & state_scalars_used, const ScalarInitializer & scalar_initializer) const {
   // Generate initial values for all state scalars used within stmt
   std::string scalar_init_str = "StateScalar(std::map<std::string, int>";
   scalar_init_str += "{";
@@ -40,7 +40,7 @@ std::string BanzaiAtom::scalar_init_string(const VariableSet & state_scalars_use
   return scalar_init_str;
 }
 
-std::string BanzaiAtom::array_init_string(const VariableSet & state_arrays_used, const ArrayInitializer & array_initializer) const {
+std::string PISAAtom::array_init_string(const VariableSet & state_arrays_used, const ArrayInitializer & array_initializer) const {
   // Generate initial values for all state arrays used within stmt
   std::string array_init_str = "StateArray(std::map<std::string, std::vector<int>>";
   array_init_str += "{";
@@ -55,7 +55,7 @@ std::string BanzaiAtom::array_init_string(const VariableSet & state_arrays_used,
   return array_init_str;
 }
 
-std::string BanzaiAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const {
+std::string PISAAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const {
   assert_exception(stmt);
 
   if(isa<CompoundStmt>(stmt)) {
@@ -82,7 +82,7 @@ std::string BanzaiAtom::rewrite_into_banzai_ops(const clang::Stmt * stmt) const 
   } else if (isa<MemberExpr>(stmt)) {
     const auto * member_expr = dyn_cast<MemberExpr>(stmt);
     // All packet fields are of the type p(...) in banzai
-    // N.B. the Banzai code overloads the () operator.
+    // N.B. the PISA code overloads the () operator.
     return   PACKET_IDENTIFIER + "(\"" + clang_value_decl_printer(member_expr->getMemberDecl()) + "\")";
   } else if (isa<DeclRefExpr>(stmt)) {
     // All state variables are of the type s(...) in banzai
