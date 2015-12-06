@@ -47,10 +47,6 @@ class Graph {
   /// Add edge to existing graph, check that both from_node and to_node exist
   void add_edge(const NodeType & from_node, const NodeType & to_node);
 
-  /// Find the graph transpose G', i.e. for every edge u-->v in G,
-  /// there is an edge v-->u in G'
-  Graph<NodeType> transpose() const;
-
   /// Copy over graph and clear out all edges
   Graph<NodeType> copy_and_clear() const;
 
@@ -126,6 +122,10 @@ class Graph {
 
   /// Book-keeping data structure to keep track of DFS properties for each node
   typedef std::map<NodeType, DfsProps> DfsPropMap;
+
+  /// Find the graph transpose G', i.e. for every edge u-->v in G,
+  /// there is an edge v-->u in G'
+  Graph<NodeType> transpose() const;
 
   /// Depth First Search of graph
   DfsPropMap dfs(const Comparator & comparator = std::less<NodeType>()) const;
