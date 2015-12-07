@@ -45,11 +45,16 @@ class Graph {
     Agraph_t * graph = agread(fp, NULL);
     assert_exception(graph);
 
-    /* Iterate through nodes */
+    /* Iterate through nodes and add them all */
     Agnode_t * node = agfstnode(graph);
     while (node != NULL) {
       assert_exception(node);
       add_node(node);
+      node  = agnxtnode(graph, node);
+    }
+
+    /* Now add all edges */
+    while (node != NULL) {
       Agedge_t * edge   = agfstout(graph, node);
       while (edge != NULL) {
         assert_exception(edge);
@@ -59,7 +64,6 @@ class Graph {
       }
 
       /* Move on to the next node */
-      printf("\n");
       node  = agnxtnode(graph, node);
     }
 
