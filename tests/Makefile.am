@@ -8,10 +8,10 @@ CLANG_LLVM_LIBS = -lclangAST -lclangAnalysis -lclangBasic -lclangDriver -lclangE
 				-lclangAST -lclangAnalysis -lclangBasic -lclangDriver -lclangEdit -lclangFrontend -lclangFrontendTool -lclangLex -lclangParse -lclangSema -lclangSerialization\
         -lLLVMOption  -lLLVMMCParser -lLLVMBitReader  -lLLVMMC -lLLVMSupport -lz -lpthread -ltinfo -ldl
 
-LDADD = $(CLANG_LLVM_LIBS) $(srcdir)/../third_party/libgtest.a $(srcdir)/../libdomino.a $(srcdir)/../third_party/libmahimahi.a
+LDADD = $(CLANG_LLVM_LIBS) $(srcdir)/../third_party/libgtest.a $(srcdir)/../libdomino.a $(srcdir)/../third_party/libmahimahi.a $(libcgraph_LIBS)
 
 # Define unit tests
-TESTS = echo_test if_converter_test expr_flattener_test scc_test complicated_scc_test
+TESTS = echo_test if_converter_test expr_flattener_test scc_test complicated_scc_test graph_dot_constructor
 check_PROGRAMS = $(TESTS)
 
 # domino tests
@@ -20,3 +20,4 @@ if_converter_test_SOURCES = if_converter_test.cc
 expr_flattener_test_SOURCES = expr_flattener_test.cc
 scc_test_SOURCES = scc_test.cc
 complicated_scc_test_SOURCES = complicated_scc_test.cc
+graph_dot_constructor_SOURCES = graph_dot_constructor.cc

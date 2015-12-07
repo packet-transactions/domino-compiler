@@ -1,6 +1,9 @@
 #ifndef GRAPH_H_
 #define GRAPH_H_
 
+#include <graphviz/cgraph.h>
+#include <cstdio>
+
 #include <map>
 #include <set>
 #include <vector>
@@ -32,6 +35,37 @@ class Graph {
 
   /// Node crayon for coloring nodes in dot
   typedef std::function<std::string(const NodeType &)> NodeCrayon;
+
+  /// Graph constructor, taking a dot file as argument
+  Graph<NodeType>(const std::string & dot_file)
+    : node_printer_(),
+      node_crayon_() {
+    FILE * fp = fopen(dot_file.c_str(), "r");
+    assert_exception(fp);
+    Agraph_t * graph = agread(fp, NULL);
+    assert_exception(graph);
+
+    /* Iterate through nodes */
+    Agnode_t * node = agfstnode(graph);
+    while (node != NULL) {
+      assert_exception(node);
+      add_node(node);
+      Agedge_t * edge   = agfstout(graph, node);
+      while (edge != NULL) {
+        assert_exception(edge);
+        assert_exception(agtail(edge) == node);
+        add_edge(agtail(edge), aghead(edge));
+        edge = agnxtout(graph, edge);
+      }
+
+      /* Move on to the next node */
+      printf("\n");
+      node  = agnxtnode(graph, node);
+    }
+
+    /* Free graph structure */
+    agclose(graph);
+  }
 
   /// Graph constructor, taking node printer as argument
   Graph<NodeType>(const NodePrinter & node_printer, const NodeCrayon & node_crayon = [] (const auto & x __attribute__((unused))) { return "white"; })
