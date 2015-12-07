@@ -38,44 +38,42 @@ class Graph {
 
   /// Graph constructor, taking a dot file as argument
   Graph<NodeType>(const std::string & dot_file)
-    : node_printer_([] (const auto & x __attribute__((unused))) { char tag[] = "label"; return std::string(agget(x, tag)); }),
+    : node_printer_([this] (const auto & x) { return this->dot_labels_.at(x); }),
       node_crayon_([] (const auto & x __attribute__((unused))) { return "white"; }) {
     FILE * fp = fopen(dot_file.c_str(), "r");
     assert_exception(fp);
-    Agraph_t * libcgraph_ptr_ = agread(fp, NULL);
-    assert_exception(libcgraph_ptr_);
+    Agraph_t * libcgraph_ptr = agread(fp, NULL);
+    assert_exception(libcgraph_ptr);
 
     /* Iterate through nodes and add them all */
-    Agnode_t * node = agfstnode(libcgraph_ptr_);
+    Agnode_t * node = agfstnode(libcgraph_ptr);
+    char tag[] = "label";
     while (node != NULL) {
       assert_exception(node);
       add_node(node);
-      node  = agnxtnode(libcgraph_ptr_, node);
+      dot_labels_[node] = std::string(agget(node, tag));
+      node  = agnxtnode(libcgraph_ptr, node);
     }
 
     /* Now add all edges */
     while (node != NULL) {
-      Agedge_t * edge   = agfstout(libcgraph_ptr_, node);
+      Agedge_t * edge   = agfstout(libcgraph_ptr, node);
       while (edge != NULL) {
         assert_exception(edge);
         assert_exception(agtail(edge) == node);
         add_edge(agtail(edge), aghead(edge));
-        edge = agnxtout(libcgraph_ptr_, edge);
+        edge = agnxtout(libcgraph_ptr, edge);
       }
 
       /* Move on to the next node */
-      node  = agnxtnode(libcgraph_ptr_, node);
+      node  = agnxtnode(libcgraph_ptr, node);
     }
+
+    // Free Agraph_t pointer, TODO: This isn't exception safe.
+    // We should encapsulate Agraph_t inside a C++ wrapper.
+    // For now though, I am ignoring this.
+    agclose(libcgraph_ptr);
   }
-
-  /// Graph copy constructor
-  Graph<NodeType>(const Graph<NodeType> & other) = delete;
-
-  /// Graph copy assignment
-  Graph<NodeType> & operator=(const Graph<NodeType> & other) = delete;
-
-  /// Graph destructor, destroy libcgraph_ptr_ if it was ever initialized
-  ~Graph<NodeType>() { if (libcgraph_ptr_ != nullptr) agclose(libcgraph_ptr_); }
 
   /// Graph constructor, taking node printer as argument
   Graph<NodeType>(const NodePrinter & node_printer, const NodeCrayon & node_crayon = [] (const auto & x __attribute__((unused))) { return "white"; })
@@ -208,8 +206,8 @@ class Graph {
   /// Node crayon function, to color nodes for dot output
   NodeCrayon node_crayon_;
 
-  /// Data structure to track Graph's representation in libcgraph
-  Agraph_t * libcgraph_ptr_ = nullptr;
+  /// Data structure to track dot labels for each node
+  std::map<NodeType, std::string> dot_labels_ = {};
 };
 
 template <class NodeType>
