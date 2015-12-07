@@ -38,8 +38,7 @@ class Graph {
 
   /// Graph constructor, taking a dot file as argument
   Graph<NodeType>(const std::string & dot_file)
-    : node_printer_([] (const auto & x __attribute__((unused))) { return "foo"; }),
-        //std::string tag = "label"; return std::string(agget(x, tag.c_str())); }),
+    : node_printer_([] (const auto & x __attribute__((unused))) { char tag[] = "label"; return std::string(agget(x, tag)); }),
       node_crayon_([] (const auto & x __attribute__((unused))) { return "white"; }) {
     FILE * fp = fopen(dot_file.c_str(), "r");
     assert_exception(fp);
