@@ -8,9 +8,10 @@
 5. sudo -E add-apt-repository -y 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.5 main'
 6. sudo apt-get install -y -qq libclang-3.5-dev
 7. sudo apt-get install -y -qq llvm-3.5-dev
-8. git clone https://github.com/anirudhSK/banzai.git; cd banzai; ./autogen.sh; ./configure CXX='g++-4.9'; sudo make install; cd ..; ./autogen.sh && ./configure CXX='g++-4.9' && make
-9. git clone https://github.com/anirudhsk/domino
-10. ./autogen.sh
-11. CXX='g++-4.9' ./configure
-12. make
-13. make check
+8. sudo apt-get install -y -qq libgraphviz-dev
+9. git clone https://github.com/anirudhSK/banzai.git; cd banzai; ./autogen.sh; ./configure CXX='g++-4.9'; sudo make install; cd ..; ./autogen.sh && ./configure CXX='g++-4.9' && make
+10. git clone https://github.com/anirudhsk/domino
+11. ./autogen.sh
+12. CXX='g++-4.9' ./configure
+13. make
+14. make check
