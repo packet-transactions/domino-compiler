@@ -43,34 +43,40 @@ class Graph {
       node_crayon_([] (const auto & x __attribute__((unused))) { return "white"; }) {
     FILE * fp = fopen(dot_file.c_str(), "r");
     assert_exception(fp);
-    Agraph_t * graph = agread(fp, NULL);
-    assert_exception(graph);
+    Agraph_t * libcgraph_ptr_ = agread(fp, NULL);
+    assert_exception(libcgraph_ptr_);
 
     /* Iterate through nodes and add them all */
-    Agnode_t * node = agfstnode(graph);
+    Agnode_t * node = agfstnode(libcgraph_ptr_);
     while (node != NULL) {
       assert_exception(node);
       add_node(node);
-      node  = agnxtnode(graph, node);
+      node  = agnxtnode(libcgraph_ptr_, node);
     }
 
     /* Now add all edges */
     while (node != NULL) {
-      Agedge_t * edge   = agfstout(graph, node);
+      Agedge_t * edge   = agfstout(libcgraph_ptr_, node);
       while (edge != NULL) {
         assert_exception(edge);
         assert_exception(agtail(edge) == node);
         add_edge(agtail(edge), aghead(edge));
-        edge = agnxtout(graph, edge);
+        edge = agnxtout(libcgraph_ptr_, edge);
       }
 
       /* Move on to the next node */
-      node  = agnxtnode(graph, node);
+      node  = agnxtnode(libcgraph_ptr_, node);
     }
-
-    /* Free graph structure */
-    agclose(graph);
   }
+
+  /// Graph copy constructor
+  Graph<NodeType>(const Graph<NodeType> & other) = delete;
+
+  /// Graph copy assignment
+  Graph<NodeType> & operator=(const Graph<NodeType> & other) = delete;
+
+  /// Graph destructor, destroy libcgraph_ptr_ if it was ever initialized
+  ~Graph<NodeType>() { if (libcgraph_ptr_ != nullptr) agclose(libcgraph_ptr_); }
 
   /// Graph constructor, taking node printer as argument
   Graph<NodeType>(const NodePrinter & node_printer, const NodeCrayon & node_crayon = [] (const auto & x __attribute__((unused))) { return "white"; })
@@ -202,6 +208,9 @@ class Graph {
 
   /// Node crayon function, to color nodes for dot output
   NodeCrayon node_crayon_;
+
+  /// Data structure to track Graph's representation in libcgraph
+  Agraph_t * libcgraph_ptr_ = nullptr;
 };
 
 template <class NodeType>
