@@ -1,0 +1,9 @@
+digraph graph_output {
+splines=true
+node [shape = box style="rounded,filled"];
+root [label = "pifo_root"  fillcolor=white];
+left [label = "pifo_left"  fillcolor=white];
+right [label = "pifo_right" fillcolor=white];
+root -> left;
+root -> right;
+}
