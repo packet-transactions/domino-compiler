@@ -50,7 +50,7 @@ class Graph {
     char tag[] = "label";
     while (node != NULL) {
       assert_exception(node);
-      add_node(node);
+      add_node(NodeType(node));
       dot_labels_[node] = std::string(agget(node, tag));
       node  = agnxtnode(libcgraph_ptr, node);
     }
@@ -61,7 +61,7 @@ class Graph {
       while (edge != NULL) {
         assert_exception(edge);
         assert_exception(agtail(edge) == node);
-        add_edge(agtail(edge), aghead(edge));
+        add_edge(NodeType(agtail(edge)), NodeType(aghead(edge)));
         edge = agnxtout(libcgraph_ptr, edge);
       }
 
