@@ -56,6 +56,7 @@ class Graph {
     }
 
     /* Now add all edges */
+    node = agfstnode(libcgraph_ptr);
     while (node != NULL) {
       Agedge_t * edge   = agfstout(libcgraph_ptr, node);
       while (edge != NULL) {
