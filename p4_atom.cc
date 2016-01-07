@@ -63,8 +63,7 @@ std::string P4Atom::rewrite_into_p4_ops(const clang::Stmt * stmt) {
           ret = "modify_field_with_hash_based_offset(" + clang_stmt_printer(assigned_var) + ", 0, hash_" + std::to_string(id) + ", " + clang_stmt_printer(dyn_cast<BinaryOperator>(rhs)->getRHS())+")";
           return ret;
         } else {
-          std::cout << "rhs is " << clang_stmt_printer(rhs) << "\n";
-          throw std::logic_error("rewrite_into_p4_ops cannot handle stmt " + clang_stmt_printer(stmt) + " of type " + std::string(stmt->getStmtClassName()));
+          return rewrite_into_p4_ops(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + rewrite_into_p4_ops(bin_op->getRHS());
         }
       } else {
          return rewrite_into_p4_ops(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + rewrite_into_p4_ops(bin_op->getRHS());
