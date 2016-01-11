@@ -86,6 +86,9 @@ std::pair<std::string, std::vector<std::string>> add_stateful_flanks(const Compo
           const auto new_subscript_var   = pkt_name + "." + new_tmp_var_for_subscript;
 
           // Create read and write flanks for it
+          if (var_expr_map.find(subscript_var) == var_expr_map.end()) {
+            throw std::logic_error(" subscript_var " + subscript_var + " not found in var_expr_map");
+          }
           read_prologue += new_subscript_var + " = " + var_expr_map.at(subscript_var) + ";";
           read_prologue += pkt_tmp_var + " = " + replace_subscript_expr(dyn_cast<ArraySubscriptExpr>(lhs), new_subscript_var) + ";";
           write_epilogue += replace_subscript_expr(dyn_cast<ArraySubscriptExpr>(lhs), new_subscript_var) + " = " + pkt_tmp_var + ";";
