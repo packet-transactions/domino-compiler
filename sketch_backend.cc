@@ -39,6 +39,51 @@ static const std::string sketch_harness =""
 "}\n"
 "";
 
+PacketFieldPair extract_packet_fields(const Stmt * function_body) {
+  // Store all MemberExpr from the function_body.
+  // This gives us all packet fields seen in function_body
+  std::set<PktField> all_pkt_fields = gen_var_list(function_body,
+                                                   {{VariableType::PACKET, true},
+                                                    {VariableType::STATE_SCALAR, false},
+                                                    {VariableType::STATE_ARRAY, false}});
+
+  // Store all fields that are written into,
+  // i.e. anything that occurs on the lhs
+  std::set<PktField> defined_fields;
+  for (const auto * stmt : function_body->children()) {
+    assert_exception(isa<BinaryOperator>(stmt));
+    const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
+    assert_exception(bin_op->isAssignmentOp());
+    if (isa<MemberExpr>(bin_op->getLHS())) {
+      defined_fields.emplace(clang_stmt_printer(dyn_cast<MemberExpr>(bin_op->getLHS())));
+    }
+  }
+
+  // Store all fields that are part of array subscripts
+  // i.e. anything that occurs within square brackets
+  std::set<PktField> array_fields;
+  for (const auto * stmt : function_body->children()) {
+    assert_exception(isa<BinaryOperator>(stmt));
+    const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
+    assert_exception(bin_op->isAssignmentOp());
+    // ArraySubscriptExprs show up directly on the LHS or RHS
+    // They don't show up as part of expression because they
+    // are hoisted out of code in the stateful flanks pass.
+    if (isa<ArraySubscriptExpr>(bin_op->getRHS())) {
+      array_fields.emplace(clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(bin_op->getRHS())->getIdx()));
+    } else if (isa<ArraySubscriptExpr>(bin_op->getLHS())) {
+      array_fields.emplace(clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(bin_op->getLHS())->getIdx()));
+    }
+  }
+
+  // Subtract defined_fields and array_fields from all_pkt_fields to get incoming fields
+  // that are set by someone else before getting into this function body
+  PacketFieldPair ret;
+  ret.incoming_fields = all_pkt_fields - defined_fields - array_fields;
+  ret.defined_fields  = defined_fields;
+  return ret;
+}
+
 std::string sketch_preprocessor(const TranslationUnitDecl * tu_decl) {
   std::map<PktField, std::set<PktField>> providers;
   std::map<PktField, std::string> provider_expressions;
@@ -83,45 +128,7 @@ std::string sketch_preprocessor(const TranslationUnitDecl * tu_decl) {
 std::string coalesce_args(const Stmt * function_body,
                           const std::map<PktField, std::set<PktField>> & providers,
                           const std::map<PktField, std::string> & provider_expressions) {
- // Store all MemberExpr from the function_body.
- // This gives us all packet fields seen in function_body
- std::set<PktField> all_pkt_fields = gen_var_list(function_body,
-                                                  {{VariableType::PACKET, true},
-                                                   {VariableType::STATE_SCALAR, false},
-                                                   {VariableType::STATE_ARRAY, false}});
-
- // Store all fields that are written into,
- // i.e. anything that occurs on the lhs
- std::set<PktField> defined_fields;
- for (const auto * stmt : function_body->children()) {
-   assert_exception(isa<BinaryOperator>(stmt));
-   const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
-   assert_exception(bin_op->isAssignmentOp());
-   if (isa<MemberExpr>(bin_op->getLHS())) {
-     defined_fields.emplace(clang_stmt_printer(dyn_cast<MemberExpr>(bin_op->getLHS())));
-   }
- }
-
- // Store all fields that are part of array subscripts
- // i.e. anything that occurs within square brackets
- std::set<PktField> array_fields;
- for (const auto * stmt : function_body->children()) {
-   assert_exception(isa<BinaryOperator>(stmt));
-   const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
-   assert_exception(bin_op->isAssignmentOp());
-   // ArraySubscriptExprs show up directly on the LHS or RHS
-   // They don't show up as part of expression because they
-   // are hoisted out of code in the stateful flanks pass.
-   if (isa<ArraySubscriptExpr>(bin_op->getRHS())) {
-     array_fields.emplace(clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(bin_op->getRHS())->getIdx()));
-   } else if (isa<ArraySubscriptExpr>(bin_op->getLHS())) {
-     array_fields.emplace(clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(bin_op->getLHS())->getIdx()));
-   }
- }
-
- // Subtract defined_fields and array_fields from all_pkt_fields to get incoming fields
- // that are set by someone else before getting into this function body
- std::set<PktField> incoming_fields = all_pkt_fields - defined_fields - array_fields;
+ std::set<PktField> incoming_fields = extract_packet_fields(function_body).incoming_fields;
 
  /// Replace each incoming field with its providers to see if there is a net reduction
  /// in the size of the incoming field set
@@ -209,50 +216,12 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
     rename_map[state_ref] = "state_" + std::to_string(++count);
   }
 
-
-  // Store all MemberExpr from the function_body.
-  // This gives us all packet fields seen in function_body
-  std::set<PktField> all_pkt_fields = gen_var_list(function_body,
-                                                   {{VariableType::PACKET, true},
-                                                    {VariableType::STATE_SCALAR, false},
-                                                    {VariableType::STATE_ARRAY, false}});
-
-  // Store all fields that are written into,
-  // i.e. anything that occurs on the lhs
-  std::set<PktField> defined_fields;
-  for (const auto * stmt : function_body->children()) {
-    assert_exception(isa<BinaryOperator>(stmt));
-    const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
-    assert_exception(bin_op->isAssignmentOp());
-    if (isa<MemberExpr>(bin_op->getLHS())) {
-      defined_fields.emplace(clang_stmt_printer(dyn_cast<MemberExpr>(bin_op->getLHS())));
-    }
-  }
-
-  // Store all fields that are part of array subscripts
-  // i.e. anything that occurs within square brackets
-  std::set<PktField> array_fields;
-  for (const auto * stmt : function_body->children()) {
-    assert_exception(isa<BinaryOperator>(stmt));
-    const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
-    assert_exception(bin_op->isAssignmentOp());
-    // ArraySubscriptExprs show up directly on the LHS or RHS
-    // They don't show up as part of expression because they
-    // are hoisted out of code in the stateful flanks pass.
-    if (isa<ArraySubscriptExpr>(bin_op->getRHS())) {
-      array_fields.emplace(clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(bin_op->getRHS())->getIdx()));
-    } else if (isa<ArraySubscriptExpr>(bin_op->getLHS())) {
-      array_fields.emplace(clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(bin_op->getLHS())->getIdx()));
-    }
-  }
-
-  // Subtract defined_fields and array_fields from all_pkt_fields to get incoming fields
-  // that are set by someone else before getting into this function body
-  std::set<PktField> incoming_fields = all_pkt_fields - defined_fields - array_fields;
+  // extract incoming fields
+  const auto ret = extract_packet_fields(function_body);
 
   // Create unique names for all fields in incoming_fields.
   count = 0;
-  for (const auto & field : incoming_fields) {
+  for (const auto & field : ret.incoming_fields) {
     rename_map[field] = "pkt_" + std::to_string(++count);
   }
 
@@ -262,7 +231,7 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
   // Also track the names of all defined packet fields to create
   // declarations for them later (the set defined_vars does this)
   std::set<ScalarVarName> defined_vars;
-  for (const auto & field : defined_fields) {
+  for (const auto & field : ret.defined_fields) {
     std::string conjoined_field = field;
     std::replace(conjoined_field.begin(), conjoined_field.end(), '.', '_');
     rename_map[field] = conjoined_field;

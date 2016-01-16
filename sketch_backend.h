@@ -16,6 +16,17 @@ typedef std::string PktField;
 /// String represent a scalar variable name like "x"
 typedef std::string ScalarVarName;
 
+struct PacketFieldPair {
+  std::set<PktField> incoming_fields = {};
+  std::set<PktField> defined_fields  = {};
+};
+
+/// Extract packet fields from function body
+/// i.e. non-array subscript packet fields that are
+/// either "external" arguments to the codelet (incoming_fields) or
+/// are defined by the codelet body (defined_fields)
+PacketFieldPair extract_packet_fields(const clang::Stmt * function_body);
+
 /// Core logic that coalesces arguments in a codelet if they are correlated
 std::string coalesce_args(const clang::Stmt * function_body,
                           const std::map<PktField, std::set<PktField>> & providers,
