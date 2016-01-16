@@ -39,6 +39,127 @@ static const std::string sketch_harness =""
 "}\n"
 "";
 
+std::string sketch_preprocessor(const TranslationUnitDecl * tu_decl) {
+  std::map<PktField, std::set<PktField>> providers;
+  std::map<PktField, std::string> provider_expressions;
+  for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
+    if (isa<FunctionDecl>(child_decl) and
+        (is_packet_func(dyn_cast<FunctionDecl>(child_decl)))) {
+      for (const auto * stmt : dyn_cast<FunctionDecl>(child_decl)->getBody()->children()) {
+        assert_exception(isa<BinaryOperator>(stmt));
+        const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
+        assert_exception(bin_op->isAssignmentOp());
+        const auto assigned_field = clang_stmt_printer(bin_op->getLHS());
+        assert_exception(providers.find(assigned_field) == providers.end());
+        providers[assigned_field] = gen_var_list(bin_op->getRHS(),
+                                                 {{VariableType::PACKET, true},
+                                                  {VariableType::STATE_SCALAR, true},
+                                                  {VariableType::STATE_ARRAY, true}});
+        assert_exception(provider_expressions.find(assigned_field) == provider_expressions.end());
+        provider_expressions[assigned_field] = clang_stmt_printer(bin_op->getRHS());
+      }
+    }
+  }
+
+  std::string ret;
+  for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
+    if (isa<TypedefDecl>(child_decl)) continue;
+    if (isa<FunctionDecl>(child_decl) and
+        (is_packet_func(dyn_cast<FunctionDecl>(child_decl))) and
+        (not collect_state_vars(dyn_cast<FunctionDecl>(child_decl)->getBody()).empty())) {
+      const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
+      assert_exception(function_decl->getNumParams() == 1);
+      ret += function_decl->getReturnType().getAsString() + " " +
+             function_decl->getNameInfo().getName().getAsString() +
+             "(" + clang_decl_printer(function_decl->getParamDecl(0)) + ")" +
+             coalesce_args(function_decl->getBody(), providers, provider_expressions);
+    } else {
+      ret += clang_decl_printer(child_decl) + ";";
+    }
+  }
+  return ret;
+}
+
+std::string coalesce_args(const Stmt * function_body,
+                          const std::map<PktField, std::set<PktField>> & providers,
+                          const std::map<PktField, std::string> & provider_expressions) {
+ // Store all MemberExpr from the function_body.
+ // This gives us all packet fields seen in function_body
+ std::set<PktField> all_pkt_fields = gen_var_list(function_body,
+                                                  {{VariableType::PACKET, true},
+                                                   {VariableType::STATE_SCALAR, false},
+                                                   {VariableType::STATE_ARRAY, false}});
+
+ // Store all fields that are written into,
+ // i.e. anything that occurs on the lhs
+ std::set<PktField> defined_fields;
+ for (const auto * stmt : function_body->children()) {
+   assert_exception(isa<BinaryOperator>(stmt));
+   const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
+   assert_exception(bin_op->isAssignmentOp());
+   if (isa<MemberExpr>(bin_op->getLHS())) {
+     defined_fields.emplace(clang_stmt_printer(dyn_cast<MemberExpr>(bin_op->getLHS())));
+   }
+ }
+
+ // Store all fields that are part of array subscripts
+ // i.e. anything that occurs within square brackets
+ std::set<PktField> array_fields;
+ for (const auto * stmt : function_body->children()) {
+   assert_exception(isa<BinaryOperator>(stmt));
+   const auto * bin_op = dyn_cast<BinaryOperator>(stmt);
+   assert_exception(bin_op->isAssignmentOp());
+   // ArraySubscriptExprs show up directly on the LHS or RHS
+   // They don't show up as part of expression because they
+   // are hoisted out of code in the stateful flanks pass.
+   if (isa<ArraySubscriptExpr>(bin_op->getRHS())) {
+     array_fields.emplace(clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(bin_op->getRHS())->getIdx()));
+   } else if (isa<ArraySubscriptExpr>(bin_op->getLHS())) {
+     array_fields.emplace(clang_stmt_printer(dyn_cast<ArraySubscriptExpr>(bin_op->getLHS())->getIdx()));
+   }
+ }
+
+ // Subtract defined_fields and array_fields from all_pkt_fields to get incoming fields
+ // that are set by someone else before getting into this function body
+ std::set<PktField> incoming_fields = all_pkt_fields - defined_fields - array_fields;
+
+ /// Replace each incoming field with its providers to see if there is a net reduction
+ /// in the size of the incoming field set
+ bool found_smaller_field_set = false;
+ std::set<PktField> replacement_fields;
+ std::set<PktField> new_field_set_candidate;
+ PktField replaced_field = "";
+ for (const auto & field : incoming_fields) {
+   if (providers.find(field) == providers.end()) {
+     std::cerr << "Could not find " << field << " in providers, it's likely an input field, moving on\n";
+     continue;
+   } else {
+     replacement_fields = providers.at(field);
+     if (((incoming_fields - std::set<PktField>({field})) + replacement_fields).size() < incoming_fields.size()) {
+       found_smaller_field_set = true;
+       new_field_set_candidate = incoming_fields - std::set<PktField>({field}) + replacement_fields;
+       replaced_field = field;
+       break;
+     }
+   }
+ }
+
+ std::string orig_body = "";
+ for (const auto * stmt : function_body->children()) orig_body += clang_stmt_printer(stmt) + ";";
+
+ std::cerr << "incoming_fields " << incoming_fields << std::endl;
+ if (found_smaller_field_set) {
+   std::cerr << "Found smaller field set " << new_field_set_candidate << "\n";
+   return "{ " +
+          replaced_field + " = " + provider_expressions.at(replaced_field) + ";" +
+          orig_body +
+          "}";
+ } else {
+   std::cerr << "No luck, sticking with old field set\n";
+   return "{" + orig_body + "}";
+ }
+}
+
 std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     // Transform only packet functions into SKETCH specifications

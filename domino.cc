@@ -52,6 +52,7 @@ void populate_passes() {
   // types like unique_ptrs (http://stackoverflow.com/questions/9618268/initializing-container-of-unique-ptrs-from-initializer-list-fails-with-gcc-4-7)
   all_passes["cse"]               =[] () { return std::make_unique<FixedPointPass<CompoundPass, std::vector<Transformer>>>(std::vector<Transformer>({csi_transform, cse_transform})); };
   all_passes["sketch_backend"]    =[] () { return std::make_unique<SinglePass>(sketch_backend_transform); };
+  all_passes["sketch_preprocessor"]    =[] () { return std::make_unique<SinglePass>(sketch_preprocessor); };
   all_passes["redundancy_remover"]=[] () { return std::make_unique<FixedPointPass<SinglePass, Transformer>>(redundancy_remover_transform); };
   all_passes["array_validator"]  = [] () { return std::make_unique<SinglePass>(std::bind(& ArrayValidator::ast_visit_transform, ArrayValidator(), _1)); };
   all_passes["validator"]        = [] () { return std::make_unique<SinglePass>(std::bind(& Validator::ast_visit_transform, Validator(), _1)); };

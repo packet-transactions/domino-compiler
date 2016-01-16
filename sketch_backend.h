@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <set>
+#include <map>
 
 #include "clang/AST/Decl.h"
 #include "clang/AST/Stmt.h"
@@ -14,6 +15,15 @@ typedef std::string PktField;
 
 /// String represent a scalar variable name like "x"
 typedef std::string ScalarVarName;
+
+/// Core logic that coalesces arguments in a codelet if they are correlated
+std::string coalesce_args(const clang::Stmt * function_body,
+                          const std::map<PktField, std::set<PktField>> & providers,
+                          const std::map<PktField, std::string> & provider_expressions);
+
+/// Transform codelets by reducing the number of incoming packet
+/// fields if there are correlations between the packet fields
+std::string sketch_preprocessor(const clang::TranslationUnitDecl * tu_decl);
 
 /// Transform code blocks (or) equivalently, strongly connected
 /// components into SKETCH specifications.
