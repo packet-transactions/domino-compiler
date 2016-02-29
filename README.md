@@ -15,3 +15,4 @@
 12. CXX='g++-4.9' ./configure
 13. make
 14. make check
+(needs python 3.5.1)
