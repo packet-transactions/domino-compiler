@@ -133,8 +133,8 @@ for state in state_assignments:
     print("#define ", state, state_assignments[state].n);
   # Convert mutable state into C arrays or scalars
   elif (state in pytoc_converter.write_set):
-    assert(type(state_assignments[state]) is Num)
-    print("int ", state, " = ", state_assignments[state].n, ";");
+    if (type(state_assignments[state]) is Num):
+      print("int ", state, " = ", state_assignments[state].n, ";");
 
 # Print out fields
 print("struct Packet {");
