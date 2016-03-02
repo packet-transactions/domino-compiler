@@ -125,6 +125,9 @@ assert(len(function_def_nodes) == 1)
 pytoc_converter = PyToC()
 pytoc_converter.visit(function_def_nodes[0])
 
+# Include the hashes header
+print("#include \"headers.h\"")
+
 # Now print out the converted output
 # Print out state
 for state in state_assignments:
