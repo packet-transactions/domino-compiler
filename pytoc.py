@@ -6,6 +6,7 @@ from ast     import Name
 from ast     import Subscript
 from ast     import FunctionDef
 from ast     import Assign
+from ast     import BinOp
 from ast     import Num
 from sys     import argv
 from io      import StringIO
@@ -135,6 +136,13 @@ for state in state_assignments:
   elif (state in pytoc_converter.write_set):
     if (type(state_assignments[state]) is Num):
       print("int ", state, " = ", state_assignments[state].n, ";");
+    elif (type(state_assignments[state]) is BinOp):
+      # This is an array initializer in python
+      num_elements  = state_assignments[state].right.n;
+      element_value = state_assignments[state].left.elts[0].n;
+      print("int ", state, "[" + str(num_elements) + "] = {" + str(element_value) + "};")
+    else:
+      assert(False)
 
 # Print out fields
 print("struct Packet {");
@@ -144,4 +152,4 @@ print("};")
 
 # Print out program
 print(pytoc_converter.program_output.getvalue())
-#print(dump(parse(open(sys.argv[1]).read())))
+#print(dump(parse(open(argv[1]).read())))
