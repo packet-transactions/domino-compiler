@@ -148,6 +148,8 @@ for state in state_assignments:
   elif (state in pytoc_converter.write_set):
     if (type(state_assignments[state]) is Num):
       mutable_state += "int " + str(state) + " = " + str(state_assignments[state].n) + ";\n"
+    elif (type(state_assignments[state]) is Name):
+      mutable_state += "int " + str(state) + " = " + str(state_assignments[state].id) + ";\n"
     elif (type(state_assignments[state]) is BinOp):
       # This is an array initializer in python
       element_value = StringIO()
