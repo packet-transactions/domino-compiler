@@ -102,10 +102,12 @@ class PyToC(NodeVisitor):
     print(" {", file = self.program_output)
     for stmt in node.body:
       self.visit(stmt)
-    print("} else {", file = self.program_output)
-    for stmt in node.orelse:
-      self.visit(stmt)
     print("}", file = self.program_output)
+    if (len(node.orelse) >= 1):
+      print("else {", file = self.program_output)
+      for stmt in node.orelse:
+        self.visit(stmt)
+      print("}", file = self.program_output)
 
 # Main function in the program
 # Parse the top level and generate nodes
