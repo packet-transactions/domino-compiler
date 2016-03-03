@@ -134,16 +134,18 @@ pytoc_converter.visit(function_def_nodes[0])
 print("#include \"headers.h\"")
 
 # Now print out the converted output
-# Print out state
+# Print out state, constant state first, then mutable state
+constant_state = ""
+mutable_state  = ""
 for state in state_assignments:
   # Convert constant state into C macros
   if (state in pytoc_converter.read_set and state not in pytoc_converter.write_set):
     assert(type(state_assignments[state]) is Num)
-    print("#define ", state, state_assignments[state].n);
+    constant_state += "#define " + str(state) + " " + str(state_assignments[state].n) + "\n"
   # Convert mutable state into C arrays or scalars
   elif (state in pytoc_converter.write_set):
     if (type(state_assignments[state]) is Num):
-      print("int ", state, " = ", state_assignments[state].n, ";");
+      mutable_state += "int " + str(state) + " = " + str(state_assignments[state].n) + ";\n"
     elif (type(state_assignments[state]) is BinOp):
       # This is an array initializer in python
       element_value = state_assignments[state].left.elts[0].n;
@@ -153,11 +155,12 @@ for state in state_assignments:
         num_elements  = state_assignments[state].right.id
       else:
         assert(False)
-      print("int ", state, "[" + str(num_elements) + "] = {" + str(element_value) + "};")
+      mutable_state += "int " + str(state) + " [" + str(num_elements) + "] = {" + str(element_value) + "};\n"
     else:
       assert(False)
   else:
     assert(False)
+print(constant_state + mutable_state)
 
 # Print out fields
 print("struct Packet {");
