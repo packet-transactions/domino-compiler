@@ -146,11 +146,18 @@ for state in state_assignments:
       print("int ", state, " = ", state_assignments[state].n, ";");
     elif (type(state_assignments[state]) is BinOp):
       # This is an array initializer in python
-      num_elements  = state_assignments[state].right.n;
       element_value = state_assignments[state].left.elts[0].n;
+      if (type(state_assignments[state].right) is Num):
+        num_elements  = state_assignments[state].right.n
+      elif (type(state_assignments[state].right) is Name):
+        num_elements  = state_assignments[state].right.id
+      else:
+        assert(False)
       print("int ", state, "[" + str(num_elements) + "] = {" + str(element_value) + "};")
     else:
       assert(False)
+  else:
+    assert(False)
 
 # Print out fields
 print("struct Packet {");
