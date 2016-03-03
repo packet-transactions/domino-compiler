@@ -37,8 +37,7 @@ class StateReadWrite(NodeVisitor):
       self.write_set.add(track_state_vars(target))
     self.generic_visit(node)
   def visit_AugAssign(self, node):
-    for target in node.targets:
-      self.write_set.add(track_state_vars(target))
+    self.write_set.add(track_state_vars(node.target))
     self.generic_visit(node)
 
   # Reads (scalars and arrays)
