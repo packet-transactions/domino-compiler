@@ -89,16 +89,13 @@ class PyToC(NodeVisitor):
 
   # Visitors for all other nodes traversed recursively from FunctionDef
   # Use Unparser to turn nodes into text
-  def visit_Compare(self, node):
-    Unparser(node, self.program_output)
-
   def visit_Assign(self, node):
     Unparser(node, self.program_output)
     print(";\n", file = self.program_output)
 
   def visit_If(self, node):
     print("if ", file = self.program_output)
-    self.visit(node.test)
+    Unparser(node.test, self.program_output)
     print(" {", file = self.program_output)
     for stmt in node.body:
       self.visit(stmt)
