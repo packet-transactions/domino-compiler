@@ -35,15 +35,20 @@ class StateReadWrite(NodeVisitor):
   def visit_Assign(self, node):
     for target in node.targets:
       self.write_set.add(track_state_vars(target))
+    self.generic_visit(node)
   def visit_AugAssign(self, node):
     for target in node.targets:
       self.write_set.add(track_state_vars(target))
+    self.generic_visit(node)
 
   # Reads (scalars and arrays)
   def visit_Name(self, node):
     self.read_set.add(node.id)
+    self.generic_visit(node)
+
   def visit_Subscript(self, node):
     self.read_set.add(node.value.id) 
+    self.generic_visit(node)
 
 # Collect fields used in function body
 class FieldCollector(NodeVisitor):
