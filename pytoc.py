@@ -9,6 +9,7 @@ from ast     import Assign
 from ast     import BinOp
 from ast     import Num
 from sys     import argv
+from sys     import stderr
 from io      import StringIO
 from unparse import Unparser
 
@@ -161,6 +162,7 @@ for state in state_assignments:
     else:
       assert(False)
   else:
+    print("Couldn't find " + str(state) + " in function's read and write sets", file=stderr)
     assert(False)
 print(constant_state + mutable_state)
 
