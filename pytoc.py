@@ -150,14 +150,15 @@ for state in state_assignments:
       mutable_state += "int " + str(state) + " = " + str(state_assignments[state].n) + ";\n"
     elif (type(state_assignments[state]) is BinOp):
       # This is an array initializer in python
-      element_value = state_assignments[state].left.elts[0].n;
+      element_value = StringIO()
+      Unparser(state_assignments[state].left.elts[0], file = element_value)
       if (type(state_assignments[state].right) is Num):
         num_elements  = state_assignments[state].right.n
       elif (type(state_assignments[state].right) is Name):
         num_elements  = state_assignments[state].right.id
       else:
         assert(False)
-      mutable_state += "int " + str(state) + " [" + str(num_elements) + "] = {" + str(element_value) + "};\n"
+      mutable_state += "int " + str(state) + " [" + str(num_elements) + "] = {" + element_value.getvalue().strip() + "};\n"
     else:
       assert(False)
   else:
