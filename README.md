@@ -1,4 +1,4 @@
-[![Build Status](https://magnum.travis-ci.com/anirudhSK/domino.svg?token=E3TBAuEumusxDa6hAgxA)](https://magnum.travis-ci.com/anirudhSK/domino)
+[![Build Status](https://travis-ci.org/anirudhSK/domino.svg?branch=master)](https://travis-ci.org/anirudhSK/domino)
 
 0. sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
 1. sudo apt-get update -qq
