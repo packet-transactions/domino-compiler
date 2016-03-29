@@ -36,7 +36,6 @@ struct Packet {
 	int bwpp; 			// bandwidth computed 2 probe cycles ago
 	int bwp; 			// bandwidth computed in previous probe cycle
 	int bw; 			// bandwidth currently being computed
-	int B[MAX_HOPS]; 	// set of bottlenecks for this session
 		// *** DOMINO does not allow arrays in packet fields -- need a workaround for this
 	int b; 				// latest bottleneck that was added to B
 
