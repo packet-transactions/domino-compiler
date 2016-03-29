@@ -54,8 +54,18 @@ std::string clang_decl_printer(const clang::Decl * decl) {
 bool is_packet_func(const clang::FunctionDecl * func_decl) {
   // Not sure what we would get out of functions with zero args
   assert_exception(func_decl->getNumParams() >= 1);
-  return func_decl->getNumParams() == 1
-         and func_decl->getParamDecl(0)->getType().getAsString() == "struct Packet";
+  if (func_decl->getNumParams() == 1) {
+    if (func_decl->getParamDecl(0)->getType().getAsString() == "struct Packet") {
+      return true;
+    } else if (func_decl->getParamDecl(0)->getType().getAsString().find("struct") != std::string::npos) {
+      throw std::runtime_error("Can't have function with struct argument that isn't a packet, found " +
+                               func_decl->getParamDecl(0)->getType().getAsString());
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
 }
 
 std::string replace_var_helper(const Expr * expr, const std::map<std::string, std::string> & repl_map) {
