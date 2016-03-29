@@ -8,7 +8,6 @@
 		int temp2 = LINK_CAP/N;
 		
 		****** array operations on packet field ******
-		pkt.B.append(LINK_ID)
 		pkt.B.exists(LINK_ID)
 		pkt.B.remove(LINK_ID)
 
@@ -59,17 +58,13 @@ void RouterLink(struct ControlPacket pkt) {
 		pkt.shBW = (temp1 > temp2) ? temp1 : temp2;
 
 		if (pkt.bw >= shBW) {
-			pkt.B.append(LINK_ID);	
 			pkt.b = LINK_ID;
 			NR = NR + 1;
 		}
 		// send downstream Join(s,bwpp,bwp,bw,B,b)
 	}
 	else if (pkt.type == 1 ) {
-		if (pkt.B.exists(LINK_ID)) { 	
-			pkt.B.remove(LINK_ID);		
-		}
-		else {
+		{
 			BF = BF - pkt.bwpp;
 			NR = NR + 1;
 		}
@@ -79,7 +74,6 @@ void RouterLink(struct ControlPacket pkt) {
 		pkt.shBW = (temp1 > temp2) ? temp1 : temp2;
 
 		if ( (LINK_ID == pkt.b) || (pkt.bw >= shBW)) {
-			pkt.B = pkt.B.append(LINK_ID);		
 			pkt.bw = shBW;
 			pkt.b = LINK_ID;
 		}
@@ -90,10 +84,7 @@ void RouterLink(struct ControlPacket pkt) {
 		// send downstream Probe(s,bwpp,bwp,bw,B,b)
 	}
 	else if (pkt.type == 2) {
-		if (pkt.B.exists(LINK_ID)) {
-			pkt.B.remove(LINK_ID);
-		}
-		else {
+		{
 			BF = BF - pkt.bwp;
 			NR = NR + 1;
 		}
@@ -103,7 +94,6 @@ void RouterLink(struct ControlPacket pkt) {
 		pkt.shBW = (temp1 > temp2) ? temp1 : temp2;
 
 		if ( (LINK_ID == pkt.b) || (pkt.bw >= shBW) ) {
-			pkt.B.append(LINK_ID);
 			pkt.bw = shBW;
 			pkt.b = LINK_ID;
 		}
@@ -114,32 +104,10 @@ void RouterLink(struct ControlPacket pkt) {
 		// send upstream ProbeAck(s,bwpp,bwp,bw,B,b)
 	}
 	else if (pkt.type == 3) {
-		if (pkt.B.exists(LINK_ID)) {
-			NR = NR - 1;
-		}
-		else {
+                {
 			BF = BF - pkt.bwp;
 		}
 		N = N - 1;
 		// send downstream(s,bwpp,bwp,bw,B,b)
 	}
-} 
-
-
-void append(int link_id) {
-	if ( pkt.numBNecks < MAX_HOPS) {
-		pkt.B[pkt.numBNecks] = link_id;
-		pkt.numBNecks++;
-	}
-}
-
-void exists(int link_id) {
-	// Require hardware implementation of parallel search on an array (pkt.B)
-	// This is a required primative to run at line rate
-	// Amount of required hardware is proportional to MAX_HOPS (the size of the B field in the packet)
-}
-
-void remove(int link_id) {
-	// Require hardware implementation of parallel search and removal of element from array
-	pkt.numBNecks--;
 }
