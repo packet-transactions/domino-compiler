@@ -18,6 +18,11 @@
 #define LINK_CAP 	100 
 #define LINK_ID		1
 
+// Declare the state stored on the switch per link
+int BF = 0; // total bandwidth allocated to saturated flows
+int NR = 0; // total number of unsaturated flows
+int N = 0; // total number of flows that cross this link
+
 struct ControlPacket {
 	int type;
 		/*
@@ -40,12 +45,7 @@ struct ControlPacket {
         int temp1;
         int temp2;
         int shBW;
-}
-
-// Declare the state stored on the switch per link
-int BF = 0; // total bandwidth allocated to saturated flows
-int NR = 0; // total number of unsaturated flows
-int N = 0; // total number of flows that cross this link
+};
 
 void RouterLink(struct ControlPacket pkt) {
 
@@ -55,9 +55,9 @@ void RouterLink(struct ControlPacket pkt) {
 		// int shBW = max( (LINK_CAP - BF)/(NR + 1), LINK_CAP/N ); 
 		pkt.temp1 = (LINK_CAP - BF)/(NR + 1);
 		pkt.temp2 = LINK_CAP/N;
-		pkt.shBW = (temp1 > temp2) ? temp1 : temp2;
+		pkt.shBW = (pkt.temp1 > pkt.temp2) ? pkt.temp1 : pkt.temp2;
 
-		if (pkt.bw >= shBW) {
+		if (pkt.bw >= pkt.shBW) {
 			pkt.b = LINK_ID;
 			NR = NR + 1;
 		}
@@ -71,10 +71,10 @@ void RouterLink(struct ControlPacket pkt) {
 		// int shBW = max( (LINK_CAP - BF)/(NR + 1), LINK_CAP/N ); 
 		pkt.temp1 = (LINK_CAP - BF)/(NR + 1);
 		pkt.temp2 = LINK_CAP/N;
-		pkt.shBW = (temp1 > temp2) ? temp1 : temp2;
+		pkt.shBW = (pkt.temp1 > pkt.temp2) ? pkt.temp1 : pkt.temp2;
 
-		if ( (LINK_ID == pkt.b) || (pkt.bw >= shBW)) {
-			pkt.bw = shBW;
+		if ( (LINK_ID == pkt.b) || (pkt.bw >= pkt.shBW)) {
+			pkt.bw = pkt.shBW;
 			pkt.b = LINK_ID;
 		}
 		else { // pkt.bw < shBW
@@ -91,10 +91,10 @@ void RouterLink(struct ControlPacket pkt) {
 		// int shBW = max( (LINK_CAP - BF)/(NR + 1), LINK_CAP/N ); 
 		pkt.temp1 = (LINK_CAP - BF)/(NR + 1);
 		pkt.temp2 = LINK_CAP/N;
-		pkt.shBW = (temp1 > temp2) ? temp1 : temp2;
+		pkt.shBW = (pkt.temp1 > pkt.temp2) ? pkt.temp1 : pkt.temp2;
 
-		if ( (LINK_ID == pkt.b) || (pkt.bw >= shBW) ) {
-			pkt.bw = shBW;
+		if ( (LINK_ID == pkt.b) || (pkt.bw >= pkt.shBW) ) {
+			pkt.bw = pkt.shBW;
 			pkt.b = LINK_ID;
 		}
 		else { // pkt.bw < shBW
