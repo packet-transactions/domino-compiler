@@ -23,7 +23,7 @@ int BF = 0; // total bandwidth allocated to saturated flows
 int NR = 0; // total number of unsaturated flows
 int N = 0; // total number of flows that cross this link
 
-struct ControlPacket {
+struct Packet {
 	int type;
 		/*
 			ControlPacket Types:
@@ -47,7 +47,7 @@ struct ControlPacket {
         int shBW;
 };
 
-void RouterLink(struct ControlPacket pkt) {
+void RouterLink(struct Packet pkt) {
 
 	if (pkt.type == 0) {
 		N = N + 1;
