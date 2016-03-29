@@ -1,5 +1,3 @@
-
-
 /*
 	First attempt to implement SLBN in the data plane
 	using DOMINO.
@@ -21,7 +19,6 @@
 #define LINK_CAP 	100 
 #define LINK_ID		1
 
-
 struct ControlPacket {
 	int type;
 		/*
@@ -40,6 +37,10 @@ struct ControlPacket {
 	int b; 				// latest bottleneck that was added to B
 
 	int numBNecks; // indicates the number of elements in B
+
+        int temp1;
+        int temp2;
+        int shBW;
 }
 
 // Declare the state stored on the switch per link
@@ -53,9 +54,9 @@ void RouterLink(struct ControlPacket pkt) {
 		N = N + 1;
 		
 		// int shBW = max( (LINK_CAP - BF)/(NR + 1), LINK_CAP/N ); 
-		int temp1 = (LINK_CAP - BF)/(NR + 1);
-		int temp2 = LINK_CAP/N;
-		int shBW = (temp1 > temp2) ? temp1 : temp2;
+		pkt.temp1 = (LINK_CAP - BF)/(NR + 1);
+		pkt.temp2 = LINK_CAP/N;
+		pkt.shBW = (temp1 > temp2) ? temp1 : temp2;
 
 		if (pkt.bw >= shBW) {
 			pkt.B.append(LINK_ID);	
@@ -73,9 +74,9 @@ void RouterLink(struct ControlPacket pkt) {
 			NR = NR + 1;
 		}
 		// int shBW = max( (LINK_CAP - BF)/(NR + 1), LINK_CAP/N ); 
-		int temp1 = (LINK_CAP - BF)/(NR + 1);
-		int temp2 = LINK_CAP/N;
-		int shBW = (temp1 > temp2) ? temp1 : temp2;
+		pkt.temp1 = (LINK_CAP - BF)/(NR + 1);
+		pkt.temp2 = LINK_CAP/N;
+		pkt.shBW = (temp1 > temp2) ? temp1 : temp2;
 
 		if ( (LINK_ID == pkt.b) || (pkt.bw >= shBW)) {
 			pkt.B = pkt.B.append(LINK_ID);		
@@ -97,9 +98,9 @@ void RouterLink(struct ControlPacket pkt) {
 			NR = NR + 1;
 		}
 		// int shBW = max( (LINK_CAP - BF)/(NR + 1), LINK_CAP/N ); 
-		int temp1 = (LINK_CAP - BF)/(NR + 1);
-		int temp2 = LINK_CAP/N;
-		int shBW = (temp1 > temp2) ? temp1 : temp2;
+		pkt.temp1 = (LINK_CAP - BF)/(NR + 1);
+		pkt.temp2 = LINK_CAP/N;
+		pkt.shBW = (temp1 > temp2) ? temp1 : temp2;
 
 		if ( (LINK_ID == pkt.b) || (pkt.bw >= shBW) ) {
 			pkt.B.append(LINK_ID);
