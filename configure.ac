@@ -32,9 +32,6 @@ utility vector], [], [AC_MSG_ERROR([Missing header file])])
 AC_CHECK_HEADERS([pipeline.h stage.h field_container.h atom.h packet.h packet_latches.h],
                  [], [AC_MSG_ERROR([Missing header files for pisa target machine])])
 
-# Check for libcgraph to read and parse dot files
-PKG_CHECK_MODULES([libcgraph], [libcgraph])
-
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
 AC_TYPE_UINT64_T

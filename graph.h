@@ -1,7 +1,6 @@
 #ifndef GRAPH_H_
 #define GRAPH_H_
 
-#include <graphviz/cgraph.h>
 #include <cstdio>
 
 #include <map>
@@ -35,46 +34,6 @@ class Graph {
 
   /// Node crayon for coloring nodes in dot
   typedef std::function<std::string(const NodeType &)> NodeCrayon;
-
-  /// Graph constructor, taking a dot file as argument
-  Graph<NodeType>(const std::string & dot_file)
-    : node_printer_([this] (const auto & x) { return this->dot_labels_.at(x); }),
-      node_crayon_([] (const auto & x __attribute__((unused))) { return "white"; }) {
-    FILE * fp = fopen(dot_file.c_str(), "r");
-    assert_exception(fp);
-    Agraph_t * libcgraph_ptr = agread(fp, NULL);
-    assert_exception(libcgraph_ptr);
-
-    /* Iterate through nodes and add them all */
-    Agnode_t * node = agfstnode(libcgraph_ptr);
-    char tag[] = "label";
-    while (node != NULL) {
-      assert_exception(node);
-      add_node(NodeType(node));
-      dot_labels_[node] = std::string(agget(node, tag));
-      node  = agnxtnode(libcgraph_ptr, node);
-    }
-
-    /* Now add all edges */
-    node = agfstnode(libcgraph_ptr);
-    while (node != NULL) {
-      Agedge_t * edge   = agfstout(libcgraph_ptr, node);
-      while (edge != NULL) {
-        assert_exception(edge);
-        assert_exception(agtail(edge) == node);
-        add_edge(NodeType(agtail(edge)), NodeType(aghead(edge)));
-        edge = agnxtout(libcgraph_ptr, edge);
-      }
-
-      /* Move on to the next node */
-      node  = agnxtnode(libcgraph_ptr, node);
-    }
-
-    // Free Agraph_t pointer, TODO: This isn't exception safe.
-    // We should encapsulate Agraph_t inside a C++ wrapper.
-    // For now though, I am ignoring this.
-    agclose(libcgraph_ptr);
-  }
 
   /// Graph constructor, taking node printer as argument
   Graph<NodeType>(const NodePrinter & node_printer, const NodeCrayon & node_crayon = [] (const auto & x __attribute__((unused))) { return "white"; })
