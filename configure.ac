@@ -16,6 +16,10 @@ AC_SUBST([PICKY_CXXFLAGS])
 # Checks for header files.
 AC_LANG_PUSH(C++)
 
+# clang-3.5 development libraries and headers
+AC_ARG_VAR(CLANG_DEV_LIBS, Root directory of Clang development libraries and headers)
+AC_SUBST([CLANG_DEV_LIBS])
+
 # Search for g++, because we shell out to g++ when generating pisa code
 AC_ARG_VAR([GPLUSPLUS], [path to g++])
 AC_PATH_PROGS([GPLUSPLUS], [g++], [no], [$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/bin$PATH_SEPARATOR/usr/bin])

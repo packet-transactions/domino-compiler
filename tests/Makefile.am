@@ -1,6 +1,6 @@
-AM_CPPFLAGS = -isystem ~/Downloads/clang+llvm-3.5.0-macosx-apple-darwin/include/
 AM_CXXFLAGS = $(PICKY_CXXFLAGS) -isystem $(srcdir)/../third_party/
-AM_LDFLAGS = -L ~/Downloads/clang+llvm-3.5.0-macosx-apple-darwin/lib
+AM_CPPFLAGS = -isystem $(CLANG_DEV_LIBS)/include/
+AM_LDFLAGS = -L $(CLANG_DEV_LIBS)/lib
 
 # There are some strange circular deps within clang requiring us to list libraries twice
 # https://github.com/eliben/llvm-clang-samples/blob/master/Makefile#L71
