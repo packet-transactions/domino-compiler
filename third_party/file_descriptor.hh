@@ -15,7 +15,7 @@ private:
     unsigned int read_count_, write_count_;
 
     /* maximum size of a read */
-    const static size_t BUFFER_SIZE = 1024 * 1024;
+    const static size_t BUFFER_SIZE;
 
 protected:
     void register_read( void ) { read_count_++; }

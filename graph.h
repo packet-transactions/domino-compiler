@@ -8,7 +8,7 @@
 #include <set>
 #include <vector>
 #include <ostream>
-#include <algorithm>
+#include <numeric>
 #include <functional>
 #include <string>
 #include <tuple>

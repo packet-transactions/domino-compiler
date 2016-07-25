@@ -8,6 +8,8 @@
 
 using namespace std;
 
+const size_t FileDescriptor::BUFFER_SIZE = 1024 * 1024;
+
 /* construct from fd number */
 FileDescriptor::FileDescriptor( const int fd )
     : fd_( fd ),
