@@ -15,6 +15,7 @@ common_source = clang_utility_functions.cc  clang_utility_functions.h unique_ide
 noinst_LIBRARIES = libdomino.a
 bin_PROGRAMS = domino
 
+domino_CXXFLAGS = $(PICKY_CXXFLAGS) -fno-rtti
 domino_SOURCES = domino.cc
 domino_LDADD = $(CLANG_LLVM_LIBS) libdomino.a $(srcdir)/third_party/libmahimahi.a
 libdomino_a_SOURCES = $(common_source)

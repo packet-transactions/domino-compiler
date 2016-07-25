@@ -16,7 +16,12 @@ check_PROGRAMS = $(TESTS)
 
 # domino tests
 echo_test_SOURCES = echo_test.cc
+echo_test_CXXFLAGS = $(AM_CXXFLAGS) -fno-rtti
 if_converter_test_SOURCES = if_converter_test.cc
+if_converter_test_CXXFLAGS = $(AM_CXXFLAGS) -fno-rtti
 expr_flattener_test_SOURCES = expr_flattener_test.cc
+expr_flattener_test_CXXFLAGS = $(AM_CXXFLAGS) -fno-rtti
 scc_test_SOURCES = scc_test.cc
+scc_test_CXXFLAGS = $(AM_CXXFLAGS) -fno-rtti
 complicated_scc_test_SOURCES = complicated_scc_test.cc
+complicated_scc_test_CXXFLAGS = $(AM_CXXFLAGS) -fno-rtti
