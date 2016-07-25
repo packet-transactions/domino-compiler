@@ -3,12 +3,12 @@
 #include <string>
 #include <tuple>
 #include <algorithm>
+#include <cstdlib>
 
 #include "clang/AST/Expr.h"
 #include "clang/AST/Decl.h"
 
 #include "third_party/temp_file.hh"
-#include "third_party/system_runner.hh"
 #include "third_party/assert_exception.h"
 
 #include "util.h"
@@ -190,11 +190,13 @@ PISACodeGenerator::PISALibString PISACodeGenerator::gen_lib_as_string(const PISA
 
   // Compile pisa_file into a .o file
   TempFile object_file("/tmp/pisa_obj", ".o");
-  run({GPLUSPLUS, "-std=c++14", "-pedantic", "-Wconversion", "-Wsign-conversion", "-Wall", "-Wextra", "-Weffc++", "-Werror", "-fno-default-inline", "-g", "-c", pisa_prog_file.name(), "-fPIC", "-DPIC", "-o", object_file.name()});
+  auto cmd_line = "g++  -std=c++14 -pedantic -Wconversion -Wsign-conversion -Wall -Wextra -Weffc++ -Werror -fno-default-inline -g -c " + pisa_prog_file.name() + " -fPIC -DPIC -o " + object_file.name();
+  std::system(cmd_line.c_str());
 
   // Turn that into a shared library
   TempFile library_file("/tmp/libpisa", ".so");
-  run({GPLUSPLUS, "-shared", "-o", library_file.name(), object_file.name()});
+  cmd_line = "g++ -shared -o " + library_file.name() + " " + object_file.name();
+  std::system(cmd_line.c_str());
 
   // Return library file binary as a string
   // (hopefully doesn't bork the terminal)

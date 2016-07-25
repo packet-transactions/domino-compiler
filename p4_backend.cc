@@ -8,7 +8,6 @@
 #include "clang/AST/Decl.h"
 
 #include "third_party/temp_file.hh"
-#include "third_party/system_runner.hh"
 #include "third_party/assert_exception.h"
 
 #include "util.h"

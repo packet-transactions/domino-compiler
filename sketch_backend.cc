@@ -1,10 +1,10 @@
 #include <iostream>
+#include <cstdlib>
 
 #include "sketch_backend.h"
 #include "util.h"
 
 #include "third_party/temp_file.hh"
-#include "third_party/system_runner.hh"
 #include "third_party/assert_exception.h"
 
 #include "clang_utility_functions.h"
@@ -181,7 +181,8 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
       sketch_temp_file.write(sketch_contents);
       int rand_seed = rand();
       try {
-        run({"/home/anirudh/sketch-1.6.9/sketch-frontend/sketch", "--slv-seed=" + std::to_string(rand_seed), "--fe-no-output-print", sketch_temp_file.name()});
+        auto cmd_line = "/home/anirudh/sketch-1.6.9/sketch-frontend/sketch --slv-seed=" + std::to_string(rand_seed) + " --fe-no-output-print " + sketch_temp_file.name();
+        std::system(cmd_line.c_str());
         std::ofstream out("/tmp/success.sk");
         out << sketch_contents;
         out.close();
