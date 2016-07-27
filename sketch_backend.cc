@@ -167,14 +167,14 @@ std::string coalesce_args(const Stmt * function_body,
  }
 }
 
-std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl) {
+std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl, const std::string t_atom_template) {
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     // Transform only packet functions into SKETCH specifications
     if (isa<FunctionDecl>(child_decl) and
         (is_packet_func(dyn_cast<FunctionDecl>(child_decl))) and
         (not collect_state_vars(dyn_cast<FunctionDecl>(child_decl)->getBody()).empty())) {
       std::string sketch_contents = sketch_struct +
-                                    file_to_str(std::string(getenv("ATOM_TEMPLATE"))) +
+                                    file_to_str(t_atom_template) +
                                     create_sketch_spec((dyn_cast<FunctionDecl>(child_decl)->getBody()), "codelet") +
                                     sketch_harness;
       TempFile sketch_temp_file("/tmp/sketch", ".sk");

@@ -41,7 +41,7 @@ std::string sketch_preprocessor(const clang::TranslationUnitDecl * tu_decl);
 /// SKETCH specifications can then be fed to the SKETCH compiler to
 /// synthesize configurations for atoms
 /// (represented as sketches with holes).
-std::string sketch_backend_transform(const clang::TranslationUnitDecl * tu_decl);
+std::string sketch_backend_transform(const clang::TranslationUnitDecl * tu_decl, const std::string t_atom_template);
 
 /// Transfrom a Stmt representing a function body
 /// into a SKETCH specification.
