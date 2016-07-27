@@ -98,7 +98,7 @@ std::string all_passes_as_string(const PassFactory & pass_factory) {
 }
 
 void print_usage() {
-  std::cerr << "Usage: domino <source_file> <atom_template> <pipeline width> <pipeline depth> <comma-separated list of passes (optional)>" << std::endl;
+  std::cerr << "Usage: domino <source_file> <atom_template> <pipeline width> <pipeline depth> <yes to run sketch preprocessor (no by default)> <comma-separated list of passes (optional)>" << std::endl;
   std::cerr << "List of passes: " << std::endl;
   std::cerr << all_passes_as_string(all_passes);
 }
@@ -122,9 +122,10 @@ int main(int argc, const char **argv) {
       if (pipeline_width <= 0) throw std::logic_error("Pipeline width ("  + std::string(argv[3]) + ") must be a positive integer");
       const auto pipeline_depth = std::atoi(argv[4]);
       if (pipeline_depth <= 0) throw std::logic_error("Pipeline depth (" + std::string(argv[4]) + ") must be a positive integer");
-      const auto pass_list = (argc == 6) ? split(std::string(argv[5]), ","): split(default_pass_list, ",");
+      const auto run_sketch_prepocessor = ((argc >= 6) and (std::string(argv[5]) == "yes")) ? true : false;
+      const auto pass_list = (argc == 7) ? split(std::string(argv[6]), ","): split(default_pass_list, ",");
 
-      if (argc > 6) {
+      if (argc > 7) {
         print_usage();
         return EXIT_FAILURE;
       }
@@ -134,7 +135,7 @@ int main(int argc, const char **argv) {
       for (const auto & pass_name : pass_list) passes_to_run.emplace_back(get_pass_functor(pass_name, all_passes));
 
       // add the passes for the sketch preprocessor and backend
-      passes_to_run.emplace_back([] () { return std::make_unique<DefaultSinglePass>(sketch_preprocessor); });
+      if (run_sketch_prepocessor) passes_to_run.emplace_back([] () { return std::make_unique<DefaultSinglePass>(sketch_preprocessor); });
       passes_to_run.emplace_back([atom_template_file] () { return std::make_unique<SinglePass<const std::string>>(sketch_backend_transform, atom_template_file); });
 
       /// Process them one after the other
