@@ -89,6 +89,12 @@ std::string all_passes_as_string(const PassFactory & pass_factory) {
   return ret;
 }
 
+void print_usage() {
+  std::cerr << "Usage: domino <source_file> <atom_template> <pipeline width> <pipeline depth> <comma-separated list of passes (optional)>" << std::endl;
+  std::cerr << "List of passes: " << std::endl;
+  std::cerr << all_passes_as_string(all_passes);
+}
+
 int main(int argc, const char **argv) {
   try {
     // Block out SIGINT, because we can't handle it properly
@@ -97,16 +103,30 @@ int main(int argc, const char **argv) {
     // Populate all passes
     populate_passes();
 
-    // Get string that needs to be parsed and pass list
-    std::string string_to_parse = "";
-    std::vector<std::string> pass_list;
-    if (argc == 3) {
-      string_to_parse = file_to_str(std::string(argv[1]));
-      pass_list = split(std::string(argv[2]), ",");
+    // Default pass list
+    const auto default_pass_list = "int_type_checker,desugar_comp_asgn,if_converter,algebra_simplify,array_validator,stateful_flanks,ssa,expr_propagater,expr_flattener,cse,partitioning";
 
-      // add all user-requested passes in the same order that the user specified
+    if (argc >= 5) {
+      // Get cmdline args
+      const auto string_to_parse = file_to_str(std::string(argv[1]));
+      const auto atom_template_file = std::string(argv[2]);
+      const auto pipeline_width = std::atoi(argv[3]);
+      if (pipeline_width <= 0) throw std::logic_error("Pipeline width ("  + std::string(argv[3]) + ") must be a positive integer");
+      const auto pipeline_depth = std::atoi(argv[4]);
+      if (pipeline_depth <= 0) throw std::logic_error("Pipeline depth (" + std::string(argv[4]) + ") must be a positive integer");
+      const auto pass_list = (argc == 6) ? split(std::string(argv[5]), ","): split(default_pass_list, ",");
+
+      if (argc > 6) {
+        print_usage();
+        return EXIT_FAILURE;
+      }
+
+      // add all non-sketch passes
       PassFunctorVector passes_to_run;
       for (const auto & pass_name : pass_list) passes_to_run.emplace_back(get_pass_functor(pass_name, all_passes));
+
+      // add the passes for the sketch backend
+      // TODO
 
       /// Process them one after the other
       std::cout << std::accumulate(passes_to_run.begin(), passes_to_run.end(), string_to_parse, [] (const auto & current_output, const auto & pass_functor __attribute__((unused)))
@@ -114,8 +134,7 @@ int main(int argc, const char **argv) {
 
       return EXIT_SUCCESS;
     } else {
-      std::cerr << "Usage: " << argv[0] << " <source_file> <comma-separated list of passes given below>" << std::endl;
-      std::cerr << all_passes_as_string(all_passes);
+      print_usage();
       return EXIT_FAILURE;
     } 
   } catch (const std::exception & e) {
