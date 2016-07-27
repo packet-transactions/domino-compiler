@@ -100,11 +100,7 @@ int main(int argc, const char **argv) {
     // Get string that needs to be parsed and pass list
     std::string string_to_parse = "";
     std::vector<std::string> pass_list;
-    if (argc != 3) {
-      std::cerr << "Usage: " << argv[0] << " <source_file> <comma-separated list of passes given below>" << std::endl;
-      std::cerr << all_passes_as_string(all_passes);
-      return EXIT_FAILURE;
-    } else {
+    if (argc == 3) {
       string_to_parse = file_to_str(std::string(argv[1]));
       pass_list = split(std::string(argv[2]), ",");
 
@@ -117,7 +113,11 @@ int main(int argc, const char **argv) {
                                    { return (*pass_functor())(current_output); });
 
       return EXIT_SUCCESS;
-    }
+    } else {
+      std::cerr << "Usage: " << argv[0] << " <source_file> <comma-separated list of passes given below>" << std::endl;
+      std::cerr << all_passes_as_string(all_passes);
+      return EXIT_FAILURE;
+    } 
   } catch (const std::exception & e) {
     std::cerr << "Caught exception in main " << std::endl << e.what() << std::endl;
     return EXIT_FAILURE;
