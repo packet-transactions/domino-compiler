@@ -61,8 +61,6 @@ void populate_passes() {
   // to populate PassMap all_passes because initializer lists don't play well with move-only
   // types like unique_ptrs (http://stackoverflow.com/questions/9618268/initializing-container-of-unique-ptrs-from-initializer-list-fails-with-gcc-4-7)
   all_passes["cse"]               =[] () { return std::make_unique<FixedPointPass<CompoundPass, std::vector<DefaultTransformer>>>(std::vector<DefaultTransformer>({csi_transform, cse_transform})); };
-  all_passes["sketch_backend"]    =[] () { return std::make_unique<SinglePass<const std::string>>(sketch_backend_transform, "foobar"); };
-  all_passes["sketch_preprocessor"]    =[] () { return std::make_unique<DefaultSinglePass>(sketch_preprocessor); };
   all_passes["redundancy_remover"]=[] () { return std::make_unique<FixedPointPass<DefaultSinglePass, DefaultTransformer>>(redundancy_remover_transform); };
   all_passes["array_validator"]  = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& ArrayValidator::ast_visit_transform, ArrayValidator(), _1)); };
   all_passes["validator"]        = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& Validator::ast_visit_transform, Validator(), _1)); };
@@ -135,8 +133,9 @@ int main(int argc, const char **argv) {
       PassFunctorVector passes_to_run;
       for (const auto & pass_name : pass_list) passes_to_run.emplace_back(get_pass_functor(pass_name, all_passes));
 
-      // add the passes for the sketch backend
-      // TODO
+      // add the passes for the sketch preprocessor and backend
+      passes_to_run.emplace_back([] () { return std::make_unique<DefaultSinglePass>(sketch_preprocessor); });
+      passes_to_run.emplace_back([atom_template_file] () { return std::make_unique<SinglePass<const std::string>>(sketch_backend_transform, atom_template_file); });
 
       /// Process them one after the other
       std::cout << std::accumulate(passes_to_run.begin(), passes_to_run.end(), string_to_parse, [] (const auto & current_output, const auto & pass_functor __attribute__((unused)))
