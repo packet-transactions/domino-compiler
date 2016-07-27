@@ -182,7 +182,7 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl, const 
       int rand_seed = rand();
 
       // Run sketch
-      auto cmd_line = "/home/anirudh/sketch-1.6.9/sketch-frontend/sketch --slv-seed=" + std::to_string(rand_seed) + " --fe-no-output-print " + sketch_temp_file.name();
+      auto cmd_line = "sketch --slv-seed=" + std::to_string(rand_seed) + " --fe-no-output-print " + sketch_temp_file.name();
       auto ret = std::system(cmd_line.c_str());
       if (ret != 0) {
         std::ofstream out("/tmp/debug.sk");
