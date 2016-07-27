@@ -57,26 +57,34 @@ template<typename... Args>
 class SinglePass  : public CompilerPass {
  public:
   /// Construct a SinglePass using a Transformer object
-  SinglePass(const Transformer<Args...> & t_transformer);
+  SinglePass(const Transformer<Args...> & t_transformer, const Args... t_args);
 
   /// Execute SinglePass object overriding function call operator
   std::string operator() (const std::string & string_to_parse) final override;
+
  private:
   class MyASTConsumer : public clang::ASTConsumer {
     public:
-    MyASTConsumer(const Transformer<Args...> & t_transformer) : transformer_(t_transformer) {};
+     MyASTConsumer(const Transformer<Args...> & t_transformer, const Args... t_args) : transformer_(t_transformer), args_(std::make_tuple(t_args...)) {};
 
-    /// Override the method that gets called for the translation unit
-    virtual void HandleTranslationUnit(clang::ASTContext & context) override {
-      const auto * tu_decl = context.getTranslationUnitDecl();
-      assert_exception(llvm::isa<clang::TranslationUnitDecl>(tu_decl));
-      output_ = transformer_(tu_decl);
-    }
-    auto output() const { return output_; }
+     /// Override the method that gets called for the translation unit
+     virtual void HandleTranslationUnit(clang::ASTContext & context) override {
+       const auto * tu_decl = context.getTranslationUnitDecl();
+       assert_exception(llvm::isa<clang::TranslationUnitDecl>(tu_decl));
+       output_ = transformer_(tu_decl);
+     }
+
+     /// Get previously stored output
+     auto output() const { return output_; }
     private:
-      std::string  output_ = {};
-      /// Transformer function
-      Transformer<Args...> transformer_;
+     /// Temporary holding area for output
+     std::string  output_ = {};
+
+     /// Transformer function
+     Transformer<Args...> transformer_;
+
+     /// Temporary storage for arguments
+     std::tuple<Args...> args_;
   };
   /// Instantiate MyASTConsumer using supplied transformer
   MyASTConsumer my_ast_consumer_;
@@ -99,8 +107,8 @@ class SinglePass  : public CompilerPass {
 };
 
 template<typename... Args>
-SinglePass<Args...>::SinglePass(const Transformer<Args...> & t_transformer)
-    : my_ast_consumer_(t_transformer),
+SinglePass<Args...>::SinglePass(const Transformer<Args...> & t_transformer, const Args... t_args)
+    : my_ast_consumer_(t_transformer, t_args...),
       temp_file_("tmp", ".c") {}
 
 template<typename... Args>
