@@ -43,6 +43,16 @@ typedef std::function<std::unique_ptr<CompilerPass>(void)> PassFunctor;
 typedef std::map<PassName, PassFunctor> PassFactory;
 typedef std::vector<PassFunctor> PassFunctorVector;
 
+// Both SinglePass and Transformer take a parameter pack as template
+// arguments to allow additional arguments to the function carrying out
+// the transformation (e.g., atom templates and pipeline width and depth in sketch_backend)
+// Unfortunately, you can't provide a default value for such parameter packs
+// As http://en.cppreference.com/w/cpp/language/template_parameters#Default_template_arguments says
+// "Defaults can be specified for any kind of template parameter (type, non-type, or template), but not to parameter packs."
+// This is my clunky workaround.
+typedef Transformer<> DefaultTransformer;
+typedef SinglePass<> DefaultSinglePass;
+
 // Map to store factory for all passes
 static  PassFactory all_passes;
 
@@ -50,27 +60,27 @@ void populate_passes() {
   // We need to explicitly call populate_passes instead of using an initializer list
   // to populate PassMap all_passes because initializer lists don't play well with move-only
   // types like unique_ptrs (http://stackoverflow.com/questions/9618268/initializing-container-of-unique-ptrs-from-initializer-list-fails-with-gcc-4-7)
-  all_passes["cse"]               =[] () { return std::make_unique<FixedPointPass<CompoundPass, std::vector<Transformer>>>(std::vector<Transformer>({csi_transform, cse_transform})); };
-  all_passes["sketch_backend"]    =[] () { return std::make_unique<SinglePass>(sketch_backend_transform); };
-  all_passes["sketch_preprocessor"]    =[] () { return std::make_unique<SinglePass>(sketch_preprocessor); };
-  all_passes["redundancy_remover"]=[] () { return std::make_unique<FixedPointPass<SinglePass, Transformer>>(redundancy_remover_transform); };
-  all_passes["array_validator"]  = [] () { return std::make_unique<SinglePass>(std::bind(& ArrayValidator::ast_visit_transform, ArrayValidator(), _1)); };
-  all_passes["validator"]        = [] () { return std::make_unique<SinglePass>(std::bind(& Validator::ast_visit_transform, Validator(), _1)); };
-  all_passes["int_type_checker"] = [] () { return std::make_unique<SinglePass>(std::bind(& IntTypeChecker::ast_visit_transform, IntTypeChecker(), _1)); };
-  all_passes["desugar_comp_asgn"]= [] () { return std::make_unique<SinglePass>(std::bind(& DesugarCompAssignment::ast_visit_transform, DesugarCompAssignment(), _1)); };
-  all_passes["if_converter"]     = [] () { return std::make_unique<SinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)); };
-  all_passes["algebra_simplify"] = [] () { return std::make_unique<SinglePass>(std::bind(& AlgebraicSimplifier::ast_visit_transform, AlgebraicSimplifier(), _1)); };
-  all_passes["bool_to_int"]      = [] () { return std::make_unique<SinglePass>(std::bind(& BoolToInt::ast_visit_transform, BoolToInt(), _1));};
-  all_passes["expr_flattener"]   = [] () { return std::make_unique<FixedPointPass<SinglePass, Transformer>>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1)); };
-  all_passes["expr_propagater"]  = [] () { return std::make_unique<SinglePass>(expr_prop_transform); };
-  all_passes["stateful_flanks"]  = [] () { return std::make_unique<SinglePass>(stateful_flank_transform); };
-  all_passes["ssa"]              = [] () { return std::make_unique<SinglePass>(ssa_transform); };
-  all_passes["partitioning"]     = [] () { return std::make_unique<SinglePass>(partitioning_transform); };
-  all_passes["pisa_source"]    = [] () { return std::make_unique<SinglePass>(std::bind(& PISACodeGenerator::transform_translation_unit, PISACodeGenerator(PISACodeGenerator::CodeGenerationType::SOURCE), _1)); };
-  all_passes["p4_source"]        = [] () { return std::make_unique<SinglePass>(std::bind(& P4CodeGenerator::transform_translation_unit, P4CodeGenerator(), _1)); };
-  all_passes["pisa_binary"]    = [] () { return std::make_unique<SinglePass>(std::bind(& PISACodeGenerator::transform_translation_unit, PISACodeGenerator(PISACodeGenerator::CodeGenerationType::BINARY), _1)); };
-  all_passes["echo"]             = [] () { return std::make_unique<SinglePass>(clang_decl_printer); };
-  all_passes["gen_used_fields"]   = [] () { return std::make_unique<SinglePass>(gen_used_field_transform); };
+  all_passes["cse"]               =[] () { return std::make_unique<FixedPointPass<CompoundPass, std::vector<DefaultTransformer>>>(std::vector<DefaultTransformer>({csi_transform, cse_transform})); };
+  all_passes["sketch_backend"]    =[] () { return std::make_unique<DefaultSinglePass>(sketch_backend_transform); };
+  all_passes["sketch_preprocessor"]    =[] () { return std::make_unique<DefaultSinglePass>(sketch_preprocessor); };
+  all_passes["redundancy_remover"]=[] () { return std::make_unique<FixedPointPass<DefaultSinglePass, DefaultTransformer>>(redundancy_remover_transform); };
+  all_passes["array_validator"]  = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& ArrayValidator::ast_visit_transform, ArrayValidator(), _1)); };
+  all_passes["validator"]        = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& Validator::ast_visit_transform, Validator(), _1)); };
+  all_passes["int_type_checker"] = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& IntTypeChecker::ast_visit_transform, IntTypeChecker(), _1)); };
+  all_passes["desugar_comp_asgn"]= [] () { return std::make_unique<DefaultSinglePass>(std::bind(& DesugarCompAssignment::ast_visit_transform, DesugarCompAssignment(), _1)); };
+  all_passes["if_converter"]     = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1)); };
+  all_passes["algebra_simplify"] = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& AlgebraicSimplifier::ast_visit_transform, AlgebraicSimplifier(), _1)); };
+  all_passes["bool_to_int"]      = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& BoolToInt::ast_visit_transform, BoolToInt(), _1));};
+  all_passes["expr_flattener"]   = [] () { return std::make_unique<FixedPointPass<DefaultSinglePass, DefaultTransformer>>(std::bind(& ExprFlattenerHandler::transform, ExprFlattenerHandler(), _1)); };
+  all_passes["expr_propagater"]  = [] () { return std::make_unique<DefaultSinglePass>(expr_prop_transform); };
+  all_passes["stateful_flanks"]  = [] () { return std::make_unique<DefaultSinglePass>(stateful_flank_transform); };
+  all_passes["ssa"]              = [] () { return std::make_unique<DefaultSinglePass>(ssa_transform); };
+  all_passes["partitioning"]     = [] () { return std::make_unique<DefaultSinglePass>(partitioning_transform); };
+  all_passes["pisa_source"]    = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& PISACodeGenerator::transform_translation_unit, PISACodeGenerator(PISACodeGenerator::CodeGenerationType::SOURCE), _1)); };
+  all_passes["p4_source"]        = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& P4CodeGenerator::transform_translation_unit, P4CodeGenerator(), _1)); };
+  all_passes["pisa_binary"]    = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& PISACodeGenerator::transform_translation_unit, PISACodeGenerator(PISACodeGenerator::CodeGenerationType::BINARY), _1)); };
+  all_passes["echo"]             = [] () { return std::make_unique<DefaultSinglePass>(clang_decl_printer); };
+  all_passes["gen_used_fields"]   = [] () { return std::make_unique<DefaultSinglePass>(gen_used_field_transform); };
 }
 
 PassFunctor get_pass_functor(const std::string & pass_name, const PassFactory & pass_factory) {

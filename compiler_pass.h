@@ -28,7 +28,11 @@
 
 
 /// Convenience typedef for transforming a translation unit
-typedef std::function<std::string(const clang::TranslationUnitDecl *)> Transformer;
+/// This is where all the interesting stuff happens: if conversion, pipelining, etc.
+/// TranslationUnitDecl is the clang class for traversing the AST of a parsed translation unit.
+/// The return type is a string, because clang doesn't allow you to construct or modify ASTs.
+template<typename ...Args>
+using Transformer = std::function<std::string(const clang::TranslationUnitDecl *, const Args... t_args)>;
 
 /// Abstract base class for a pass of the Clang compiler,
 /// a function object that takes a string corresponding to a translation unit
@@ -49,17 +53,18 @@ class CompilerPass {
 /// Single pass over a translation unit.
 /// Most code here is based on
 /// http://eli.thegreenplace.net/2012/06/08/basic-source-to-source-transformation-with-clang
+template<typename... Args>
 class SinglePass  : public CompilerPass {
  public:
   /// Construct a SinglePass using a Transformer object
-  SinglePass(const Transformer & t_transformer);
+  SinglePass(const Transformer<Args...> & t_transformer);
 
   /// Execute SinglePass object overriding function call operator
   std::string operator() (const std::string & string_to_parse) final override;
  private:
   class MyASTConsumer : public clang::ASTConsumer {
     public:
-    MyASTConsumer(const Transformer & t_transformer) : transformer_(t_transformer) {};
+    MyASTConsumer(const Transformer<Args...> & t_transformer) : transformer_(t_transformer) {};
 
     /// Override the method that gets called for the translation unit
     virtual void HandleTranslationUnit(clang::ASTContext & context) override {
@@ -71,7 +76,7 @@ class SinglePass  : public CompilerPass {
     private:
       std::string  output_ = {};
       /// Transformer function
-      Transformer transformer_;
+      Transformer<Args...> transformer_;
   };
   /// Instantiate MyASTConsumer using supplied transformer
   MyASTConsumer my_ast_consumer_;
@@ -93,11 +98,13 @@ class SinglePass  : public CompilerPass {
   TempFile temp_file_;
 };
 
-SinglePass::SinglePass(const Transformer & t_transformer)
+template<typename... Args>
+SinglePass<Args...>::SinglePass(const Transformer<Args...> & t_transformer)
     : my_ast_consumer_(t_transformer),
       temp_file_("tmp", ".c") {}
 
-std::string SinglePass::operator()(const std::string & string_to_parse) {
+template<typename... Args>
+std::string SinglePass<Args...>::operator()(const std::string & string_to_parse) {
   // Write string_to_parse into temp_file_
   temp_file_.write(string_to_parse);
 
@@ -168,21 +175,21 @@ class FixedPointPass : public CompilerPass {
 class CompoundPass : public CompilerPass {
  public:
   /// Construct a CompoundPass
-  CompoundPass(const std::vector<Transformer> & t_transforms)
+  CompoundPass(const std::vector<Transformer<>> & t_transforms)
     : transforms_(t_transforms) {}
 
   /// Execute CompoundPass object
   std::string operator() (const std::string & string_to_parse) final override {
     std::string output = string_to_parse;
     for (const auto & transform : transforms_) {
-      output = SinglePass(transform)(output);
+      output = SinglePass<>(transform)(output);
     }
     return output;
   }
 
  private:
   /// Store t_transorms for future use
-  std::vector<Transformer> transforms_;
+  std::vector<Transformer<>> transforms_;
 };
 
 // Vector of Transform functions, each transform function runs within a CompilerPass
