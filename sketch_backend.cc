@@ -180,18 +180,21 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl, const 
       TempFile sketch_temp_file("/tmp/sketch", ".sk");
       sketch_temp_file.write(sketch_contents);
       int rand_seed = rand();
-      try {
-        auto cmd_line = "/home/anirudh/sketch-1.6.9/sketch-frontend/sketch --slv-seed=" + std::to_string(rand_seed) + " --fe-no-output-print " + sketch_temp_file.name();
-        std::system(cmd_line.c_str());
-        std::ofstream out("/tmp/success.sk");
-        out << sketch_contents;
-        out.close();
-        std::cerr << "Sketch succeeded with random seed " << rand_seed << " , input sketch available at /tmp/success.sk" << std::endl;
-      } catch (const std::exception & e) {
+
+      // Run sketch
+      auto cmd_line = "/home/anirudh/sketch-1.6.9/sketch-frontend/sketch --slv-seed=" + std::to_string(rand_seed) + " --fe-no-output-print " + sketch_temp_file.name();
+      auto ret = std::system(cmd_line.c_str());
+      if (ret != 0) {
         std::ofstream out("/tmp/debug.sk");
         out << sketch_contents;
         out.close();
         std::cerr << "Sketch failed to find a configuration, with random seed " << rand_seed << " , input available at /tmp/debug.sk" << std::endl;
+      } else {
+        std::ofstream out("/tmp/success.sk");
+        out << sketch_contents;
+        out.close();
+        std::cerr << "Return value is " << ret << std::endl;
+        std::cerr << "Sketch succeeded with random seed " << rand_seed << " , input sketch available at /tmp/success.sk" << std::endl;
       }
     }
   }
