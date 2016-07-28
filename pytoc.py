@@ -109,9 +109,9 @@ class PyToC(NodeVisitor):
     print(";\n", file = self.program_output)
 
   def visit_If(self, node):
-    print("if ", file = self.program_output)
+    print("if (", file = self.program_output)
     Unparser(node.test, self.program_output)
-    print(" {", file = self.program_output)
+    print(") {", file = self.program_output)
     for stmt in node.body:
       self.visit(stmt)
     print("}", file = self.program_output)
