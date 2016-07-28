@@ -220,7 +220,7 @@ std::string draw_pipeline(const PipelineDrawing & atoms_for_drawing, const Graph
   return ret;
 }
 
-std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
+std::string partitioning_transform(const TranslationUnitDecl * tu_decl, const uint32_t pipeline_depth, const uint32_t pipeline_width) {
   const auto & id_set = identifier_census(tu_decl);
 
   // Storage for returned string
@@ -262,6 +262,21 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl) {
           ret += atom_body_as_str;
         }
       }
+
+      // count number of stages in the pipeline and max stage width
+      uint32_t max_stage_id = 0;
+      uint32_t max_atom_id  = 0;
+      for (const auto & body_pair : atom_bodies) {
+        uint32_t atom_id = 0;
+        const uint32_t stage_id = body_pair.first;
+        for (const auto & atom_body __attribute__ ((unused)) : body_pair.second) {
+          max_atom_id = std::max(max_atom_id, atom_id);
+          atom_id++;
+        }
+        max_stage_id = std::max(max_stage_id, stage_id);
+      }
+      if ((max_stage_id + 1) > pipeline_depth) throw std::logic_error("Pipeline depth of " + std::to_string(max_stage_id + 1) + " exceeds allowed pipeline depth of " + std::to_string(pipeline_depth));
+      if ((max_atom_id + 1) > pipeline_width) throw std::logic_error("Pipeline width of " + std::to_string(max_atom_id + 1) + " exceeds allowed pipeline width of " + std::to_string(pipeline_width));
     }
   }
   return ret;

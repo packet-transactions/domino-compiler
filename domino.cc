@@ -73,7 +73,6 @@ void populate_passes() {
   all_passes["expr_propagater"]  = [] () { return std::make_unique<DefaultSinglePass>(expr_prop_transform); };
   all_passes["stateful_flanks"]  = [] () { return std::make_unique<DefaultSinglePass>(stateful_flank_transform); };
   all_passes["ssa"]              = [] () { return std::make_unique<DefaultSinglePass>(ssa_transform); };
-  all_passes["partitioning"]     = [] () { return std::make_unique<DefaultSinglePass>(partitioning_transform); };
   all_passes["pisa_source"]    = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& PISACodeGenerator::transform_translation_unit, PISACodeGenerator(PISACodeGenerator::CodeGenerationType::SOURCE), _1)); };
   all_passes["p4_source"]        = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& P4CodeGenerator::transform_translation_unit, P4CodeGenerator(), _1)); };
   all_passes["pisa_binary"]    = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& PISACodeGenerator::transform_translation_unit, PISACodeGenerator(PISACodeGenerator::CodeGenerationType::BINARY), _1)); };
@@ -98,7 +97,7 @@ std::string all_passes_as_string(const PassFactory & pass_factory) {
 }
 
 void print_usage() {
-  std::cerr << "Usage: domino <source_file> <atom_template> <pipeline width> <pipeline depth> <yes to run sketch preprocessor (no by default)> <comma-separated list of passes (optional)>" << std::endl;
+  std::cerr << "Usage: domino <source_file> <atom_template> <pipeline depth> <pipeline width> <yes to run sketch preprocessor (no by default)> <comma-separated list of passes (optional)>" << std::endl;
   std::cerr << "List of passes: " << std::endl;
   std::cerr << all_passes_as_string(all_passes);
 }
@@ -112,16 +111,16 @@ int main(int argc, const char **argv) {
     populate_passes();
 
     // Default pass list
-    const auto default_pass_list = "int_type_checker,desugar_comp_asgn,if_converter,algebra_simplify,array_validator,stateful_flanks,ssa,expr_propagater,expr_flattener,cse,partitioning";
+    const auto default_pass_list = "int_type_checker,desugar_comp_asgn,if_converter,algebra_simplify,array_validator,stateful_flanks,ssa,expr_propagater,expr_flattener,cse";
 
     if (argc >= 5) {
       // Get cmdline args
       const auto string_to_parse = file_to_str(std::string(argv[1]));
       const auto atom_template_file = std::string(argv[2]);
-      const auto pipeline_width = std::atoi(argv[3]);
-      if (pipeline_width <= 0) throw std::logic_error("Pipeline width ("  + std::string(argv[3]) + ") must be a positive integer");
-      const auto pipeline_depth = std::atoi(argv[4]);
-      if (pipeline_depth <= 0) throw std::logic_error("Pipeline depth (" + std::string(argv[4]) + ") must be a positive integer");
+      const auto pipeline_depth = std::atoi(argv[3]);
+      if (pipeline_depth <= 0) throw std::logic_error("Pipeline depth (" + std::string(argv[3]) + ") must be a positive integer");
+      const auto pipeline_width = std::atoi(argv[4]);
+      if (pipeline_width <= 0) throw std::logic_error("Pipeline width ("  + std::string(argv[4]) + ") must be a positive integer");
       const auto run_sketch_prepocessor = ((argc >= 6) and (std::string(argv[5]) == "yes")) ? true : false;
       const auto pass_list = (argc == 7) ? split(std::string(argv[6]), ","): split(default_pass_list, ",");
 
@@ -130,9 +129,12 @@ int main(int argc, const char **argv) {
         return EXIT_FAILURE;
       }
 
-      // add all non-sketch passes
+      // add all preprocessing passes
       PassFunctorVector passes_to_run;
       for (const auto & pass_name : pass_list) passes_to_run.emplace_back(get_pass_functor(pass_name, all_passes));
+
+      // add partitioning pass
+      passes_to_run.emplace_back([pipeline_depth, pipeline_width] () { return std::make_unique<SinglePass<const uint32_t, const uint32_t>>(partitioning_transform, pipeline_depth, pipeline_width); } );
 
       // add the passes for the sketch preprocessor and backend
       if (run_sketch_prepocessor) passes_to_run.emplace_back([] () { return std::make_unique<DefaultSinglePass>(sketch_preprocessor); });

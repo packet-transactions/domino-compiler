@@ -46,6 +46,6 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const clang::Comp
 std::string draw_pipeline(const PipelineDrawing & atoms_for_drawing, const Graph<InstBlock> & condensed_graph);
 
 /// Entry point to partitioning logic, called by SinglePass
-std::string partitioning_transform(const clang::TranslationUnitDecl * tu_decl);
+std::string partitioning_transform(const clang::TranslationUnitDecl * tu_decl, const uint32_t pipeline_depth, const uint32_t pipeline_width);
 
 #endif  // PARTITIONING_H_
