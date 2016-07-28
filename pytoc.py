@@ -57,6 +57,14 @@ class FieldCollector(NodeVisitor):
   def visit_Attribute(self, node):
     self.field_set.add(node.attr)
 
+# Identify packet variable name in function body
+class PacketVariableIdentifier(NodeVisitor):
+  def __init__(self):
+    self.packet_var = set()
+  def visit_Attribute(self, node):
+    assert(type(node.value) is Name)
+    self.packet_var.add(node.value.id)
+
 # The core logic,
 # go through the function body,
 # identify state variables and packet fields
@@ -81,8 +89,15 @@ class PyToC(NodeVisitor):
     field_collector.visit(node)
     self.field_set = field_collector.field_set
 
+    # Get packet variable name
+    packet_var_identifier = PacketVariableIdentifier()
+    packet_var_identifier.visit(node)
+    self.packet_var = packet_var_identifier.packet_var
+    # Make sure there is only one
+    assert(len(self.packet_var) == 1)
+
     # Write out function body
-    print("void func(struct Packet p) {", file = self.program_output)
+    print("void func(struct Packet " + self.packet_var.pop() + ") {", file = self.program_output)
     for stmt in node.body:
       self.visit(stmt)
     print("}", file = self.program_output)
