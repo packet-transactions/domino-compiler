@@ -145,7 +145,7 @@ pytoc_converter = PyToC()
 pytoc_converter.visit(function_def_nodes[0])
 
 # Include the hashes header
-print("#include \"headers.h\"")
+print("#include \"hashes.h\"")
 
 # Include the iso646 header
 print("#include \"iso646.h\"")
