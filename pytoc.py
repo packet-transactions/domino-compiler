@@ -109,6 +109,10 @@ class PyToC(NodeVisitor):
     Unparser(node, self.program_output)
     print(";\n", file = self.program_output)
 
+  def visit_AugAssign(self, node):
+    Unparser(node, self.program_output)
+    print(";\n", file = self.program_output)
+
   def visit_If(self, node):
     print("if (", file = self.program_output)
     Unparser(node.test, self.program_output)
