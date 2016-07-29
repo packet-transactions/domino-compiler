@@ -184,8 +184,8 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
     max_stage_id = std::max(max_stage_id, stage_id);
   }
   std::cerr << draw_pipeline(atoms_for_drawing, condensed_graph) << std::endl;
-  std::cerr << "// " + std::to_string(max_stage_id + 1) + " stages" << std::endl;
-  std::cerr << "// " + std::to_string(max_atom_id  + 1) + " atoms/stage" << std::endl;
+  std::cout << "// " + std::to_string(max_stage_id + 1) + " stages" << std::endl;
+  std::cout << "// " + std::to_string(max_atom_id  + 1) + " atoms/stage" << std::endl;
   return atom_bodies;
 }
 
