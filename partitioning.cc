@@ -184,8 +184,8 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
     max_stage_id = std::max(max_stage_id, stage_id);
   }
   std::cerr << draw_pipeline(atoms_for_drawing, condensed_graph) << std::endl;
-  std::cout << "// " + std::to_string(max_stage_id + 1) + " stages" << std::endl;
-  std::cout << "// " + std::to_string(max_atom_id  + 1) + " atoms/stage" << std::endl;
+  std::cout << "Total of " + std::to_string(max_stage_id + 1) + " stages" << std::endl;
+  std::cout << "Maximum of " + std::to_string(max_atom_id  + 1) + " atoms/stage" << std::endl;
   return atom_bodies;
 }
 
@@ -275,8 +275,14 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl, const ui
         }
         max_stage_id = std::max(max_stage_id, stage_id);
       }
-      if ((max_stage_id + 1) > pipeline_depth) throw std::logic_error("Pipeline depth of " + std::to_string(max_stage_id + 1) + " exceeds allowed pipeline depth of " + std::to_string(pipeline_depth));
-      if ((max_atom_id + 1) > pipeline_width) throw std::logic_error("Pipeline width of " + std::to_string(max_atom_id + 1) + " exceeds allowed pipeline width of " + std::to_string(pipeline_width));
+      if ((max_stage_id + 1) > pipeline_depth) {
+        const auto diagnostics = "// Pipeline depth of " + std::to_string(max_stage_id + 1) + " exceeds allowed pipeline depth of " + std::to_string(pipeline_depth);
+        throw std::logic_error(diagnostics);
+      }
+      if ((max_atom_id + 1) > pipeline_width) {
+        const auto diagnostics = "// Pipeline width of " + std::to_string(max_atom_id + 1) + " exceeds allowed pipeline width of " + std::to_string(pipeline_width);
+        throw std::logic_error(diagnostics);
+      }
     }
   }
   return ret;
