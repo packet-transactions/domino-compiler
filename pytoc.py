@@ -1,4 +1,5 @@
-#! /usr/bin/python
+#! /usr/bin/env python3
+
 from ast     import NodeVisitor
 from ast     import parse
 from ast     import dump
