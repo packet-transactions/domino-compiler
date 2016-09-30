@@ -36,3 +36,4 @@ complicated_scc_test
 graph_dot_constructor
 __pycache__
 *.spec
+domino_to_p4
