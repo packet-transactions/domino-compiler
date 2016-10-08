@@ -1,4 +1,4 @@
-1. Ensure you have python-3 (> 3.5.1) git g++ (>4.9) build-essential autotools-dev libncurses5-dev autoconf and zlib1g-dev
+1. Ensure you have python3 (> 3.5.1) git g++ (>4.9) build-essential autotools-dev libncurses5-dev autoconf and zlib1g-dev
 (Use a package manager like macports or apt-get to get them.)
 2. Get clang + llvm from
 http://llvm.org/releases/3.5.0/clang+llvm-3.5.0-macosx-apple-darwin.tar.xz (OS X)
