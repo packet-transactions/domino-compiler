@@ -191,12 +191,12 @@ PISACodeGenerator::PISALibString PISACodeGenerator::gen_lib_as_string(const PISA
   // Compile pisa_file into a .o file
   TempFile object_file("/tmp/pisa_obj", ".o");
   auto cmd_line = "g++  -std=c++14 -pedantic -Wconversion -Wsign-conversion -Wall -Wextra -Weffc++ -Werror -fno-default-inline -g -c " + pisa_prog_file.name() + " -fPIC -DPIC -o " + object_file.name();
-  std::system(cmd_line.c_str());
+  auto __attribute__((unused)) ret1 = std::system(cmd_line.c_str());
 
   // Turn that into a shared library
   TempFile library_file("/tmp/libpisa", ".so");
   cmd_line = "g++ -shared -o " + library_file.name() + " " + object_file.name();
-  std::system(cmd_line.c_str());
+  auto __attribute__((unused)) ret2 = std::system(cmd_line.c_str());
 
   // Return library file binary as a string
   // (hopefully doesn't bork the terminal)
