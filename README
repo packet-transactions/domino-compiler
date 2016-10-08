@@ -5,7 +5,7 @@ http://llvm.org/releases/3.5.0/clang+llvm-3.5.0-macosx-apple-darwin.tar.xz (OS X
 http://llvm.org/releases/3.5.0/clang+llvm-3.5.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz (Ubuntu)
 Similar files exist for other distributions as well, though this has only been tested so far on Ubuntu and OS X.
 3. Get sketch from https://people.csail.mit.edu/asolar/sketch-1.6.9.tar.gz, install it, and add the sketch binary to the path.
-4. git clone https://github.com/anirudhSK/banzai.git; cd banzai; ./autogen.sh; ./configure CXX='g++'; sudo make install; cd ..; ./autogen.sh && ./configure CXX='g++' && make
+4. git clone https://github.com/anirudhSK/banzai.git; cd banzai; ./autogen.sh; ./configure; sudo make install;
 5. git clone https://github.com/anirudhsk/domino
 6. ./autogen.sh
 7. ./configure CLANG_DEV_LIBS=<wherever you untarred clang+llvm in step 2>
