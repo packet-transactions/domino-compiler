@@ -10,7 +10,7 @@
 using std::placeholders::_1;
 
 void test_if_converter(const std::string & input, const std::string & expected_output) {
-  auto if_converter_pass = SinglePass(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1));
+  auto if_converter_pass = SinglePass<>(std::bind(& IfConversionHandler::transform, IfConversionHandler(), _1));
   const auto output = if_converter_pass(input);
   std::cerr << "Actual output is " << output << std::endl;
   std::cerr << "Expected output is " << expected_output << std::endl;

@@ -9,6 +9,7 @@
 #include <ostream>
 #include <numeric>
 #include <functional>
+#include <algorithm>
 #include <string>
 #include <tuple>
 #include <stdexcept>

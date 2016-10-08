@@ -10,6 +10,7 @@ AC_PROG_RANLIB
 
 # Add picky CXXFLAGS
 CPPFLAGS="-std=c++14 -pthread -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D_GLIBCXX_USE_CXX11_ABI=0"
+LDFLAGS="-pthread"
 PICKY_CXXFLAGS="-pedantic -Wconversion -Wsign-conversion -Wall -Wextra -Weffc++ -Werror"
 AC_SUBST([PICKY_CXXFLAGS])
 
