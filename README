@@ -10,5 +10,6 @@ add the sketch binary to the path.
 5. git clone https://github.com/packet-transactions/domino-compiler.git
 6. ./autogen.sh
 7. ./configure CLANG_DEV_LIBS=<wherever you untarred clang+llvm in step 2>
+(make sure CLANG_DEV_LIBS is set to an absolute file system path)
 8. make
 9. make check
