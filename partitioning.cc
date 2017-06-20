@@ -186,6 +186,7 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
   std::cerr << draw_pipeline(atoms_for_drawing, condensed_graph) << std::endl;
   std::cout << "Total of " + std::to_string(max_stage_id + 1) + " stages" << std::endl;
   std::cout << "Maximum of " + std::to_string(max_atom_id  + 1) + " atoms/stage" << std::endl;
+  std::cout << "Total of " << atom_bodies.size() << " atoms" << std::endl;
   return atom_bodies;
 }
 
