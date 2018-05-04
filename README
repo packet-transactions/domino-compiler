@@ -13,3 +13,4 @@ add the sketch binary to the path.
 (make sure CLANG_DEV_LIBS is set to an absolute file system path)
 8. make
 9. make check
+10. sudo make install (if you want to install it system wide).
