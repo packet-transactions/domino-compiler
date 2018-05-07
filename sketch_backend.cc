@@ -129,7 +129,6 @@ std::string sketch_preprocessor(const TranslationUnitDecl * tu_decl) {
 std::string coalesce_args(const Stmt * function_body,
                           const std::map<PktField, std::set<PktField>> & providers,
                           const std::map<PktField, std::string> & provider_expressions) {
- std::cerr << "Applying coalesce_args to " << clang_stmt_printer(function_body) << std::endl;
  std::set<PktField> incoming_fields = extract_packet_fields(function_body).incoming_fields;
 
  /// Replace each incoming field with its providers to see if there is a net reduction
