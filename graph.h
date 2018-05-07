@@ -427,7 +427,7 @@ std::map<NodeType, uint32_t> Graph<NodeType>::critical_path_schedule() const {
     const uint32_t next_node_time = std::accumulate(pred_map_.at(next_node).begin(),
                                                     pred_map_.at(next_node).end(),
                                                     static_cast<uint32_t>(0),
-                                                    [&schedule, &next_node, this] (const auto & acc, const auto & x)
+                                                    [&schedule] (const auto & acc, const auto & x)
                                                     { return std::max(acc, schedule.at(x) + 1);});
 
     // append to schedule, remove from to_schedule
