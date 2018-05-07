@@ -112,6 +112,7 @@ std::string sketch_preprocessor(const TranslationUnitDecl * tu_decl) {
     if (isa<FunctionDecl>(child_decl) and
         (is_packet_func(dyn_cast<FunctionDecl>(child_decl))) and
         (not collect_state_vars(dyn_cast<FunctionDecl>(child_decl)->getBody()).empty())) {
+      // The collect_state_vars check ensures that this is run only on stateful codelets
       const auto * function_decl = dyn_cast<FunctionDecl>(child_decl);
       assert_exception(function_decl->getNumParams() == 1);
       ret += function_decl->getReturnType().getAsString() + " " +
@@ -128,6 +129,7 @@ std::string sketch_preprocessor(const TranslationUnitDecl * tu_decl) {
 std::string coalesce_args(const Stmt * function_body,
                           const std::map<PktField, std::set<PktField>> & providers,
                           const std::map<PktField, std::string> & provider_expressions) {
+ std::cerr << "Applying coalesce_args to " << clang_stmt_printer(function_body) << std::endl;
  std::set<PktField> incoming_fields = extract_packet_fields(function_body).incoming_fields;
 
  /// Replace each incoming field with its providers to see if there is a net reduction
@@ -156,13 +158,13 @@ std::string coalesce_args(const Stmt * function_body,
 
  std::cerr << "incoming_fields " << incoming_fields << std::endl;
  if (found_smaller_field_set) {
-   std::cerr << "Found smaller field set " << new_field_set_candidate << "\n";
+   std::cerr << "Found smaller field set " << new_field_set_candidate << "\n" << std::endl;
    return "{ " +
           replaced_field + " = " + provider_expressions.at(replaced_field) + ";" +
           orig_body +
           "}";
  } else {
-   std::cerr << "No luck, sticking with old field set\n";
+   std::cerr << "No luck, sticking with old field set" << "\n" << std::endl;
    return "{" + orig_body + "}";
  }
 }
