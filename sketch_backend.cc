@@ -170,7 +170,6 @@ std::string coalesce_args(const Stmt * function_body,
 
 std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl, const std::string t_atom_template) {
   static int debug_count = 0;
-  debug_count++;
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     // Transform only packet functions into SKETCH specifications
     if (isa<FunctionDecl>(child_decl) and
@@ -188,6 +187,7 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl, const 
       auto cmd_line = "sketch --slv-seed=" + std::to_string(rand_seed) + " --fe-no-output-print " + sketch_temp_file.name();
       auto ret = std::system(cmd_line.c_str());
       if (ret != 0) {
+        debug_count++;
         std::ofstream out("/tmp/debug" + std::to_string(debug_count) + ".sk");
         out << sketch_contents;
         out.close();
