@@ -169,6 +169,7 @@ std::string coalesce_args(const Stmt * function_body,
 }
 
 std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl, const std::string t_atom_template) {
+  static int debug_count = 0;
   for (const auto * child_decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     // Transform only packet functions into SKETCH specifications
     if (isa<FunctionDecl>(child_decl) and
@@ -186,11 +187,11 @@ std::string sketch_backend_transform(const TranslationUnitDecl * tu_decl, const 
       auto cmd_line = "sketch --slv-seed=" + std::to_string(rand_seed) + " --fe-no-output-print " + sketch_temp_file.name();
       auto ret = std::system(cmd_line.c_str());
       if (ret != 0) {
-        std::ofstream out("/tmp/debug.sk");
+        std::ofstream out("/tmp/debug" + debug_count.to_string() + ".sk");
         out << sketch_contents;
         out.close();
         std::cerr << "// Return value is " << ret << std::endl;
-        std::cout << "Sketch failed to find a configuration with random seed " << rand_seed << " , input available at /tmp/debug.sk" << std::endl;
+        std::cout << "Sketch failed to find a configuration with random seed " << rand_seed << " , input available at /tmp/debug" + debug_count.to_string() + ".sk" << std::endl;
       } else {
         std::ofstream out("/tmp/success.sk");
         out << sketch_contents;
