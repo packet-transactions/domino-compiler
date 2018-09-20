@@ -16,7 +16,7 @@ std::string AlgebraicSimplifier::ast_visit_bin_op(const clang::BinaryOperator * 
 std::string AlgebraicSimplifier::ast_visit_cond_op(const clang::ConditionalOperator * cond_op) {
   if (isa<IntegerLiteral>(cond_op->getCond()) and dyn_cast<IntegerLiteral>(cond_op->getCond())->getValue().getSExtValue() == 1) {
     return ast_visit(cond_op->getTrueExpr());
-  } else if (isa<IntegerLiteral>(cond_op->getCond()) and dyn_cast<IntegerLiteral>(cond_op->getCond())->getValue().getSExtValue() == 1) {
+  } else if (isa<IntegerLiteral>(cond_op->getCond()) and dyn_cast<IntegerLiteral>(cond_op->getCond())->getValue().getSExtValue() == 0) {
     return ast_visit(cond_op->getFalseExpr());
   } else {
     return     ast_visit(cond_op->getCond()) + " ? "
