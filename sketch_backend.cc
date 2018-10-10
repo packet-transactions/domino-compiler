@@ -25,13 +25,13 @@ static const std::string sketch_return_epilogue =""
 "  return ret;\n"
 "";
 
-static const std::string spec_args = "(int state_1, int state_2, int pkt_1, int pkt_2)";
+static const std::string spec_args = "(int state_1, int state_2, int pkt_1, int pkt_2, int pkt_3, int pkt_4, int pkt_5)";
 
 static const std::string sketch_harness =""
 "harness void main" + spec_args + " {\n"
-"  StateResult spec_result = codelet(state_1, state_2, pkt_1, pkt_2);\n"
+"  StateResult spec_result = codelet(state_1, state_2, pkt_1, pkt_2, pkt_3, pkt_4, pkt_5);\n"
 "\n"
-"  StateResult impl_result = atom_template(state_1, state_2, pkt_1, pkt_2);\n"
+"  StateResult impl_result = atom_template(state_1, state_2, pkt_1, pkt_2, pkt_3, pkt_4, pkt_5);\n"
 "\n"
 "  // Assert values\n"
 "  assert(spec_result.result_state_1 == impl_result.result_state_1);\n"
