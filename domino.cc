@@ -5,8 +5,6 @@
 #include "stateful_flanks.h"
 #include "expr_flattener_handler.h"
 #include "algebraic_simplifier.h"
-#include "pisa_code_generator.h"
-#include "p4_backend.h"
 #include "bool_to_int.h"
 #include "desugar_compound_assignment.h"
 #include "int_type_checker.h"
@@ -73,9 +71,6 @@ void populate_passes() {
   all_passes["expr_propagater"]  = [] () { return std::make_unique<DefaultSinglePass>(expr_prop_transform); };
   all_passes["stateful_flanks"]  = [] () { return std::make_unique<DefaultSinglePass>(stateful_flank_transform); };
   all_passes["ssa"]              = [] () { return std::make_unique<DefaultSinglePass>(ssa_transform); };
-  all_passes["pisa_source"]    = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& PISACodeGenerator::transform_translation_unit, PISACodeGenerator(PISACodeGenerator::CodeGenerationType::SOURCE), _1)); };
-  all_passes["p4_source"]        = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& P4CodeGenerator::transform_translation_unit, P4CodeGenerator(), _1)); };
-  all_passes["pisa_binary"]    = [] () { return std::make_unique<DefaultSinglePass>(std::bind(& PISACodeGenerator::transform_translation_unit, PISACodeGenerator(PISACodeGenerator::CodeGenerationType::BINARY), _1)); };
   all_passes["echo"]             = [] () { return std::make_unique<DefaultSinglePass>(clang_decl_printer); };
   all_passes["gen_used_fields"]   = [] () { return std::make_unique<DefaultSinglePass>(gen_used_field_transform); };
 }
