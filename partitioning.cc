@@ -161,55 +161,55 @@ std::map<uint32_t, std::vector<InstBlock>> generate_partitions(const CompoundStm
   const auto & partitioning = condensed_graph.critical_path_schedule();
 
   // Output partition into valid C code, one for each timestamp
-  std::map<uint32_t, std::vector<InstBlock>> atom_bodies;
+  std::map<uint32_t, std::vector<InstBlock>> codelet_bodies;
   std::vector<std::pair<InstBlock, uint32_t>> sorted_pairs(partitioning.begin(), partitioning.end());
   std::sort(sorted_pairs.begin(), sorted_pairs.end(), [] (const auto & x, const auto & y) { return x.second < y.second; });
-  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&atom_bodies] (const auto & pair)
-                { if (atom_bodies.find(pair.second) == atom_bodies.end()) atom_bodies[pair.second] = std::vector<InstBlock>();
-                  atom_bodies.at(pair.second).emplace_back(pair.first); });
+  std::for_each(sorted_pairs.begin(), sorted_pairs.end(), [&codelet_bodies] (const auto & pair)
+                { if (codelet_bodies.find(pair.second) == codelet_bodies.end()) codelet_bodies[pair.second] = std::vector<InstBlock>();
+                  codelet_bodies.at(pair.second).emplace_back(pair.first); });
 
 
   // Draw pipeline
   uint32_t max_stage_id = 0;
-  uint32_t max_atom_id  = 0;
-  uint32_t num_atoms = 0;
-  PipelineDrawing atoms_for_drawing;
-  for (const auto & body_pair : atom_bodies) {
-    uint32_t atom_id = 0;
+  uint32_t max_codelet_id  = 0;
+  uint32_t num_codelets = 0;
+  PipelineDrawing codelets_for_drawing;
+  for (const auto & body_pair : codelet_bodies) {
+    uint32_t codelet_id = 0;
     const uint32_t stage_id = body_pair.first;
-    for (const auto & atom_body : body_pair.second) {
-      atoms_for_drawing[stage_id][atom_id] = atom_body;
-      max_atom_id = std::max(max_atom_id, atom_id);
-      atom_id++;
-      num_atoms++;
+    for (const auto & codelet_body : body_pair.second) {
+      codelets_for_drawing[stage_id][codelet_id] = codelet_body;
+      max_codelet_id = std::max(max_codelet_id, codelet_id);
+      codelet_id++;
+      num_codelets++;
     }
     max_stage_id = std::max(max_stage_id, stage_id);
   }
-  std::cerr << draw_pipeline(atoms_for_drawing, condensed_graph) << std::endl;
+  std::cerr << draw_pipeline(codelets_for_drawing, condensed_graph) << std::endl;
   std::cout << "Total of " + std::to_string(max_stage_id + 1) + " stages" << std::endl;
-  std::cout << "Maximum of " + std::to_string(max_atom_id  + 1) + " atoms/stage" << std::endl;
-  std::cout << "Total of " << num_atoms << " atoms" << std::endl;
-  return atom_bodies;
+  std::cout << "Maximum of " + std::to_string(max_codelet_id  + 1) + " codelets/stage" << std::endl;
+  std::cout << "Total of " << num_codelets << " codelets" << std::endl;
+  return codelet_bodies;
 }
 
-std::string draw_pipeline(const PipelineDrawing & atoms_for_drawing, const Graph<InstBlock> & condensed_graph) {
+std::string draw_pipeline(const PipelineDrawing & codelets_for_drawing, const Graph<InstBlock> & condensed_graph) {
   // Preamble for dot (node shape, fontsize etc)
   std::string ret = "digraph pipeline_diagram {splines=true node [shape = box style=\"rounded,filled\" fontsize = 10];\n";
   const uint32_t scale_x = 250;
   const uint32_t scale_y = 75;
 
   // Print out nodes
-  for (const auto & stageid_with_atom_map : atoms_for_drawing) {
-    const uint32_t stage_id = stageid_with_atom_map.first;
-    for (const auto & atom_pair : stageid_with_atom_map.second) {
-      const uint32_t atom_id = atom_pair.first;
-      const auto atom = atoms_for_drawing.at(stage_id).at(atom_id);
-      const auto atom_as_str = inst_block_printer(atom);
-      ret += hash_string(atom_as_str) + " [label = \""
-                                      + atom_as_str + "\""
+  for (const auto & stageid_with_codelet_map : codelets_for_drawing) {
+    const uint32_t stage_id = stageid_with_codelet_map.first;
+    for (const auto & codelet_pair : stageid_with_codelet_map.second) {
+      const uint32_t codelet_id = codelet_pair.first;
+      const auto codelet = codelets_for_drawing.at(stage_id).at(codelet_id);
+      const auto codelet_as_str = inst_block_printer(codelet);
+      ret += hash_string(codelet_as_str) + " [label = \""
+                                      + codelet_as_str + "\""
                                       + "  pos = \""
-                                      + std::to_string(scale_x * stage_id) + "," + std::to_string(scale_y * atom_id) + "\""
-                                      + " fillcolor=" + (atom.size() > 1 ? "darkturquoise" : "white")
+                                      + std::to_string(scale_x * stage_id) + "," + std::to_string(scale_y * codelet_id) + "\""
+                                      + " fillcolor=" + (codelet.size() > 1 ? "darkturquoise" : "white")
                                       + "];\n";
     }
   }
@@ -250,31 +250,31 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl, const ui
       const auto pkt_name = clang_value_decl_printer(pkt_param);
 
       // Transform function body
-      const auto atom_bodies = generate_partitions(dyn_cast<CompoundStmt>(function_decl->getBody()));
+      const auto codelet_bodies = generate_partitions(dyn_cast<CompoundStmt>(function_decl->getBody()));
 
-      // Create atom functions with new bodies, encode stage_id and atom_id within function signature.
-      for (const auto & body_pair : atom_bodies) {
-        uint32_t atom_id = 0;
+      // Create codelet functions with new bodies, encode stage_id and codelet_id within function signature.
+      for (const auto & body_pair : codelet_bodies) {
+        uint32_t codelet_id = 0;
         const uint32_t stage_id = body_pair.first;
-        for (const auto & atom_body : body_pair.second) {
-          const auto atom_body_as_str = function_decl->getReturnType().getAsString() + " " +
-                                        "_atom_" + std::to_string(stage_id) + "_" + std::to_string(atom_id) +
+        for (const auto & codelet_body : body_pair.second) {
+          const auto codelet_body_as_str = function_decl->getReturnType().getAsString() + " " +
+                                        "_codelet_" + std::to_string(stage_id) + "_" + std::to_string(codelet_id) +
                                         "( " + pkt_type + " " +  pkt_name + ") { " +
-                                        inst_block_printer(atom_body) + "}\n";
-          atom_id++;
-          ret += atom_body_as_str;
+                                        inst_block_printer(codelet_body) + "}\n";
+          codelet_id++;
+          ret += codelet_body_as_str;
         }
       }
 
       // count number of stages in the pipeline and max stage width
       uint32_t max_stage_id = 0;
-      uint32_t max_atom_id  = 0;
-      for (const auto & body_pair : atom_bodies) {
-        uint32_t atom_id = 0;
+      uint32_t max_codelet_id  = 0;
+      for (const auto & body_pair : codelet_bodies) {
+        uint32_t codelet_id = 0;
         const uint32_t stage_id = body_pair.first;
-        for (const auto & atom_body __attribute__ ((unused)) : body_pair.second) {
-          max_atom_id = std::max(max_atom_id, atom_id);
-          atom_id++;
+        for (const auto & codelet_body __attribute__ ((unused)) : body_pair.second) {
+          max_codelet_id = std::max(max_codelet_id, codelet_id);
+          codelet_id++;
         }
         max_stage_id = std::max(max_stage_id, stage_id);
       }
@@ -282,8 +282,8 @@ std::string partitioning_transform(const TranslationUnitDecl * tu_decl, const ui
         const auto diagnostics = "// Pipeline depth of " + std::to_string(max_stage_id + 1) + " exceeds allowed pipeline depth of " + std::to_string(pipeline_depth);
         throw std::logic_error(diagnostics);
       }
-      if ((max_atom_id + 1) > pipeline_width) {
-        const auto diagnostics = "// Pipeline width of " + std::to_string(max_atom_id + 1) + " exceeds allowed pipeline width of " + std::to_string(pipeline_width);
+      if ((max_codelet_id + 1) > pipeline_width) {
+        const auto diagnostics = "// Pipeline width of " + std::to_string(max_codelet_id + 1) + " exceeds allowed pipeline width of " + std::to_string(pipeline_width);
         throw std::logic_error(diagnostics);
       }
     }
