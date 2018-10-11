@@ -21,7 +21,7 @@ struct FlattenResult {
 };
 
 /// Flatten expressions using temporaries so that every
-/// statement is of the form x = y op z, where x, y, z are atoms
+/// statement is of the form x = y op z, where x, y, z are atomic
 class ExprFlattenerHandler {
  public:
   /// Function supplied to SinglePass
@@ -45,18 +45,18 @@ class ExprFlattenerHandler {
   /// Is expression flat?
   bool is_flat(const clang::Expr * expr) const;
 
-  /// Is expression an atom?
-  bool is_atom(const clang::Expr * expr) const;
+  /// Is expression atomic?
+  bool is_atomic_expr(const clang::Expr * expr) const;
 
-  /// Flatten expr to atom if it isn't already an atom
+  /// Flatten expr to atomic expression if it isn't already atomic
   /// , creating a temporary variable is required
-  FlattenResult flatten_to_atom(const clang::Expr * expr, const std::string & pkt_name) const;
+  FlattenResult flatten_to_atomic_expr(const clang::Expr * expr, const std::string & pkt_name) const;
 
-  /// Flatten conditional op by calling flatten_to_atom
+  /// Flatten conditional op by calling flatten_to_atomic_expr
   /// on its three constituents
   FlattenResult flatten_cond_op(const clang::ConditionalOperator * cond_op, const std::string & pkt_name) const;
 
-  /// Flatten binary op by calling flatten_to_atom
+  /// Flatten binary op by calling flatten_to_atomic_expr
   /// on the left and right halves
   FlattenResult flatten_bin_op(const clang::BinaryOperator * bin_op, const std::string & pkt_name) const;
 

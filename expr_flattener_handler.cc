@@ -44,7 +44,7 @@ ExprFlattenerHandler::flatten_body(const Stmt * function_body, const std::string
   return make_pair("{" + output + "}", new_decls);
 }
 
-bool ExprFlattenerHandler::is_atom(const clang::Expr * expr) const {
+bool ExprFlattenerHandler::is_atomic_expr(const clang::Expr * expr) const {
   expr = expr->IgnoreParenImpCasts();
   return isa<DeclRefExpr>(expr) or isa<IntegerLiteral>(expr) or isa<MemberExpr>(expr) or isa<CallExpr>(expr) or isa<ArraySubscriptExpr>(expr);
 }
@@ -53,15 +53,15 @@ bool ExprFlattenerHandler::is_flat(const clang::Expr * expr) const {
   expr = expr->IgnoreParenImpCasts();
   assert_exception(expr);
   if (isa<UnaryOperator>(expr)) {
-    return is_atom(dyn_cast<UnaryOperator>(expr)->getSubExpr());
+    return is_atomic_expr(dyn_cast<UnaryOperator>(expr)->getSubExpr());
   } else if (isa<ConditionalOperator>(expr)) {
     const auto * cond_op = dyn_cast<ConditionalOperator>(expr);
-    return is_atom(cond_op->getCond()) and is_atom(cond_op->getTrueExpr()) and is_atom(cond_op->getFalseExpr());
+    return is_atomic_expr(cond_op->getCond()) and is_atomic_expr(cond_op->getTrueExpr()) and is_atomic_expr(cond_op->getFalseExpr());
   } else if (isa<BinaryOperator>(expr)) {
-    return is_atom(dyn_cast<BinaryOperator>(expr)->getLHS()) and
-           is_atom(dyn_cast<BinaryOperator>(expr)->getRHS());
+    return is_atomic_expr(dyn_cast<BinaryOperator>(expr)->getLHS()) and
+           is_atomic_expr(dyn_cast<BinaryOperator>(expr)->getRHS());
   } else {
-    assert_exception(is_atom(expr));
+    assert_exception(is_atomic_expr(expr));
     return true;
   }
 }
@@ -84,8 +84,8 @@ FlattenResult ExprFlattenerHandler::flatten(const clang::Expr * expr, const std:
 
 FlattenResult ExprFlattenerHandler::flatten_bin_op(const BinaryOperator * bin_op, const std::string & pkt_name) const {
   assert_exception(not is_flat(bin_op));
-  const auto ret_lhs = flatten_to_atom(bin_op->getLHS(), pkt_name);
-  const auto ret_rhs = flatten_to_atom(bin_op->getRHS(), pkt_name);
+  const auto ret_lhs = flatten_to_atomic_expr(bin_op->getLHS(), pkt_name);
+  const auto ret_rhs = flatten_to_atomic_expr(bin_op->getRHS(), pkt_name);
 
   // Join all declarations
   std::vector<std::string> all_decls;
@@ -99,9 +99,9 @@ FlattenResult ExprFlattenerHandler::flatten_bin_op(const BinaryOperator * bin_op
 
 FlattenResult ExprFlattenerHandler::flatten_cond_op(const ConditionalOperator * cond_op, const std::string & pkt_name) const {
   assert_exception(not is_flat(cond_op));
-  const auto ret_cond  = flatten_to_atom(cond_op->getCond(), pkt_name);
-  const auto ret_true  = flatten_to_atom(cond_op->getTrueExpr(), pkt_name);
-  const auto ret_false = flatten_to_atom(cond_op->getFalseExpr(), pkt_name);
+  const auto ret_cond  = flatten_to_atomic_expr(cond_op->getCond(), pkt_name);
+  const auto ret_true  = flatten_to_atomic_expr(cond_op->getTrueExpr(), pkt_name);
+  const auto ret_false = flatten_to_atomic_expr(cond_op->getFalseExpr(), pkt_name);
 
   // Join all declarations
   std::vector<std::string> all_decls;
@@ -114,8 +114,8 @@ FlattenResult ExprFlattenerHandler::flatten_cond_op(const ConditionalOperator * 
           all_decls};
 }
 
-FlattenResult ExprFlattenerHandler::flatten_to_atom(const Expr * expr, const std::string & pkt_name) const {
-  if (is_atom(expr)) {
+FlattenResult ExprFlattenerHandler::flatten_to_atomic_expr(const Expr * expr, const std::string & pkt_name) const {
+  if (is_atomic_expr(expr)) {
     return {clang_stmt_printer(expr), "", {}};
   } else {
     const auto flat_var_member     = unique_identifiers_.get_unique_identifier();
