@@ -9,6 +9,17 @@
 
 using namespace clang;
 
+std::string ChipmunkCodeGenerator::ast_visit_transform(const clang::TranslationUnitDecl * tu_decl) {
+  // TODO: Need to check if we have more than one packet func per tu_decl and report an error if so.
+  for (const auto * decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
+    if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) {
+      return "|StateAndPacket| program (|StateAndPacket| state_and_packet) {" +
+             ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody()) + " return state_and_packet;\n}";
+    }
+  }
+  assert_exception(false);
+}
+
 std::string ChipmunkCodeGenerator::ast_visit_member_expr(const clang::MemberExpr * member_expr) {
   assert_exception(member_expr);
   std::string s = clang_stmt_printer(member_expr);

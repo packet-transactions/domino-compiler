@@ -6,6 +6,9 @@
 #include <string>
 
 class ChipmunkCodeGenerator : public AstVisitor {
+ public:
+  std::string ast_visit_transform(const clang::TranslationUnitDecl * tu_decl) override;
+
  protected:
   std::string ast_visit_member_expr(const clang::MemberExpr * member_expr) override;
   std::string ast_visit_array_subscript_expr(const clang::ArraySubscriptExpr * array_subscript_expr) override;
