@@ -13,7 +13,11 @@ class ChipmunkCodeGenerator : public AstVisitor {
   
   int count_stateful = 0;
   int count_stateless = 0;
-  std::map<std::string, std::string> c_to_sk; 
+
+  // TODO: This strange typedef is to address an issue with gcc:
+  // https://stackoverflow.com/a/28803798/1152801
+  typedef std::map<std::string, std::string> DominoToSketchRenamer;
+  DominoToSketchRenamer c_to_sk = DominoToSketchRenamer();
 };
 
 #endif // CHIPMUNK_CODE_GENERATOR_H_
