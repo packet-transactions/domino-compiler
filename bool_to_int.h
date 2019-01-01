@@ -19,8 +19,8 @@ class BoolToInt : public AstVisitor {
     // Make sure the condition within cond_op is a MemberExpr
     assert_exception(clang::isa<clang::MemberExpr>(cond_op->getCond()->IgnoreParenImpCasts()));
     return     "(" + clang_stmt_printer(cond_op->getCond()) + " != 0) ? "
-             + ast_visit(cond_op->getTrueExpr()) + " : "
-             + ast_visit(cond_op->getFalseExpr());
+             + ast_visit_stmt(cond_op->getTrueExpr()) + " : "
+             + ast_visit_stmt(cond_op->getFalseExpr());
   }
 };
 

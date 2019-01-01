@@ -9,19 +9,19 @@ std::string AlgebraicSimplifier::ast_visit_bin_op(const clang::BinaryOperator * 
   if (can_be_simplified(bin_op)) {
     return simplify_simple_bin_op(bin_op);
   } else {
-    return ast_visit(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + ast_visit(bin_op->getRHS());
+    return ast_visit_stmt(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + ast_visit_stmt(bin_op->getRHS());
   }
 }
 
 std::string AlgebraicSimplifier::ast_visit_cond_op(const clang::ConditionalOperator * cond_op) {
   if (isa<IntegerLiteral>(cond_op->getCond()) and dyn_cast<IntegerLiteral>(cond_op->getCond())->getValue().getSExtValue() == 1) {
-    return ast_visit(cond_op->getTrueExpr());
+    return ast_visit_stmt(cond_op->getTrueExpr());
   } else if (isa<IntegerLiteral>(cond_op->getCond()) and dyn_cast<IntegerLiteral>(cond_op->getCond())->getValue().getSExtValue() == 0) {
-    return ast_visit(cond_op->getFalseExpr());
+    return ast_visit_stmt(cond_op->getFalseExpr());
   } else {
-    return     ast_visit(cond_op->getCond()) + " ? "
-             + ast_visit(cond_op->getTrueExpr()) + " : "
-             + ast_visit(cond_op->getFalseExpr());
+    return     ast_visit_stmt(cond_op->getCond()) + " ? "
+             + ast_visit_stmt(cond_op->getTrueExpr()) + " : "
+             + ast_visit_stmt(cond_op->getFalseExpr());
   }
 }
 

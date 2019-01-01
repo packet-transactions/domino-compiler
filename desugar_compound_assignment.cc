@@ -25,9 +25,9 @@ std::string DesugarCompAssignment::ast_visit_bin_op(const BinaryOperator * bin_o
   std::string ret;
   if (isa<CompoundAssignOperator>(bin_op)) {
     // Handle compound assignments alone
-    return ast_visit(bin_op->getLHS()) + "=" + ast_visit(bin_op->getLHS())
+    return ast_visit_stmt(bin_op->getLHS()) + "=" + ast_visit_stmt(bin_op->getLHS())
            + std::string(BinaryOperator::getOpcodeStr(get_underlying_op(bin_op->getOpcode())))
-           + ast_visit(bin_op->getRHS());
+           + ast_visit_stmt(bin_op->getRHS());
   } else {
     // Delegate to default base class method
     return AstVisitor::ast_visit_bin_op(bin_op);

@@ -55,11 +55,11 @@ class AstVisitor {
   /// which happen implicitly in the C standard
   virtual std::string ast_visit_implicit_cast(const clang::ImplicitCastExpr * implicit_cast);
 
-  /// Visit a node (clang::Stmt) recursively
+  /// Visit a clang::Stmt recursively
   /// This is protected so that derived classes can call it recursively,
   /// but not virtual because the grammar is fixed and ast_visit simply
   /// captures a walk down the AST
-  std::string ast_visit(const clang::Stmt * stmt);
+  std::string ast_visit_stmt(const clang::Stmt * stmt);
 
  private:
   /// Wrapper around recursive function ast_visit_helper

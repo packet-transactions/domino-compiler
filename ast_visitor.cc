@@ -19,44 +19,44 @@ std::string AstVisitor::ast_visit_transform(const TranslationUnitDecl * tu_decl)
 
 std::pair<std::string, std::vector<std::string>> AstVisitor::ast_visit_helper(const clang::CompoundStmt * body,
                                                                               const std::string & pkt_name __attribute__((unused))) {
-  return std::make_pair("{" + ast_visit(body) + "}", std::vector<std::string>());
+  return std::make_pair("{" + ast_visit_stmt(body) + "}", std::vector<std::string>());
 }
 
 std::string AstVisitor::ast_visit_comp_stmt(const CompoundStmt * comp_stmt) {
   assert_exception(comp_stmt);
   std::string ret;
   for (const auto & child : comp_stmt->children())
-    ret += ast_visit(child) + ";";
+    ret += ast_visit_stmt(child) + ";";
   return ret;
 }
 
 std::string AstVisitor::ast_visit_if_stmt(const IfStmt * if_stmt) {
   assert_exception(if_stmt);
   std::string ret;
-  ret += "if (" + ast_visit(if_stmt->getCond()) + ") {" + ast_visit(if_stmt->getThen()) + "; }";
+  ret += "if (" + ast_visit_stmt(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
   if (if_stmt->getElse() != nullptr) {
-    ret += "else {" + ast_visit(if_stmt->getElse()) + "; }";
+    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
   }
   return ret;
 }
 
 std::string AstVisitor::ast_visit_bin_op(const BinaryOperator * bin_op) {
   assert_exception(bin_op);
-  return ast_visit(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + ast_visit(bin_op->getRHS());
+  return ast_visit_stmt(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + ast_visit_stmt(bin_op->getRHS());
 }
 
 std::string AstVisitor::ast_visit_cond_op(const ConditionalOperator * cond_op) {
   assert_exception(cond_op);
-  return     ast_visit(cond_op->getCond()) + " ? "
-             + ast_visit(cond_op->getTrueExpr()) + " : "
-             + ast_visit(cond_op->getFalseExpr());
+  return     ast_visit_stmt(cond_op->getCond()) + " ? "
+             + ast_visit_stmt(cond_op->getTrueExpr()) + " : "
+             + ast_visit_stmt(cond_op->getFalseExpr());
 }
 
 std::string AstVisitor::ast_visit_func_call(const CallExpr * call_expr) {
   assert_exception(call_expr);
   std::string ret = clang_stmt_printer(call_expr->getCallee()) + "(";
   for (const auto * child : call_expr->arguments()) {
-    const auto child_str = ast_visit(child);
+    const auto child_str = ast_visit_stmt(child);
     ret += child_str + ",";
   }
   ret.back() = ')';
@@ -87,15 +87,15 @@ std::string AstVisitor::ast_visit_un_op(const UnaryOperator * un_op) {
   assert_exception(un_op->isArithmeticOp());
   const auto opcode_str = std::string(UnaryOperator::getOpcodeStr(un_op->getOpcode()));
   assert_exception(opcode_str == "!");
-  return opcode_str + ast_visit(un_op->getSubExpr());
+  return opcode_str + ast_visit_stmt(un_op->getSubExpr());
 }
 
 std::string AstVisitor::ast_visit_implicit_cast(const ImplicitCastExpr * implicit_cast) {
   assert_exception(implicit_cast);
-  return ast_visit(implicit_cast->getSubExpr());
+  return ast_visit_stmt(implicit_cast->getSubExpr());
 }
 
-std::string AstVisitor::ast_visit(const Stmt * stmt) {
+std::string AstVisitor::ast_visit_stmt(const Stmt * stmt) {
   assert_exception(stmt);
   std::string ret;
   if(isa<CompoundStmt>(stmt)) {
@@ -115,7 +115,7 @@ std::string AstVisitor::ast_visit(const Stmt * stmt) {
   } else if (isa<ArraySubscriptExpr>(stmt)) {
     return ast_visit_array_subscript_expr(dyn_cast<ArraySubscriptExpr>(stmt));
   } else if (isa<ParenExpr>(stmt)) {
-    return "(" + ast_visit(dyn_cast<ParenExpr>(stmt)->getSubExpr()) + ")";
+    return "(" + ast_visit_stmt(dyn_cast<ParenExpr>(stmt)->getSubExpr()) + ")";
   } else if (isa<UnaryOperator>(stmt)) {
     return ast_visit_un_op(dyn_cast<UnaryOperator>(stmt));
   } else if (isa<ImplicitCastExpr>(stmt)) {
