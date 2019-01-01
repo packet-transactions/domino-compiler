@@ -20,6 +20,21 @@ std::string ChipmunkCodeGenerator::ast_visit_transform(const clang::TranslationU
   assert_exception(false);
 }
 
+std::string ChipmunkCodeGenerator::ast_visit_decl_ref_expr(const clang::DeclRefExpr * decl_ref_expr) {
+  assert_exception(decl_ref_expr);
+  std::string s = clang_stmt_printer(decl_ref_expr);
+  std::map<std::string,std::string>::iterator it;
+        it = c_to_sk.find(s);
+        if (it == c_to_sk.end()){
+            std::string name;
+            //stateless
+                name = "state_and_packet.state_" + std::to_string(count_stateful);
+                count_stateful++;
+		c_to_sk[s] = name;
+        }
+  return c_to_sk[s];
+}
+
 std::string ChipmunkCodeGenerator::ast_visit_member_expr(const clang::MemberExpr * member_expr) {
   assert_exception(member_expr);
   std::string s = clang_stmt_printer(member_expr);
