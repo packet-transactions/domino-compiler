@@ -12,7 +12,7 @@ class AstVisitor {
  public:
   /// Entry point from SinglePass,
   /// which immediately delegates to ast_visit_helper
-  std::string ast_visit_transform(const clang::TranslationUnitDecl * tu_decl);
+  virtual std::string ast_visit_transform(const clang::TranslationUnitDecl * tu_decl);
 
   /// Need destructor to be virtual and accessible, g++ whines otherwise
   virtual ~AstVisitor() {};
