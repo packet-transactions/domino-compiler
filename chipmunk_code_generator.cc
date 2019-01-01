@@ -22,8 +22,8 @@ std::string ChipmunkCodeGenerator::ast_visit_member_expr(const clang::MemberExpr
                 count_stateless++;
             }
             else{
-                name = "state_and_packet.state_" + std::to_string(count_stateful);
-                count_stateful++;
+                // Should never get here.
+                assert_exception(false);
             }
             c_to_sk[s] = name;
         }
