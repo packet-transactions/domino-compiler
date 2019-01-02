@@ -15,7 +15,6 @@ std::string ChipmunkCodeGenerator::ast_visit_transform(const clang::TranslationU
     if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) {
       //record body part first
       std::string body_part = ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody());
-      std::cout << "Output the rename map:" << std::endl;
       print_map();
       return "|StateAndPacket| program (|StateAndPacket| state_and_packet) {" + body_part + " return state_and_packet;\n}";
     }
@@ -31,9 +30,15 @@ std::string ChipmunkCodeGenerator::ast_visit_decl_ref_expr(const clang::DeclRefE
         if (it == c_to_sk.end()){
             std::string name;
             //stateless
+	    if (s.find('.')!=std::string::npos){
+		// Should never get here.
+		assert_exception(false);
+	    }
+	    else{
                 name = "state_and_packet.state_" + std::to_string(count_stateful);
                 count_stateful++;
 		c_to_sk[s] = name;
+	    }
         }
   return c_to_sk[s];
 }
@@ -67,15 +72,21 @@ std::string ChipmunkCodeGenerator::ast_visit_array_subscript_expr(const clang::A
         it = c_to_sk.find(s);
         if (it == c_to_sk.end()){
             std::string name;
+  	    if (s.find('[')==std::string::npos){
+		// Should never get here.
+		assert_exception(false);
+	    }else{
             //stateless
             name = "state_and_packet.state_" + std::to_string(count_stateful);
             count_stateful++;
             c_to_sk[s] = name;
+	    }
         }
   return c_to_sk[s];
 }
 
 void ChipmunkCodeGenerator::print_map(){
+   std::cout << "// Output the rename map:" << std::endl;
    std::cout << "// stateless variable rename list: \n\n";
    for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
         if (it->second.find("state_and_packet.pkt_")!=std::string::npos)
