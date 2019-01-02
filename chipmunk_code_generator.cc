@@ -13,8 +13,11 @@ std::string ChipmunkCodeGenerator::ast_visit_transform(const clang::TranslationU
   // TODO: Need to check if we have more than one packet func per tu_decl and report an error if so.
   for (const auto * decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) {
-      return "|StateAndPacket| program (|StateAndPacket| state_and_packet) {" +
-             ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody()) + " return state_and_packet;\n}";
+      //record body part first
+      std::string body_part = ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody());
+      std::cout << "Output the rename map:" << std::endl;
+      print_map();
+      return "|StateAndPacket| program (|StateAndPacket| state_and_packet) {" + body_part + " return state_and_packet;\n}";
     }
   }
   assert_exception(false);
@@ -73,12 +76,16 @@ std::string ChipmunkCodeGenerator::ast_visit_array_subscript_expr(const clang::A
 }
 
 void ChipmunkCodeGenerator::print_map(){
+   std::cout << "// stateless variable rename list: \n\n";
    for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
         if (it->second.find("state_and_packet.pkt_")!=std::string::npos)
             std::cout << "// " <<it->first << "=" << it->second << "\n";
     }
-    for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
+   std::cout << std::endl;
+   std::cout << "// stateful variable rename list: \n\n";
+   for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
         if (it->second.find("state_and_packet.state_")!=std::string::npos)
             std::cout << "// " <<it->first << "=" << it->second << "\n";
     }
+   std::cout << std::endl;
 }

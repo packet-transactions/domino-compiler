@@ -31,9 +31,10 @@ int main(int argc, const char **argv) {
 
       auto chipmunk_code_generator = SinglePass<>(std::bind(& ChipmunkCodeGenerator::ast_visit_transform,
                                                   ChipmunkCodeGenerator(), _1));
-      std::string sketch_program = chipmunk_code_generator(string_to_parse);
-      
+
       std::cout << "/* \n// Original program: \n" + string_to_parse + " */\n" << std::endl;
+      
+      std::string sketch_program = chipmunk_code_generator(string_to_parse);
       std::cout << sketch_program << std::endl;
       
       return EXIT_SUCCESS;
