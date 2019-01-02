@@ -94,7 +94,7 @@ void ChipmunkCodeGenerator::print_map(){
    while (stateless != count_stateless){
       for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
         if (it->second.find("state_and_packet.pkt_" + std::to_string(stateless))!=std::string::npos){
-              std::cout << "// " <<it->first << "=" << it->second << "\n";
+              std::cout << "// " <<it->second << " = " << it->first << "\n";
 	      stateless++;
 	      break;
 	}
@@ -107,7 +107,7 @@ void ChipmunkCodeGenerator::print_map(){
    while (stateful != count_stateful){
       for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
         if (it->second.find("state_and_packet.state_" + std::to_string(stateful))!=std::string::npos){
-              std::cout << "// " <<it->first << "=" << it->second << "\n";
+	      std::cout << "// " <<it->second << " = " << it->first << "\n";
               stateful++;
               break;
         }
