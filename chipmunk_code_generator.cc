@@ -6,6 +6,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <algorithm>
 
 using namespace clang;
 
@@ -88,15 +89,29 @@ std::string ChipmunkCodeGenerator::ast_visit_array_subscript_expr(const clang::A
 void ChipmunkCodeGenerator::print_map(){
    std::cout << "// Output the rename map:" << std::endl;
    std::cout << "// stateless variable rename list: \n\n";
-   for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
-        if (it->second.find("state_and_packet.pkt_")!=std::string::npos)
-            std::cout << "// " <<it->first << "=" << it->second << "\n";
-    }
+   // output the rename map in order
+   int stateless = 0;
+   while (stateless != count_stateless){
+      for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
+        if (it->second.find("state_and_packet.pkt_" + std::to_string(stateless))!=std::string::npos){
+              std::cout << "// " <<it->first << "=" << it->second << "\n";
+	      stateless++;
+	      break;
+	}
+     }
+   }
    std::cout << std::endl;
    std::cout << "// stateful variable rename list: \n\n";
-   for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
-        if (it->second.find("state_and_packet.state_")!=std::string::npos)
-            std::cout << "// " <<it->first << "=" << it->second << "\n";
-    }
+
+   int stateful = 0;
+   while (stateful != count_stateful){
+      for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
+        if (it->second.find("state_and_packet.state_" + std::to_string(stateful))!=std::string::npos){
+              std::cout << "// " <<it->first << "=" << it->second << "\n";
+              stateful++;
+              break;
+        }
+     }
+   }
    std::cout << std::endl;
 }
