@@ -1,5 +1,6 @@
 #include <csignal>
 #include "chipmunk_code_generator.h"
+#include "chipmunk_deadcode_generator.h"
 
 #include <utility>
 #include <iostream>
@@ -18,7 +19,7 @@
 using std::placeholders::_1;
 
 void print_usage() {
-  std::cerr << "Usage: domino_to_chipmunk <source_file>" << std::endl;
+  std::cerr << "Usage: domino_to_chipmunk <source_file> <whether add dead code or not(input yes or no)>" << std::endl;
 }
 
 int main(int argc, const char **argv) {
@@ -26,7 +27,7 @@ int main(int argc, const char **argv) {
     // Block out SIGINT, because we can't handle it properly
     signal(SIGINT, SIG_IGN);
 
-    if (argc == 2) {
+    if (argc == 2 || (argc == 3 && std::string(argv[2]) == "no")) {
       const auto string_to_parse = file_to_str(std::string(argv[1]));
 
       auto chipmunk_code_generator = SinglePass<>(std::bind(& ChipmunkCodeGenerator::ast_visit_transform,
@@ -38,7 +39,20 @@ int main(int argc, const char **argv) {
       std::cout << sketch_program << std::endl;
       
       return EXIT_SUCCESS;
-    } else {
+    } else if (argc == 3 && std::string(argv[2]) == "yes"){
+      const auto string_to_parse = file_to_str(std::string(argv[1]));
+
+      auto chipmunk_deadcode_generator = SinglePass<>(std::bind(& ChipmunkDeadcodeGenerator::ast_visit_transform,
+                                                  ChipmunkDeadcodeGenerator(), _1));
+
+      std::cout << " \n// Original program: \n" + string_to_parse + " */ \n" << std::endl;
+
+      std::string sketch_program = chipmunk_deadcode_generator(string_to_parse);
+      std::cout << sketch_program << std::endl;
+
+      return EXIT_SUCCESS;
+    }
+    else {
       print_usage();
       return EXIT_FAILURE;
     }
