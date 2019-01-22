@@ -45,7 +45,7 @@ int main(int argc, const char **argv) {
       auto chipmunk_deadcode_generator = SinglePass<>(std::bind(& ChipmunkDeadcodeGenerator::ast_visit_transform,
                                                   ChipmunkDeadcodeGenerator(), _1));
 
-      std::cout << " \n// Original program: \n" + string_to_parse + " */ \n" << std::endl;
+      std::cout << "/* \n// Original program: \n" + string_to_parse + " */ \n" << std::endl;
 
       std::string sketch_program = chipmunk_deadcode_generator(string_to_parse);
       std::cout << sketch_program << std::endl;

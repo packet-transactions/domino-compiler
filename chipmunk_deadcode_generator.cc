@@ -1,12 +1,14 @@
 #include "chipmunk_deadcode_generator.h"
 #include "third_party/assert_exception.h"
 #include "clang_utility_functions.h"
+#include "pkt_func_transform.h"
 
 #include <iostream>
 #include <map>
 #include <string>
 #include <algorithm>
 
+using namespace std::placeholders;
 using namespace clang;
 
 std::string ChipmunkDeadcodeGenerator::ast_visit_transform(const clang::TranslationUnitDecl * tu_decl) {
@@ -15,9 +17,8 @@ std::string ChipmunkDeadcodeGenerator::ast_visit_transform(const clang::Translat
     if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) {
       //record body part first
       std::string body_part = ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody());
-      print_map();
       if (c_to_sk.size() == 0)
-	return "|StateAndPacket| program (|StateAndPacket| state_and_packet) {" + body_part + " return state_and_packet;\n return 1;\n}";
+	return "void func(struct Packet p) {" + body_part + "}";
       else{
 	std::string redundant_assignment;
 	for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
@@ -27,8 +28,11 @@ std::string ChipmunkDeadcodeGenerator::ast_visit_transform(const clang::Translat
 	std::string redundant_code = it->first;
 	redundant_code += "= 1;\n";
 	std::string redundant_if = "if (0){\n" + it->first + "= 0 -"+ it->first + ";\n }";
-	return "|StateAndPacket| program (|StateAndPacket| state_and_packet) {" + redundant_assignment + redundant_if + body_part + " return state_and_packet;\n return 1;\n" + redundant_code + "}";
+	return "void func(struct Packet p) {" + redundant_assignment + redundant_if + body_part + "}";
+//	return "|StateAndPacket| program (|StateAndPacket| state_and_packet) {" + redundant_assignment + redundant_if + body_part + " return state_and_packet;\n return 1;\n" + redundant_code + "}";
       }
+    }else{
+	std::cout << clang_decl_printer(decl) + ";" << std::endl;
     }
   }
   assert_exception(false);
@@ -67,7 +71,7 @@ std::string ChipmunkDeadcodeGenerator::ast_visit_decl_ref_expr(const clang::Decl
                 c_to_sk[s] = name;
             }
         }
-  return c_to_sk[s];
+  return s;
 }
 
 std::string ChipmunkDeadcodeGenerator::ast_visit_member_expr(const clang::MemberExpr * member_expr) {
@@ -88,7 +92,7 @@ std::string ChipmunkDeadcodeGenerator::ast_visit_member_expr(const clang::Member
             }
             c_to_sk[s] = name;
         }
-  return c_to_sk[s];
+  return s;
 }
 
 std::string ChipmunkDeadcodeGenerator::ast_visit_array_subscript_expr(const clang::ArraySubscriptExpr * array_subscript_expr){
@@ -109,7 +113,7 @@ std::string ChipmunkDeadcodeGenerator::ast_visit_array_subscript_expr(const clan
             c_to_sk[s] = name;
             }
         }
-  return c_to_sk[s];
+  return s;
 }
 
 void ChipmunkDeadcodeGenerator::print_map(){

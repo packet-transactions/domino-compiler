@@ -61,7 +61,6 @@ class AstVisitor {
   /// captures a walk down the AST
   std::string ast_visit_stmt(const clang::Stmt * stmt);
 
- private:
   /// Wrapper around recursive function ast_visit_helper
   std::pair<std::string, std::vector<std::string>> ast_visit_helper(const clang::CompoundStmt * body,
                                                                     const std::string & pkt_name __attribute__((unused)));
