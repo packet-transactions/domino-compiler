@@ -29,9 +29,8 @@ std::string ChipmunkDeadcodeGenerator::ast_visit_transform(const clang::Translat
 	redundant_code += "= 1;\n";
 	std::string redundant_if = "if (0){\n" + it->first + "= 0 -"+ it->first + ";\n }";
 	return "void func(struct Packet p) {" + redundant_assignment + redundant_if + body_part + "}";
-//	return "|StateAndPacket| program (|StateAndPacket| state_and_packet) {" + redundant_assignment + redundant_if + body_part + " return state_and_packet;\n return 1;\n" + redundant_code + "}";
       }
-    }else{
+    }else if (isa<VarDecl>(decl) || isa<RecordDecl>(decl) || ((isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl))))) ){ 
 	std::cout << clang_decl_printer(decl) + ";" << std::endl;
     }
   }
