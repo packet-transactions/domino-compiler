@@ -82,8 +82,8 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_transform(const clang::Tra
       std::string assignment_back;
       
       for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
-          definition += it->second + " = " + it->first + ";\n";
-          assignment_back += it->first + " = " + it->second + ";\n";
+          definition += "p." + it->second + " = " + it->first + ";\n";
+          assignment_back += it->first + " = p." + it->second + ";\n";
       }
       
       return "void " + dyn_cast<FunctionDecl>(decl)->getNameAsString() + "(" + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getType().getAsString() + " "
@@ -135,12 +135,12 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_decl_ref_expr(const clang:
                 assert_exception(false);
             }
             else{
-                name = "p.tmp_" + std::to_string(count_stateful);
+                name = "tmp_" + std::to_string(count_stateful);
                 count_stateful++;
                 c_to_sk[s] = name;
             }
         }
-  return c_to_sk[s];
+  return "p." + c_to_sk[s];
 }
 
 std::string ChipmunkAnotherdominoGenerator::ast_visit_member_expr(const clang::MemberExpr * member_expr) {
@@ -162,11 +162,11 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_array_subscript_expr(const
                 assert_exception(false);
             }else{
             //stateless
-            name = "p.tmp_" + std::to_string(count_stateful);
+            name = "tmp_" + std::to_string(count_stateful);
             count_stateful++;
             c_to_sk[s] = name;
             }
         }
-  return c_to_sk[s];
+  return "p." + c_to_sk[s];
 }
 
