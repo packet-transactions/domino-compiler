@@ -33,7 +33,11 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_stmt_specially_for_if_cond
     return ast_visit_if_stmt(dyn_cast<IfStmt>(stmt));
   } else if (isa<BinaryOperator>(stmt)) {
     const BinaryOperator * bin_op = dyn_cast<BinaryOperator>(stmt);
-    return ast_visit_stmt_specially_for_if_condition(bin_op->getRHS()) + std::string(bin_op->getOpcodeStr()) + ast_visit_stmt_specially_for_if_condition(bin_op->getLHS());
+    const auto opcode = bin_op->getOpcode();
+    if (opcode == clang::BinaryOperatorKind::BO_LAnd or opcode == clang::BinaryOperatorKind::BO_Or)
+      return ast_visit_stmt_specially_for_if_condition(bin_op->getRHS()) + std::string(bin_op->getOpcodeStr()) + ast_visit_stmt_specially_for_if_condition(bin_op->getLHS());
+    else
+      return ast_visit_stmt_specially_for_if_condition(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + ast_visit_stmt_specially_for_if_condition(bin_op->getRHS());
   } else if (isa<ConditionalOperator>(stmt)) {
     return ast_visit_cond_op(dyn_cast<ConditionalOperator>(stmt));
   } else if (isa<MemberExpr>(stmt)) {
