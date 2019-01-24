@@ -9,8 +9,8 @@
 class ChipmunkAnotherdominoGenerator : public AstVisitor {
  public:
   std::string ast_visit_transform(const clang::TranslationUnitDecl * tu_decl) override;
-  
- // void print_map(); //cout the content of map
+  // add another ast_visit_stmt_specially_for_if_condition
+  std::string ast_visit_stmt_specially_for_if_condition(const clang::Stmt * stmt);
 
  protected:
   std::string ast_visit_member_expr(const clang::MemberExpr * member_expr) override;
