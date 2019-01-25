@@ -43,7 +43,6 @@ int main(int argc, const char **argv) {
           count++;
           //random_num is to record which execution to take
           int random_num = rand() % 8 + 1;
-          std::cout << random_num << std::endl;
           if (random_num >=1 && random_num <=3){
             ChipmunkAnotherdominoGenerator another_domino;
             another_domino.round = count;
