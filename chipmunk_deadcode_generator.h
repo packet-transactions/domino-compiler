@@ -11,7 +11,7 @@ class ChipmunkDeadcodeGenerator : public AstVisitor {
   std::string ast_visit_transform(const clang::TranslationUnitDecl * tu_decl) override;
   
   void print_map(); //cout the content of map
-
+  int rand = 0;
  protected:
   std::string ast_visit_member_expr(const clang::MemberExpr * member_expr) override;
   std::string ast_visit_array_subscript_expr(const clang::ArraySubscriptExpr * array_subscript_expr) override;

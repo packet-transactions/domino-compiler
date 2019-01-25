@@ -17,9 +17,11 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_record_decl(const clang::R
   for (const auto * decl : record_decl->getDefinition()->decls()){
       ret += clang_decl_printer(decl)+";\n";
   }
-  for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
-          ret += "int " + it->second + ";\n";
-      }
+  if (rand == 1){
+    for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
+        ret += "int " + it->second + ";\n";
+    } 
+  }
   ret += "}; \n\n";
   return ret;
 }
@@ -34,7 +36,7 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_stmt_specially_for_if_cond
   } else if (isa<BinaryOperator>(stmt)) {
     const BinaryOperator * bin_op = dyn_cast<BinaryOperator>(stmt);
     const auto opcode = bin_op->getOpcode();
-    if (opcode == clang::BinaryOperatorKind::BO_LAnd or opcode == clang::BinaryOperatorKind::BO_Or)
+    if ((opcode == clang::BinaryOperatorKind::BO_LAnd or opcode == clang::BinaryOperatorKind::BO_Or) and rand == 3)
       return ast_visit_stmt_specially_for_if_condition(bin_op->getRHS()) + std::string(bin_op->getOpcodeStr()) + ast_visit_stmt_specially_for_if_condition(bin_op->getLHS());
     else
       return ast_visit_stmt_specially_for_if_condition(bin_op->getLHS()) + std::string(bin_op->getOpcodeStr()) + ast_visit_stmt_specially_for_if_condition(bin_op->getRHS());
@@ -74,8 +76,9 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_transform(const clang::Tra
     if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl))))
       //record body part first
       ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody());
-}
+  }
 
+  std::string res;
   // TODO: Need to check if we have more than one packet func per tu_decl and report an error if so.
   for (const auto * decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
     if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) {
@@ -84,20 +87,22 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_transform(const clang::Tra
       //use stateless variable to replace stateful variable
       std::string definition;
       std::string assignment_back;
-      
-      for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
+      if (rand == 1){
+        for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
           definition += "p." + it->second + " = " + it->first + ";\n";
           assignment_back += it->first + " = p." + it->second + ";\n";
+        }  
       }
       
-      return "void " + dyn_cast<FunctionDecl>(decl)->getNameAsString() + "(" + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getType().getAsString() + " "
+      res += "void " + dyn_cast<FunctionDecl>(decl)->getNameAsString() + "(" + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getType().getAsString() + " "
           + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString() + "){\n" + definition + body_part + assignment_back + "}";
+      return res;
   //now is func p 
       
     }else if (isa<VarDecl>(decl) || ((isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl))))) ){ 
-	   std::cout << clang_decl_printer(decl) + ";" << std::endl;
+	   res += clang_decl_printer(decl) + ";\n";
     }else if ( isa<RecordDecl>(decl) ){
-     std::cout << ast_visit_record_decl(dyn_cast<RecordDecl>(decl), c_to_sk);
+     res += ast_visit_record_decl(dyn_cast<RecordDecl>(decl), c_to_sk) + "\n";
   }
 }
   assert_exception(false);
@@ -106,12 +111,7 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_transform(const clang::Tra
 std::string ChipmunkAnotherdominoGenerator::ast_visit_if_stmt(const IfStmt * if_stmt) {
   assert_exception(if_stmt);
   std::string ret;
-/*  ret += "if (" + ast_visit_stmt(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
-  if (if_stmt->getElse() != nullptr) {
-    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
-  }
-  return ret;*/
-  if (if_stmt->getElse() != nullptr) {
+  if (if_stmt->getElse() != nullptr && rand == 2) {
     ret += "if (!(" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ")) {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
     ret += "else if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
     return ret;
@@ -129,7 +129,8 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_bin_op(const BinaryOperato
 std::string ChipmunkAnotherdominoGenerator::ast_visit_decl_ref_expr(const clang::DeclRefExpr * decl_ref_expr) {
   assert_exception(decl_ref_expr);
   std::string s = clang_stmt_printer(decl_ref_expr);
-  std::map<std::string,std::string>::iterator it;
+  if (rand == 1){
+    std::map<std::string,std::string>::iterator it;
         it = c_to_sk.find(s);
         if (it == c_to_sk.end()){
             std::string name;
@@ -139,12 +140,17 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_decl_ref_expr(const clang:
                 assert_exception(false);
             }
             else{
-                name = "tmp_" + std::to_string(count_stateful);
+                name = "tmp_" + std::to_string(round) + "_" + std::to_string(count_stateful);
                 count_stateful++;
                 c_to_sk[s] = name;
             }
         }
-  return "p." + c_to_sk[s];
+  
+    return "p." + c_to_sk[s];  
+  }else{
+    return s;
+  }
+  
 }
 
 std::string ChipmunkAnotherdominoGenerator::ast_visit_member_expr(const clang::MemberExpr * member_expr) {

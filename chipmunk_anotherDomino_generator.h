@@ -1,5 +1,5 @@
-#ifndef CHIPMUNK_DEADCODE_GENERATOR_H_
-#define CHIPMUNK_DEADCODE_GENERATOR_H_
+#ifndef CHIPMUNK_ANOTHERDOMINO_GENERATOR_H_
+#define CHIPMUNK_ANOTHERDOMINO_GENERATOR_H_
 
 #include "ast_visitor.h"
 #include <string>
@@ -11,7 +11,9 @@ class ChipmunkAnotherdominoGenerator : public AstVisitor {
   std::string ast_visit_transform(const clang::TranslationUnitDecl * tu_decl) override;
   // add another ast_visit_stmt_specially_for_if_condition
   std::string ast_visit_stmt_specially_for_if_condition(const clang::Stmt * stmt);
-
+  
+  int round = 0;
+  int rand = 0;
  protected:
   std::string ast_visit_member_expr(const clang::MemberExpr * member_expr) override;
   std::string ast_visit_array_subscript_expr(const clang::ArraySubscriptExpr * array_subscript_expr) override;
@@ -30,4 +32,4 @@ class ChipmunkAnotherdominoGenerator : public AstVisitor {
   DominoToSketchRenamer c_to_sk = DominoToSketchRenamer();
 };
 
-#endif // CHIPMUNK_DCODE_GENERATOR_H_
+#endif // CHIPMUNK_ANOTHERDOMINO_GENERATOR_H_
