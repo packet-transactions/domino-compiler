@@ -162,21 +162,24 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_member_expr(const clang::M
 std::string ChipmunkAnotherdominoGenerator::ast_visit_array_subscript_expr(const clang::ArraySubscriptExpr * array_subscript_expr){
   assert_exception(array_subscript_expr);
   std::string s = clang_stmt_printer(array_subscript_expr);
-
-  std::map<std::string,std::string>::iterator it;
-        it = c_to_sk.find(s);
-        if (it == c_to_sk.end()){
-            std::string name;
-            if (s.find('[')==std::string::npos){
-                // Should never get here.
-                assert_exception(false);
-            }else{
-            //stateless
-            name = "tmp_" + std::to_string(count_stateful);
-            count_stateful++;
-            c_to_sk[s] = name;
-            }
-        }
-  return "p." + c_to_sk[s];
+  if (rand == 1){
+    std::map<std::string,std::string>::iterator it;
+          it = c_to_sk.find(s);
+          if (it == c_to_sk.end()){
+              std::string name;
+              if (s.find('[')==std::string::npos){
+                  // Should never get here.
+                  assert_exception(false);
+              }else{
+              //stateless
+              name = "tmp_" + std::to_string(round) + "_" + std::to_string(count_stateful);
+              count_stateful++;
+              c_to_sk[s] = name;
+              }
+          }
+    return "p." + c_to_sk[s];
+  }else{
+    return s;
+  }
 }
 
