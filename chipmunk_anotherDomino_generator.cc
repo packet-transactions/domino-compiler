@@ -76,6 +76,7 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_transform(const clang::Tra
     if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl))))
       //record body part first
       ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody());
+      parameter_name = dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString();
   }
 
   std::string res;
@@ -93,7 +94,6 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_transform(const clang::Tra
           assignment_back += it->first + " = p." + it->second + ";\n";
         }  
       }
-      
       res += "void " + dyn_cast<FunctionDecl>(decl)->getNameAsString() + "(" + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getType().getAsString() + " "
           + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString() + "){\n" + definition + body_part + assignment_back + "}";
       return res;
@@ -146,7 +146,7 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_decl_ref_expr(const clang:
             }
         }
   
-    return "p." + c_to_sk[s];  
+    return parameter_name + c_to_sk[s];  
   }else{
     return s;
   }
@@ -177,7 +177,7 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_array_subscript_expr(const
               c_to_sk[s] = name;
               }
           }
-    return "p." + c_to_sk[s];
+    return parameter_name + c_to_sk[s];
   }else{
     return s;
   }

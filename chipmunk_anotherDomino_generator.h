@@ -11,7 +11,8 @@ class ChipmunkAnotherdominoGenerator : public AstVisitor {
   std::string ast_visit_transform(const clang::TranslationUnitDecl * tu_decl) override;
   // add another ast_visit_stmt_specially_for_if_condition
   std::string ast_visit_stmt_specially_for_if_condition(const clang::Stmt * stmt);
-  
+  std::string parameter_name;
+
   int round = 0;
   int rand = 0;
  protected:

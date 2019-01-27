@@ -37,7 +37,7 @@ int main(int argc, const char **argv) {
       std::size_t pos_begin = domino_file_name.rfind("/");
       std::size_t pos_end = domino_file_name.find(".");
       domino_file_name = domino_file_name.substr(pos_begin+1,pos_end-pos_begin-1);
-      
+
       while(num_of_transformed_file != 101){
         
 
@@ -47,7 +47,7 @@ int main(int argc, const char **argv) {
                                                     AnotherDomino, _1));
         int count = 0;
         std::string sketch_program = chipmunk_another_domino_generator(string_to_parse);
-        while (count < 10){
+        while (count < 101){
             count++;
             //random_num is to record which execution to take
             int random_num = rand() % 7 + 1;
