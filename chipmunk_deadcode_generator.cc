@@ -20,7 +20,8 @@ std::string ChipmunkDeadcodeGenerator::ast_visit_transform(const clang::Translat
       //record body part first
       std::string body_part = ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody());
       if (c_to_sk.size() == 0)
-	       return res + "void func(struct Packet p) {" + body_part + "}";
+	       return res + "void " + dyn_cast<FunctionDecl>(decl)->getNameAsString() + "(" + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getType().getAsString() + " "
+          + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString() + "){\n" + body_part + "}";
       else{
 	     std::string redundant_assignment;
 	     if (rand == 5){
@@ -34,7 +35,8 @@ std::string ChipmunkDeadcodeGenerator::ast_visit_transform(const clang::Translat
     	std::string redundant_if;
       if (rand == 4)
 	       redundant_if = "if (0){\n" + it->first + "= 0 -"+ it->first + ";\n }";
-	    return res + "void func(struct Packet p) {" + redundant_assignment + redundant_if + body_part + "}";
+	    return res + "void " + dyn_cast<FunctionDecl>(decl)->getNameAsString() + "(" + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getType().getAsString() + " "
+          + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString() + "){\n" + redundant_assignment + redundant_if + body_part + "}";
       }
     }else if (isa<VarDecl>(decl) || isa<RecordDecl>(decl) || ((isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl))))) ){ 
 	     res += clang_decl_printer(decl) + ";\n" ;

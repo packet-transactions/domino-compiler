@@ -71,12 +71,14 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_stmt_specially_for_if_cond
 
 std::string ChipmunkAnotherdominoGenerator::ast_visit_transform(const clang::TranslationUnitDecl * tu_decl) {
 
+
   // First pass to establish the c_to_sk map
   for (const auto * decl : dyn_cast<DeclContext>(tu_decl)->decls()) {
-    if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl))))
-      //record body part first
+    if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))){
+       //record body part first
       ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody());
-      parameter_name = dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString();
+      parameter_name = dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString(); 
+    }
   }
 
   std::string res;
@@ -90,8 +92,8 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_transform(const clang::Tra
       std::string assignment_back;
       if (rand == 1){
         for(std::map<std::string,std::string>::const_iterator it = c_to_sk.begin();it != c_to_sk.end(); ++it){
-          definition += "p." + it->second + " = " + it->first + ";\n";
-          assignment_back += it->first + " = p." + it->second + ";\n";
+          definition += dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString()+ "." + it->second + " = " + it->first + ";\n";
+          assignment_back += it->first + " = " + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString() + "." + it->second + ";\n";
         }  
       }
       res += "void " + dyn_cast<FunctionDecl>(decl)->getNameAsString() + "(" + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getType().getAsString() + " "
@@ -99,12 +101,14 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_transform(const clang::Tra
       return res;
   //now is func p 
       
-    }else if (isa<VarDecl>(decl) || ((isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl))))) ){ 
-	   res += clang_decl_printer(decl) + ";\n";
+    }else if (isa<VarDecl>(decl)) {
+        res += clang_decl_printer(decl) + ";\n";
+    }else if(((isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl))))) ){ 
+        res += clang_decl_printer(decl) + ";\n";
     }else if ( isa<RecordDecl>(decl) ){
-     res += ast_visit_record_decl(dyn_cast<RecordDecl>(decl), c_to_sk) + "\n";
+        res += ast_visit_record_decl(dyn_cast<RecordDecl>(decl), c_to_sk) + "\n";
+    }
   }
-}
   assert_exception(false);
 }
 
@@ -115,8 +119,36 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_if_stmt(const IfStmt * if_
     ret += "if (!(" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ")) {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
     ret += "else if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
     return ret;
+  }else if(rand == 8){
+    if (c_to_sk.size()!=0){
+      std::string useless_if_condition;
+      std::string useless_if_statement;
+      std::string useless_outside_if_statement;
+      for (std::map<std::string,std::string>::const_iterator it = c_to_sk.begin(); it!=c_to_sk.end();it++){
+        useless_if_condition += "&&(" + it->first + "==" + it->first + "+ 1 - 1)";
+        useless_if_statement += it->first + "=" + it->first + "+ 1;\n";
+        useless_outside_if_statement += it->first + "=" + it->first + "- 1;\n";
+      }
+      
+      ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + useless_if_condition
+              + ") {" + ast_visit_stmt(if_stmt->getThen()) + useless_if_statement + "}\n";
+      if (if_stmt->getElse() != nullptr) {
+      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "; }\n";
+      }
+      ret += useless_outside_if_statement;
+      return ret;
+    }else{
+      ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
+      if (if_stmt->getElse() != nullptr) {
+      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
+      }
+      return ret;
+    }    
   }else{
     ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
+    if (if_stmt->getElse() != nullptr) {
+    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
+    }
     return ret;
   }
 }
@@ -129,7 +161,7 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_bin_op(const BinaryOperato
 std::string ChipmunkAnotherdominoGenerator::ast_visit_decl_ref_expr(const clang::DeclRefExpr * decl_ref_expr) {
   assert_exception(decl_ref_expr);
   std::string s = clang_stmt_printer(decl_ref_expr);
-  if (rand == 1){
+  
     std::map<std::string,std::string>::iterator it;
         it = c_to_sk.find(s);
         if (it == c_to_sk.end()){
@@ -144,14 +176,15 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_decl_ref_expr(const clang:
                 count_stateful++;
                 c_to_sk[s] = name;
             }
-        }
-  
-    return parameter_name + c_to_sk[s];  
+          }
+  if (rand == 1){
+    return parameter_name + "." + c_to_sk[s];  
   }else{
     return s;
   }
-  
 }
+  
+
 
 std::string ChipmunkAnotherdominoGenerator::ast_visit_member_expr(const clang::MemberExpr * member_expr) {
   assert_exception(member_expr);
@@ -162,7 +195,7 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_member_expr(const clang::M
 std::string ChipmunkAnotherdominoGenerator::ast_visit_array_subscript_expr(const clang::ArraySubscriptExpr * array_subscript_expr){
   assert_exception(array_subscript_expr);
   std::string s = clang_stmt_printer(array_subscript_expr);
-  if (rand == 1){
+  
     std::map<std::string,std::string>::iterator it;
           it = c_to_sk.find(s);
           if (it == c_to_sk.end()){
@@ -176,10 +209,12 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_array_subscript_expr(const
               count_stateful++;
               c_to_sk[s] = name;
               }
-          }
-    return parameter_name + c_to_sk[s];
+            }
+  if (rand == 1){
+    return parameter_name + "." + c_to_sk[s];
   }else{
     return s;
   }
 }
+
 
