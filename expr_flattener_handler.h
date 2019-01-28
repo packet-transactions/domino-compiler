@@ -59,6 +59,9 @@ class ExprFlattenerHandler {
   /// Flatten binary op by calling flatten_to_atomic_expr
   /// on the left and right halves
   FlattenResult flatten_bin_op(const clang::BinaryOperator * bin_op, const std::string & pkt_name) const;
+  
+  /// Flatten unary op by calling flatten_to_atomic_expr
+  FlattenResult flatten_un_op(const clang::UnaryOperator * un_op, const std::string & pkt_name) const;
 
   /// Object that generates unique identifiers
   UniqueIdentifiers unique_identifiers_ = UniqueIdentifiers(std::set<std::string>());
