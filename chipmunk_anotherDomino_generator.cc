@@ -133,7 +133,7 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_if_stmt(const IfStmt * if_
       ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + useless_if_condition
               + ") {" + ast_visit_stmt(if_stmt->getThen()) + useless_if_statement + "}\n";
       if (if_stmt->getElse() != nullptr) {
-      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "; }\n";
+      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + useless_if_statement + "; }\n";
       }
       ret += useless_outside_if_statement;
       return ret;

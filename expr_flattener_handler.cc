@@ -76,6 +76,7 @@ FlattenResult ExprFlattenerHandler::flatten(const clang::Expr * expr, const std:
     } else if (isa<BinaryOperator>(expr)) {
       return flatten_bin_op(dyn_cast<BinaryOperator>(expr), pkt_name);
     } else {
+      std::cout << clang_stmt_printer(expr);
       assert_exception(false);
       return {"", "", {}};
     }
