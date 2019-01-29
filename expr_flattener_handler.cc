@@ -78,7 +78,6 @@ FlattenResult ExprFlattenerHandler::flatten(const clang::Expr * expr, const std:
     } else if (isa<UnaryOperator>(expr)){
       return flatten_un_op(dyn_cast<UnaryOperator>(expr),pkt_name);
     }else {
-      std::cout << clang_stmt_printer(expr);
       assert_exception(false);
       return {"", "", {}};
     }
