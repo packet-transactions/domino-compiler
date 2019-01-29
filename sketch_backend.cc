@@ -267,12 +267,27 @@ std::string create_sketch_spec(const Stmt * function_body, const std::string & s
         // Get lhs and rhs of this op
         const auto * left_operand = rhs_bin_op->getLHS()->IgnoreParenImpCasts();
         const auto * right_operand = rhs_bin_op->getRHS()->IgnoreParenImpCasts();
-        assert_exception(isa<MemberExpr>(left_operand));
-        assert_exception(isa<MemberExpr>(right_operand));
+        if (isa<IntegerLiteral>(left_operand) && isa<IntegerLiteral>(right_operand)){
+	right_rename_map[clang_stmt_printer(left_operand)] = "(" + clang_stmt_printer(left_operand) + "!= 0)";
+        right_rename_map[clang_stmt_printer(right_operand)] = "(" + clang_stmt_printer(right_operand) + "!= 0)";
+	}else if (isa<IntegerLiteral>(left_operand) && !isa<IntegerLiteral>(right_operand)){
+	right_rename_map[clang_stmt_printer(left_operand)] = "(" + clang_stmt_printer(left_operand) + "!= 0)";
+	assert_exception(isa<MemberExpr>(right_operand));
+	assert_exception(rename_map.find(clang_stmt_printer(right_operand))!= rename_map.end());
+	right_rename_map[clang_stmt_printer(right_operand)] = "(" + rename_map.at(clang_stmt_printer(right_operand)) + "!= 0)";
+	}else if (isa<IntegerLiteral>(right_operand) && !isa<IntegerLiteral>(left_operand)){
+	right_rename_map[clang_stmt_printer(right_operand)] = "(" + clang_stmt_printer(right_operand) + "!= 0)";
+	assert_exception(isa<MemberExpr>(left_operand));
+	assert_exception(rename_map.find(clang_stmt_printer(left_operand)) != rename_map.end());
+	right_rename_map[clang_stmt_printer(left_operand)] = "(" + rename_map.at(clang_stmt_printer(left_operand)) + "!= 0)";
+	}else{
+	assert_exception(isa<MemberExpr>(left_operand)); // or isa<IntegerLiteral>(left_operand));
+        assert_exception(isa<MemberExpr>(right_operand));  //or isa<IntegerLiteral>(right_operand));
         assert_exception(rename_map.find(clang_stmt_printer(left_operand)) != rename_map.end());
         assert_exception(rename_map.find(clang_stmt_printer(right_operand))!= rename_map.end());
         right_rename_map[clang_stmt_printer(left_operand)] = "(" + rename_map.at(clang_stmt_printer(left_operand)) + "!= 0)";
         right_rename_map[clang_stmt_printer(right_operand)] = "(" + rename_map.at(clang_stmt_printer(right_operand)) + "!= 0)";
+	}
       }
     } else if (isa<UnaryOperator>(bin_op->getRHS()->IgnoreParenImpCasts())) {
       const auto * rhs_un_op = dyn_cast<UnaryOperator>(bin_op->getRHS()->IgnoreParenImpCasts());
