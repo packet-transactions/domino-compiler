@@ -123,7 +123,7 @@ std::string AstVisitor::ast_visit_stmt(const Stmt * stmt) {
   } else if (isa<CallExpr>(stmt)) {
     return ast_visit_func_call(dyn_cast<CallExpr>(stmt));
   } else if (isa<NullStmt>(stmt)) {
-    return ";";
+    return "";
   } else {
     throw std::logic_error("ast_visit error: the statement\n"
                            + clang_stmt_printer(stmt)
