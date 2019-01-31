@@ -38,8 +38,10 @@ std::string ChipmunkDeadcodeGenerator::ast_visit_transform(const clang::Translat
 	    return res + "void " + dyn_cast<FunctionDecl>(decl)->getNameAsString() + "(" + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getType().getAsString() + " "
           + dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString() + "){\n" + redundant_assignment + redundant_if + body_part + "}";
       }
-    }else if (isa<VarDecl>(decl) || isa<RecordDecl>(decl) || ((isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl))))) ){ 
-	     res += clang_decl_printer(decl) + ";\n" ;
+    }else if (isa<VarDecl>(decl) || isa<RecordDecl>(decl)){
+	 res += clang_decl_printer(decl) + ";\n";
+    }else if ((isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl))))) { 
+	     res += clang_decl_printer(decl) + "\n";
     }
   }
   assert_exception(false);
@@ -49,12 +51,12 @@ std::string ChipmunkDeadcodeGenerator::ast_visit_if_stmt(const IfStmt * if_stmt)
   assert_exception(if_stmt);
   std::string ret;
   if (rand == 7){
-  ret += "if (" + ast_visit_stmt(if_stmt->getCond()) + " && 1==1) {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
+  ret += "if (" + ast_visit_stmt(if_stmt->getCond()) + " && 1==1) {" + ast_visit_stmt(if_stmt->getThen()) + " }";
   }else{
-  ret += "if (" + ast_visit_stmt(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
+  ret += "if (" + ast_visit_stmt(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + " }";
   }
   if (if_stmt->getElse() != nullptr) {
-    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
+    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + " }";
   }
   return ret;
 }

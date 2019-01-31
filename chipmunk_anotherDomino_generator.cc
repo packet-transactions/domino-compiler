@@ -22,7 +22,7 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_record_decl(const clang::R
         ret += "int " + it->second + ";\n";
     } 
   }
-  ret += "}; \n\n";
+  ret += "};";
   return ret;
 }
 
@@ -104,7 +104,7 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_transform(const clang::Tra
     }else if (isa<VarDecl>(decl)) {
         res += clang_decl_printer(decl) + ";\n";
     }else if(((isa<FunctionDecl>(decl) and (not is_packet_func(dyn_cast<FunctionDecl>(decl))))) ){ 
-        res += clang_decl_printer(decl) + ";\n";
+        res += clang_decl_printer(decl) + "\n";
     }else if ( isa<RecordDecl>(decl) ){
         res += ast_visit_record_decl(dyn_cast<RecordDecl>(decl), c_to_sk) + "\n";
     }
@@ -116,8 +116,8 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_if_stmt(const IfStmt * if_
   assert_exception(if_stmt);
   std::string ret;
   if (if_stmt->getElse() != nullptr && rand == 2) {
-    ret += "if (!(" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ")) {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
-    ret += "else if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
+    ret += "if (!(" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ")) {" + ast_visit_stmt(if_stmt->getElse()) + " }";
+    ret += "else if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + " }";
     return ret;
   }else if(rand == 8){
     if (c_to_sk.size()!=0){
@@ -125,7 +125,7 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_if_stmt(const IfStmt * if_
       std::string useless_if_statement;
       std::string useless_outside_if_statement;
       for (std::map<std::string,std::string>::const_iterator it = c_to_sk.begin(); it!=c_to_sk.end();it++){
-        useless_if_condition += "&&(" + it->first + "==" + it->first + "+ 1 - 1)";
+        useless_if_condition += " && (" + it->first + "==" + it->first + "+ 1 - 1)";
         useless_if_statement += it->first + "=" + it->first + "+ 1;\n";
         useless_outside_if_statement += it->first + "=" + it->first + "- 1;\n";
       }
@@ -133,21 +133,21 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_if_stmt(const IfStmt * if_
       ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + useless_if_condition
               + ") {" + ast_visit_stmt(if_stmt->getThen()) + useless_if_statement + "}\n";
       if (if_stmt->getElse() != nullptr) {
-      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + useless_if_statement + "; }\n";
+      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + useless_if_statement + "}\n";
       }
       ret += useless_outside_if_statement;
       return ret;
     }else{
-      ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
+      ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "}";
       if (if_stmt->getElse() != nullptr) {
-      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
+      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "}";
       }
       return ret;
     }    
   }else{
-    ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
+    ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "}";
     if (if_stmt->getElse() != nullptr) {
-    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
+    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "}";
     }
     return ret;
   }

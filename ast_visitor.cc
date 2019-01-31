@@ -33,9 +33,9 @@ std::string AstVisitor::ast_visit_comp_stmt(const CompoundStmt * comp_stmt) {
 std::string AstVisitor::ast_visit_if_stmt(const IfStmt * if_stmt) {
   assert_exception(if_stmt);
   std::string ret;
-  ret += "if (" + ast_visit_stmt(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
+  ret += "if (" + ast_visit_stmt(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "}";
   if (if_stmt->getElse() != nullptr) {
-    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
+    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "}";
   }
   return ret;
 }
