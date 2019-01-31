@@ -25,8 +25,12 @@ std::pair<std::string, std::vector<std::string>> AstVisitor::ast_visit_helper(co
 std::string AstVisitor::ast_visit_comp_stmt(const CompoundStmt * comp_stmt) {
   assert_exception(comp_stmt);
   std::string ret;
-  for (const auto & child : comp_stmt->children())
-    ret += ast_visit_stmt(child) + ";";
+  for (const auto & child : comp_stmt->children()){
+	if (ast_visit_stmt(child) != "" && ast_visit_stmt(child).back() != '}')
+		ret += ast_visit_stmt(child) + ";";
+	else
+		ret += ast_visit_stmt(child);
+  }
   return ret;
 }
 
