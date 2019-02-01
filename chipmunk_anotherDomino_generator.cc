@@ -116,8 +116,8 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_if_stmt(const IfStmt * if_
   assert_exception(if_stmt);
   std::string ret;
   if (if_stmt->getElse() != nullptr && rand == 2) {
-    ret += "if (!(" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ")) {" + ast_visit_stmt(if_stmt->getElse()) + " }";
-    ret += "else if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + " }";
+    ret += "if (!(" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ")) {" + ast_visit_stmt(if_stmt->getElse()) + " ;}";
+    ret += "else if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + " ;}";
     return ret;
   }else if(rand == 8){
     if (c_to_sk.size()!=0){
@@ -131,23 +131,23 @@ std::string ChipmunkAnotherdominoGenerator::ast_visit_if_stmt(const IfStmt * if_
       }
       
       ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + useless_if_condition
-              + ") {" + ast_visit_stmt(if_stmt->getThen()) + useless_if_statement + "}\n";
+              + ") {" + ast_visit_stmt(if_stmt->getThen()) + ";" + useless_if_statement + "}\n";
       if (if_stmt->getElse() != nullptr) {
-      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + useless_if_statement + "}\n";
+      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + ";" + useless_if_statement + "}\n";
       }
       ret += useless_outside_if_statement;
       return ret;
     }else{
-      ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "}";
+      ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + ";}";
       if (if_stmt->getElse() != nullptr) {
-      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "}";
+      ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + ";}";
       }
       return ret;
     }    
   }else{
-    ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "}";
+    ret += "if (" + ast_visit_stmt_specially_for_if_condition(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + ";}";
     if (if_stmt->getElse() != nullptr) {
-    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "}";
+    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + ";}";
     }
     return ret;
   }

@@ -45,10 +45,11 @@ int main(int argc, const char **argv) {
         ChipmunkAnotherdominoGenerator AnotherDomino;
         auto chipmunk_another_domino_generator = SinglePass<>(std::bind(& ChipmunkAnotherdominoGenerator::ast_visit_transform,
                                                     AnotherDomino, _1));
+        
         int count = 0;
-
         std::string sketch_program = chipmunk_another_domino_generator(string_to_parse);
-        while (count != 11){
+        
+        while (count != 10){
             count++;
             //random_num is to record which execution to take
             int random_num = rand() % 8 + 1;
@@ -65,7 +66,7 @@ int main(int argc, const char **argv) {
               auto chipmunk_deadcode_generator = SinglePass<>(std::bind(& ChipmunkDeadcodeGenerator::ast_visit_transform,
                                                     domino_with_deadcode, _1));
               sketch_program = chipmunk_deadcode_generator(sketch_program);
-            }    
+            }
         }
         std::string filename = "/tmp/" + domino_file_name + "_equivalent_" + std::to_string(num_of_transformed_file) + ".c";
         std::ofstream myfile;
