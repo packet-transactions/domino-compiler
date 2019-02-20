@@ -27,7 +27,7 @@ std::string redundancy_remover_stmt(const Stmt * stmt) {
 
     // Check if you nest exactly one CompoundStmt
     if (comp_stmt->size() == 1 and isa<CompoundStmt>(comp_stmt->body_back())) {
-      std::cerr <<  "Nesting exactly one CompoundStmt" << std::endl;
+      std::cerr <<  "// Nesting exactly one CompoundStmt" << std::endl;
       return clang_stmt_printer(comp_stmt->body_back()); // My version of libclang doesn't have a body_front()
     } else {
       std::string ret;

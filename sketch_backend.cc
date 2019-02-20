@@ -139,7 +139,7 @@ std::string coalesce_args(const Stmt * function_body,
  PktField replaced_field = "";
  for (const auto & field : incoming_fields) {
    if (providers.find(field) == providers.end()) {
-     std::cerr << "Could not find " << field << " in providers, it's likely an input field, moving on\n";
+     std::cerr << "// Could not find " << field << " in providers, it's likely an input field, moving on\n";
      continue;
    } else {
      replacement_fields = providers.at(field);
@@ -155,15 +155,15 @@ std::string coalesce_args(const Stmt * function_body,
  std::string orig_body = "";
  for (const auto * stmt : function_body->children()) orig_body += clang_stmt_printer(stmt) + ";";
 
- std::cerr << "incoming_fields " << incoming_fields << std::endl;
+ std::cerr << "// incoming_fields " << incoming_fields << std::endl;
  if (found_smaller_field_set) {
-   std::cerr << "Found smaller field set " << new_field_set_candidate << "\n" << std::endl;
+   std::cerr << "// Found smaller field set " << new_field_set_candidate << "\n" << std::endl;
    return "{ " +
           replaced_field + " = " + provider_expressions.at(replaced_field) + ";" +
           orig_body +
           "}";
  } else {
-   std::cerr << "No luck, sticking with old field set" << "\n" << std::endl;
+   std::cerr << "// No luck, sticking with old field set" << "\n" << std::endl;
    return "{" + orig_body + "}";
  }
 }
