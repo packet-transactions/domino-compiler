@@ -5,7 +5,7 @@
 //Output the group in format like [1,2][3,4]
 void print_group(std::vector<int> arr,int group_size){
   //Pay attention to the case where the group_size is 1 
-  for (int i=0;i!=arr.size();i++){
+  for (std::size_t i=0;i!=arr.size();i++){
     if(i%group_size == 0)
       std::cout<<"["<<arr[i]<<",";
     else if (i%group_size == group_size -1)
@@ -26,13 +26,13 @@ void Permutations(std::vector<int> origin_list,std::vector<std::vector<int> > &p
 //Sort all permutations
 void sort_list(std::vector<std::vector<int> >& permutation_list,int group_size){
   //Sort each group member by ascending order
-  for (int i=0;i!=permutation_list.size();i++)
-    for (int j=0;j<permutation_list[i].size();j=j+group_size)
+  for (std::size_t i=0;i!=permutation_list.size();i++)
+    for (std::size_t j=0;j<permutation_list[i].size();j=j+group_size)
       sort(permutation_list[i].begin()+j,permutation_list[i].begin()+j+group_size);
   return;
   //Sort the number of each group
-  for (int i=0;i!=permutation_list.size();i++)
-    for (int j=0;j<permutation_list[i].size()-group_size;j=j+group_size)
+  for (std::size_t i=0;i!=permutation_list.size();i++)
+    for (std::size_t j=0;j<permutation_list[i].size()-group_size;j=j+group_size)
       if (permutation_list[i][j] > permutation_list[i][j+group_size])
         for (int k=j;k!=j+group_size;k++){
           int tmp = permutation_list[i][k];
@@ -43,7 +43,7 @@ void sort_list(std::vector<std::vector<int> >& permutation_list,int group_size){
 
 //Whether two vectors are the same
 int is_same(std::vector<int> a,std::vector<int> b){
-  for (int i=0;i!=a.size();i++){
+  for (std::size_t i=0;i!=a.size();i++){
     if (a[i]!=b[i])
       return 0;
   }
@@ -52,7 +52,7 @@ int is_same(std::vector<int> a,std::vector<int> b){
 
 //Whether this vector has appeared in the vector<vector>
 int is_in_vector(std::vector<int> arr, std::vector<std::vector<int> >&permutation_without_repeat){
-  for (int i=0;i!=permutation_without_repeat.size();i++){
+  for (std::size_t i=0;i!=permutation_without_repeat.size();i++){
     if (is_same(arr,permutation_without_repeat[i]))
       return 1;
   }
@@ -61,7 +61,7 @@ int is_in_vector(std::vector<int> arr, std::vector<std::vector<int> >&permutatio
 
 //Delete the repeated member in the list
 void del_repeat(std::vector<std::vector<int> >permutation_list,std::vector<std::vector<int> >&permutation_without_repeat){
-  for (int i=0;i!=permutation_list.size();i++){
+  for (std::size_t i=0;i!=permutation_list.size();i++){
     if (i==0)
       permutation_without_repeat.push_back(permutation_list[i]);
     else{
@@ -86,19 +86,26 @@ void combination_generator(std::vector<int> arr,std::vector<int> data,int start,
   }
 }
 
-int main(){
-  std::vector<int> arr;
+int main(int argc, const char **argv){
   //group_size means the maximum group size
-  int group_size = 1;
+  int group_size;
   //total_number means how many state vars
-  int total_number = 4;
+  int total_number;
+  if (argc == 3){
+    group_size = atoi(argv[2]);
+    total_number = atoi(argv[1]); 
+  }else{
+    std::cerr << "Usage: Grouper <number of state vars> <group_size(1 or 2)> " << std::endl;
+    return EXIT_FAILURE;
+  }
+  std::vector<int> arr;
   //Fill in arr
   for (int i=1;i!=total_number+1;i++){
     arr.push_back(i);
   }
   //Pay attention to the case where the group_size is 1
   if (group_size == 1){
-    for (int j=0;j!=arr.size();j++){
+    for (std::size_t j=0;j!=arr.size();j++){
         if (j!= arr.size()-1)
           std::cout<<"["<< arr[j] << "]";
         else
@@ -106,9 +113,9 @@ int main(){
       }
     return 0;
   }
-  for (int i = 0;i<=arr.size()/group_size;i++){
+  for (std::size_t i = 0;i<=arr.size()/group_size;i++){
     if (i==0){
-      for (int j=0;j!=arr.size();j++){
+      for (std::size_t j=0;j!=arr.size();j++){
         if (j!= arr.size()-1)
           std::cout<<"["<< arr[j] << "]";
         else
@@ -124,8 +131,8 @@ int main(){
       data.push_back(0);
     }
     //generate combination
-    combination_generator(arr,data,0,arr.size()-1,0,num_to_pick,res);
-    for (int p=0;p!=res.size();p++){
+    combination_generator(arr,data,0,int(arr.size()-1),0,num_to_pick,res);
+    for (std::size_t p=0;p!=res.size();p++){
       std::vector<std::vector<int> > permutation;
       std::vector<std::vector<int> > permutation_without_repeat;
       //generate permutation
@@ -135,9 +142,9 @@ int main(){
       //delete the repeated member
       del_repeat(permutation,permutation_without_repeat);
       //Print out result
-      for (int k=0;k!=permutation_without_repeat.size();k++){
+      for (std::size_t k=0;k!=permutation_without_repeat.size();k++){
         //Print the member in Group of size 1
-        for (int index=0;index!=arr.size();index++)
+        for (std::size_t index=0;index!=arr.size();index++)
           //if the member of arr have not appear in permutation_without_repeat[k]
           if(find(permutation_without_repeat[k].begin(),permutation_without_repeat[k].end(),arr[index]) == permutation_without_repeat[k].end())
            std::cout <<"[" << arr[index] << "]";
