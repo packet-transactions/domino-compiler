@@ -1,19 +1,17 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <map>
+#include <string>
+#include <fstream>
 
-//Output the group in format like [1,2][3,4]
-void print_group(std::vector<int> arr,int group_size){
-  //Pay attention to the case where the group_size is 1 
-  for (std::size_t i=0;i!=arr.size();i++){
-    if(i%group_size == 0)
-      std::cout<<"["<<arr[i]<<",";
-    else if (i%group_size == group_size -1)
-      std::cout<<arr[i]<<"]";
-    else
-      std::cout<<arr[i]<<",";
-  }
-  std::cout<<std::endl;
+std::string file_to_str(const std::string & file_name) {
+  // Taken from:
+  // http://stackoverflow.com/questions/2912520/read-file-contents-into-a-string-in-c
+  std::ifstream ifs(file_name);
+  if (not ifs.good()) throw std::logic_error("Cannot read from " + file_name + ", maybe it doesn't exist?");
+  return std::string((std::istreambuf_iterator<char>(ifs)),
+                     (std::istreambuf_iterator<char>()));
 }
 
 //Generate all permutations
@@ -86,41 +84,32 @@ void combination_generator(std::vector<int> arr,std::vector<int> data,int start,
   }
 }
 
-int main(int argc, const char **argv){
-  //group_size means the maximum group size
-  int group_size;
-  //total_number means how many state vars
-  int total_number;
-  if (argc == 3){
-    group_size = atoi(argv[2]);
-    total_number = atoi(argv[1]); 
-  }else{
-    std::cerr << "Usage: Grouper <number of state vars> <group_size(1 or 2)> " << std::endl;
-    return EXIT_FAILURE;
-  }
+void group_collection(int total_number,int group_size,std::vector<std::vector<std::vector<int> > > &group ){
   std::vector<int> arr;
   //Fill in arr
-  for (int i=1;i!=total_number+1;i++){
+  for (int i=0;i!=total_number;i++){
     arr.push_back(i);
   }
   //Pay attention to the case where the group_size is 1
   if (group_size == 1){
+    std::vector<std::vector<int> > group_num;
     for (std::size_t j=0;j!=arr.size();j++){
-        if (j!= arr.size()-1)
-          std::cout<<"["<< arr[j] << "]";
-        else
-          std::cout<<"["<< arr[j] << "]"<<std::endl;
-      }
-    return 0;
+      std::vector<int> each_group;
+      each_group.push_back(arr[j]);
+      group_num.push_back(each_group);
+    }
+    group.push_back(group_num);
+    return;
   }
   for (std::size_t i = 0;i<=arr.size()/group_size;i++){
     if (i==0){
+      std::vector<std::vector<int> > group_num;
       for (std::size_t j=0;j!=arr.size();j++){
-        if (j!= arr.size()-1)
-          std::cout<<"["<< arr[j] << "]";
-        else
-          std::cout<<"["<< arr[j] << "]"<<std::endl;
+        std::vector<int> each_group;
+        each_group.push_back(arr[j]);
+        group_num.push_back(each_group);
       }
+      group.push_back(group_num);
       continue;
     }
     std::vector< std::vector<int> > res;
@@ -141,16 +130,94 @@ int main(int argc, const char **argv){
       sort_list(permutation,group_size);
       //delete the repeated member
       del_repeat(permutation,permutation_without_repeat);
+
+      std::vector<std::vector<int> > group_num;
+      std::vector<int> each_group;
       //Print out result
       for (std::size_t k=0;k!=permutation_without_repeat.size();k++){
+        //group_num store the member in each group
+        std::vector<std::vector<int> > group_num;
         //Print the member in Group of size 1
         for (std::size_t index=0;index!=arr.size();index++)
           //if the member of arr have not appear in permutation_without_repeat[k]
-          if(find(permutation_without_repeat[k].begin(),permutation_without_repeat[k].end(),arr[index]) == permutation_without_repeat[k].end())
-           std::cout <<"[" << arr[index] << "]";
-        print_group(permutation_without_repeat[k],group_size);
+          if(find(permutation_without_repeat[k].begin(),permutation_without_repeat[k].end(),arr[index]) == permutation_without_repeat[k].end()){
+            std::vector<int> each_group;
+            each_group.push_back(arr[index]);
+            group_num.push_back(each_group);
+          }
+        for (std::size_t index=0;index!=permutation_without_repeat[k].size();index=index+group_size){
+            std::vector<int> each_group;
+            for (int num=index;num!=index+group_size;num++)
+              each_group.push_back(permutation_without_repeat[k][num]);
+            group_num.push_back(each_group);
+        }
+        group.push_back(group_num);
       }
     }
   }
+
+}
+
+void generate_map(std::vector<std::vector<int> > vec,std::map<std::string,std::string> &state_to_group){
+  for (int i=0;i!=vec.size();i++){
+    for (int j=0;j!=vec[i].size();j++){
+      std::string str1 = "state_" + std::to_string(vec[i][j]);
+      std::string str2 = "state_group_" + std::to_string(i) + "_state_" + std::to_string(j);
+      state_to_group[str1] = str2;  
+    }
+  }
+}
+
+int main(int argc, const char **argv){
+  int group_size;
+  //total_number means how many state vars
+  int total_number;
+  std::string string_to_parse;
+  if (argc == 3){
+    string_to_parse = file_to_str(std::string(argv[1]));
+    group_size = atoi(argv[2]);
+  }else{
+    std::cerr << "Usage: Grouper <source file> <group_size(1 or 2)> " << std::endl;
+    return EXIT_FAILURE;
+  }
+  std::size_t found=0;
+  int max_state_var_num = 0;
+  while(found!=std::string::npos){
+    found = string_to_parse.find("state_",found+1);
+    if (found!=std::string::npos){
+      found = string_to_parse.find("_",found+1);
+      if (string_to_parse[found+1]-'0' > max_state_var_num)
+        max_state_var_num = string_to_parse[found+1]-'0';
+    }
+  } 
+  total_number = max_state_var_num+1;
+  std::vector<std::vector<std::vector<int> > > group;
+  group_collection(total_number,group_size,group);
+  for (int i=0;i!=group.size();i++){
+    for (int j=0;j!=group[i].size();j++){
+      if (group[i][j].size()==1){
+        std::cout << "[" << group[i][j][0] << "]";
+        continue;
+      }
+      for (int k=0;k!=group[i][j].size();k++)
+        if (k==0)
+          std::cout << "[" << group[i][j][k] << ",";
+        else if (k==group[i][j].size()-1)
+          std::cout <<  group[i][j][k] << "]";
+        else
+          std::cout <<  group[i][j][k] << ",";
+    }
+    std::cout << std::endl;
+  }
+  //Generate map
+/*  for (int i=0;i!=group.size();i++){
+    std::map<std::string,std::string> state_to_group;
+    generate_map(group[i],state_to_group);
+    for(std::map<std::string, std::string >::const_iterator it = state_to_group.begin();
+    it != state_to_group.end(); ++it){
+      std::cout << it->first << "=" << it->second << " ";
+    }
+    std::cout << std::endl;
+  }*/
   return 0;
 }
