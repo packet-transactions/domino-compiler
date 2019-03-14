@@ -42,5 +42,5 @@ domino_to_rename_domino_SOURCES = domino_to_rename_domino.cc
 domino_to_rename_domino_LDADD = $(CLANG_LLVM_LIBS) libdomino.a $(srcdir)/third_party/libmahimahi.a
 
 grouper_CXXFLAGS = $(PICKY_CXXFLAGS) -fno-rtti
-grouper_SOURCES = Grouper.cc
+grouper_SOURCES = grouper.cc
 grouper_LDADD = $(CLANG_LLVM_LIBS) libdomino.a $(srcdir)/third_party/libmahimahi.a
