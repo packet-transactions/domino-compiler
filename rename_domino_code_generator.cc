@@ -16,7 +16,7 @@ std::string RenameDominoCodeGenerator::ast_visit_transform(const clang::Translat
     if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) {
       //record body part first
       std::string body_part = ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody());
-      return body_part;
+      return "void func(struct Packet p) {\n" + body_part + "\n}";
     }
   }
   assert_exception(false);
@@ -52,7 +52,7 @@ std::string RenameDominoCodeGenerator::ast_visit_member_expr(const clang::Member
             std::string name;
             //stateless
             if (s.find('.')!=std::string::npos && s.find('[')==std::string::npos){
-                name = "pkt_" + std::to_string(count_stateless);
+                name = "p.pkt_" + std::to_string(count_stateless);
                 count_stateless++;
             }
             else{
