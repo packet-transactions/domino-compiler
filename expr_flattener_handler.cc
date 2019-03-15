@@ -75,12 +75,27 @@ FlattenResult ExprFlattenerHandler::flatten(const clang::Expr * expr, const std:
       return flatten_cond_op(dyn_cast<ConditionalOperator>(expr), pkt_name);
     } else if (isa<BinaryOperator>(expr)) {
       return flatten_bin_op(dyn_cast<BinaryOperator>(expr), pkt_name);
-    } else {
+    } else if (isa<UnaryOperator>(expr)){
+      return flatten_un_op(dyn_cast<UnaryOperator>(expr),pkt_name);
+    }else {
       assert_exception(false);
       return {"", "", {}};
     }
   }
 }
+
+FlattenResult ExprFlattenerHandler::flatten_un_op(const UnaryOperator * un_op, const std::string & pkt_name) const {
+  assert_exception(not is_flat(un_op));
+  const auto ret_body = flatten_to_atomic_expr(un_op->getSubExpr(),pkt_name);
+
+  std::vector<std::string> all_decls;
+  all_decls.insert(all_decls.begin(), ret_body.new_decls.begin(), ret_body.new_decls.end());
+
+  return {std::string(UnaryOperator::getOpcodeStr(un_op->getOpcode())) + ret_body.flat_expr,
+          ret_body.new_defs,
+          all_decls};
+}
+
 
 FlattenResult ExprFlattenerHandler::flatten_bin_op(const BinaryOperator * bin_op, const std::string & pkt_name) const {
   assert_exception(not is_flat(bin_op));

@@ -1,5 +1,5 @@
 #include <csignal>
-#include "chipmunk_code_generator.h"
+#include "chipmunk_remove_null_stmt.h"
 
 #include <utility>
 #include <iostream>
@@ -18,7 +18,7 @@
 using std::placeholders::_1;
 
 void print_usage() {
-  std::cerr << "Usage: domino_to_chipmunk <source_file>" << std::endl;
+  std::cerr << "Usage: domino_to_remove_null_stmt <source_file>" << std::endl;
 }
 
 int main(int argc, const char **argv) {
@@ -26,17 +26,15 @@ int main(int argc, const char **argv) {
     // Block out SIGINT, because we can't handle it properly
     signal(SIGINT, SIG_IGN);
 
-    if (argc == 2) {
+    if (argc == 2){
       const auto string_to_parse = file_to_str(std::string(argv[1]));
 
-      auto chipmunk_code_generator = SinglePass<>(std::bind(& ChipmunkCodeGenerator::ast_visit_transform,
-                                                  ChipmunkCodeGenerator(), _1));
+      auto chipmunk_remove_null_stmt_generator = SinglePass<>(std::bind(& ChipmunkNullstmtRemover::ast_visit_remove_nullstmt,
+                                                  ChipmunkNullstmtRemover(), _1));
 
-      std::cout << "/* \n// Original program: \n" + string_to_parse + " */\n" << std::endl;
-      
-      std::string sketch_program = chipmunk_code_generator(string_to_parse);
+      std::string sketch_program = chipmunk_remove_null_stmt_generator(string_to_parse);
       std::cout << sketch_program << std::endl;
-      
+
       return EXIT_SUCCESS;
     }
     else {

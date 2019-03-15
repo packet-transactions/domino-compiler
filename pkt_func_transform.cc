@@ -15,6 +15,7 @@ int get_order(const Decl * decl) {
   else if (isa<FunctionDecl>(decl) and (is_packet_func(dyn_cast<FunctionDecl>(decl)))) return 3;
   else if (isa<RecordDecl>(decl)) return 4;
   else if (isa<TypedefDecl>(decl)) return 5;
+  else if (isa<EmptyDecl>(decl)) return 6;
   else {
     throw std::logic_error("get_order in pkt_func_transform.cc cannot handle decl " + clang_decl_printer(decl) + " of type " + std::string(decl->getDeclKindName()));
   }

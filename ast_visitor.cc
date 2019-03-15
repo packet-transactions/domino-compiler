@@ -25,17 +25,24 @@ std::pair<std::string, std::vector<std::string>> AstVisitor::ast_visit_helper(co
 std::string AstVisitor::ast_visit_comp_stmt(const CompoundStmt * comp_stmt) {
   assert_exception(comp_stmt);
   std::string ret;
-  for (const auto & child : comp_stmt->children())
-    ret += ast_visit_stmt(child) + ";";
+  for (const auto & child : comp_stmt->children()){
+	if (ast_visit_stmt(child) == "")
+	   ret += ast_visit_stmt(child);
+	else if (ast_visit_stmt(child).find("if") != std::string::npos && ast_visit_stmt(child).find('}') != std::string::npos){
+	   ret += ast_visit_stmt(child);
+	}else{
+       	   ret += ast_visit_stmt(child) + ";";
+	}
+  }
   return ret;
 }
 
 std::string AstVisitor::ast_visit_if_stmt(const IfStmt * if_stmt) {
   assert_exception(if_stmt);
   std::string ret;
-  ret += "if (" + ast_visit_stmt(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "; }";
+  ret += "if (" + ast_visit_stmt(if_stmt->getCond()) + ") {" + ast_visit_stmt(if_stmt->getThen()) + "}";
   if (if_stmt->getElse() != nullptr) {
-    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "; }";
+    ret += "else {" + ast_visit_stmt(if_stmt->getElse()) + "}";
   }
   return ret;
 }
@@ -123,7 +130,7 @@ std::string AstVisitor::ast_visit_stmt(const Stmt * stmt) {
   } else if (isa<CallExpr>(stmt)) {
     return ast_visit_func_call(dyn_cast<CallExpr>(stmt));
   } else if (isa<NullStmt>(stmt)) {
-    return ";";
+    return "";
   } else {
     throw std::logic_error("ast_visit error: the statement\n"
                            + clang_stmt_printer(stmt)
