@@ -6,7 +6,7 @@
 #include <vector>
 
 // include the test code
-#include "domino_to_test_code_gen.h"
+#include "domino_to_group_domino_code_gen.h"
 #include <csignal>
 
 #include <functional>
@@ -51,13 +51,6 @@ void sort_list(std::vector<std::vector<int>> &permutation_list,
       sort(perm.begin() + j, perm.begin() + j + group_size);
     }
   }
-  // Sort each group member by ascending order
-  // for (unsigned int i = 0; i != permutation_list.size(); i++)
-  //   for (unsigned int j = 0; j < permutation_list[i].size(); j = j +
-  //   group_size)
-  //     sort(permutation_list[i].begin() + j,
-  //          permutation_list[i].begin() + j + group_size);
-
   // Sort the number of each group
   for (unsigned int i = 0; i != permutation_list.size(); i++) {
     for (unsigned int j = 0; j < permutation_list[i].size() - group_size;
@@ -241,43 +234,23 @@ int main(int argc, const char **argv) {
   total_number = max_state_var_num + 1;
   std::vector<std::vector<std::vector<int>>> group;
   group_collection(total_number, group_size, group);
-  /*  for (int i=0;i!=group.size();i++){
-      for (int j=0;j!=group[i].size();j++){
-        if (group[i][j].size()==1){
-          std::cout << "[" << group[i][j][0] << "]";
-          continue;
-        }
-        for (int k=0;k!=group[i][j].size();k++)
-          if (k==0)
-            std::cout << "[" << group[i][j][k] << ",";
-          else if (k==group[i][j].size()-1)
-            std::cout <<  group[i][j][k] << "]";
-          else
-            std::cout <<  group[i][j][k] << ",";
-      }
-      std::cout << std::endl;
-    }*/
-  // Generate map
-  // int num_of_grouped_file = 0;
-  // for (int i = 0; i != group.size(); i++) {
-  //   std::map<std::string, std::string> state_to_group;
-  //   generate_map(group[i], state_to_group);
-  //   /*    for(std::map<std::string, std::string >::const_iterator it =
-  //      state_to_group.begin(); it != state_to_group.end(); ++it){ std::cout
-  //      << it->first << "=" << it->second << " ";
-  //       }
-  //       std::cout << std::endl;*/
-  //   auto rename_domino_code_generator = SinglePass<>(
-  //       std::bind(&RenameDominoCodeGenerator::ast_visit_transform_mutator,
-  //                 RenameDominoCodeGenerator(state_to_group), _1));
-  //   std::string sketch_program =
-  //   rename_domino_code_generator(string_to_parse); std::string filename =
-  //       "/tmp/equivalent_" + std::to_string(num_of_grouped_file) + ".c";
-  //   std::ofstream myfile;
-  //   myfile.open(filename.c_str());
-  //   myfile << sketch_program;
-  //   myfile.close();
-  //   num_of_grouped_file++;
-  // }
+ // Generate map
+   int num_of_grouped_file = 0;
+   for (unsigned int i = 0; i != group.size(); i++) {
+     std::map<std::string, std::string> state_to_group;
+     generate_map(group[i], state_to_group);
+     auto group_domino_code_generator = SinglePass<>(
+         std::bind(&DominoToGroupDominoCodeGenerator::ast_visit_transform,
+                   DominoToGroupDominoCodeGenerator(state_to_group), _1));
+/*     std::string sketch_program =
+     group_domino_code_generator(string_to_parse); 
+     std::string filename =
+         "/tmp/equivalent_" + std::to_string(num_of_grouped_file) + ".c";
+     std::ofstream myfile;
+     myfile.open(filename.c_str());
+     myfile << sketch_program;
+     myfile.close();*/
+     num_of_grouped_file++;
+   }
   return 0;
 }
