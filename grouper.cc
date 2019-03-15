@@ -217,7 +217,7 @@ int main(int argc, const char **argv) {
     string_to_parse = file_to_str(std::string(argv[1]));
     group_size = (unsigned int) std::stoul(argv[2]);
   } else {
-    std::cerr << "Usage: Grouper <source file> <group_size(1 or 2)> "
+    std::cerr << "Usage: grouper <source file> <group_size(1 or 2)> "
               << std::endl;
     return EXIT_FAILURE;
   }
@@ -242,14 +242,14 @@ int main(int argc, const char **argv) {
      auto group_domino_code_generator = SinglePass<>(
          std::bind(&DominoToGroupDominoCodeGenerator::ast_visit_transform,
                    DominoToGroupDominoCodeGenerator(state_to_group), _1));
-/*     std::string sketch_program =
+     std::string sketch_program =
      group_domino_code_generator(string_to_parse); 
      std::string filename =
          "/tmp/equivalent_" + std::to_string(num_of_grouped_file) + ".c";
      std::ofstream myfile;
      myfile.open(filename.c_str());
      myfile << sketch_program;
-     myfile.close();*/
+     myfile.close();
      num_of_grouped_file++;
    }
   return 0;
