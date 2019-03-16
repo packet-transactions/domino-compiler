@@ -255,7 +255,7 @@ int main(int argc, const char **argv) {
      std::string sketch_program =
      group_domino_code_generator(string_to_parse); 
      std::string filename =
-         "/tmp" + src_filename + "/equivalent_" + std::to_string(num_of_grouped_file) + ".c";
+         "/tmp/"+ src_filename + "_equivalent_" + std::to_string(num_of_grouped_file) + ".c";
      std::ofstream myfile;
      myfile.open(filename.c_str());
      myfile << sketch_program;
