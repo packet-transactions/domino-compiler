@@ -247,8 +247,11 @@ int main(int argc, const char **argv) {
       std::sregex_iterator(), std::back_inserter(state_var_nums),
       [](std::smatch match) { return std::stoi(match[1]); });
 
-  int max_state_var_num =
-      *std::max_element(state_var_nums.begin(), state_var_nums.end());
+  int max_state_var_num = 0;
+  if (!state_var_nums.empty()) {
+    max_state_var_num =
+        *std::max_element(state_var_nums.begin(), state_var_nums.end());
+  }
   total_number = max_state_var_num + 1;
   /*  auto map_size_generator = SinglePass<>(
            std::bind(&MapSizeCodeGenerator::map_size,
