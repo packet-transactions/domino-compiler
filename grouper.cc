@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-// include the test code
 #include "domino_to_group_domino_code_gen.h"
+#include "map_size_collection.h"
 #include <csignal>
 
 #include <functional>
@@ -221,6 +221,10 @@ int main(int argc, const char **argv) {
               << std::endl;
     return EXIT_FAILURE;
   }
+  //get the filename
+  std::string src_filename = std::string(argv[1]);
+  src_filename = src_filename.substr(src_filename.rfind('/')+1,src_filename.rfind('.')-src_filename.rfind('/')-1);
+
   std::size_t found = 0;
   int max_state_var_num = 0;
   while (found != std::string::npos) {
@@ -232,6 +236,12 @@ int main(int argc, const char **argv) {
     }
   }
   total_number = max_state_var_num + 1;
+/*  auto map_size_generator = SinglePass<>(
+         std::bind(&MapSizeCodeGenerator::map_size,
+                   MapSizeCodeGenerator(), _1));
+  total_number = map_size_generator(string_to_parse);
+  std::cout << total_number << std::endl;*/
+  
   std::vector<std::vector<std::vector<int>>> group;
   group_collection(total_number, group_size, group);
  // Generate map
@@ -245,7 +255,7 @@ int main(int argc, const char **argv) {
      std::string sketch_program =
      group_domino_code_generator(string_to_parse); 
      std::string filename =
-         "/tmp/equivalent_" + std::to_string(num_of_grouped_file) + ".c";
+         "/tmp" + src_filename + "/equivalent_" + std::to_string(num_of_grouped_file) + ".c";
      std::ofstream myfile;
      myfile.open(filename.c_str());
      myfile << sketch_program;
