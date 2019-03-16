@@ -1,21 +1,18 @@
 #include <algorithm>
+#include <csignal>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <map>
+#include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "domino_to_group_domino_code_gen.h"
-#include <csignal>
-
-#include <functional>
-#include <set>
-#include <utility>
-
-#include "third_party/assert_exception.h"
-
 #include "compiler_pass.h"
+#include "domino_to_group_domino_code_gen.h"
 #include "pkt_func_transform.h"
+#include "third_party/assert_exception.h"
 #include "util.h"
 
 // For the _1, and _2 in std::bind
@@ -214,15 +211,17 @@ int main(int argc, const char **argv) {
   std::string string_to_parse;
   if (argc == 3) {
     string_to_parse = file_to_str(std::string(argv[1]));
-    group_size = (unsigned int) std::stoul(argv[2]);
+    group_size = (unsigned int)std::stoul(argv[2]);
   } else {
     std::cerr << "Usage: grouper <source file> <group_size(1 or 2)> "
               << std::endl;
     return EXIT_FAILURE;
   }
-  //get the filename
+  // get the filename
   std::string src_filename = std::string(argv[1]);
-  src_filename = src_filename.substr(src_filename.rfind('/')+1,src_filename.rfind('.')-src_filename.rfind('/')-1);
+  src_filename = src_filename.substr(src_filename.rfind('/') + 1,
+                                     src_filename.rfind('.') -
+                                         src_filename.rfind('/') - 1);
 
   std::size_t found = 0;
   int max_state_var_num = 0;
@@ -235,31 +234,30 @@ int main(int argc, const char **argv) {
     }
   }
   total_number = max_state_var_num + 1;
-/*  auto map_size_generator = SinglePass<>(
-         std::bind(&MapSizeCodeGenerator::map_size,
-                   MapSizeCodeGenerator(), _1));
-  total_number = map_size_generator(string_to_parse);
-  std::cout << total_number << std::endl;*/
+  /*  auto map_size_generator = SinglePass<>(
+           std::bind(&MapSizeCodeGenerator::map_size,
+                     MapSizeCodeGenerator(), _1));
+    total_number = map_size_generator(string_to_parse);
+    std::cout << total_number << std::endl;*/
 
   std::vector<std::vector<std::vector<int>>> group;
   group_collection(total_number, group_size, group);
- // Generate map
-   int num_of_grouped_file = 0;
-   for (unsigned int i = 0; i != group.size(); i++) {
-     std::map<std::string, std::string> state_to_group;
-     generate_map(group[i], state_to_group);
-     auto group_domino_code_generator = SinglePass<>(
-         std::bind(&DominoToGroupDominoCodeGenerator::ast_visit_transform,
-                   DominoToGroupDominoCodeGenerator(state_to_group), _1));
-     std::string sketch_program =
-     group_domino_code_generator(string_to_parse);
-     std::string filename =
-         "/tmp/"+ src_filename + "_equivalent_" + std::to_string(num_of_grouped_file) + ".c";
-     std::ofstream myfile;
-     myfile.open(filename.c_str());
-     myfile << sketch_program;
-     myfile.close();
-     num_of_grouped_file++;
-   }
+  // Generate map
+  int num_of_grouped_file = 0;
+  for (unsigned int i = 0; i != group.size(); i++) {
+    std::map<std::string, std::string> state_to_group;
+    generate_map(group[i], state_to_group);
+    auto group_domino_code_generator = SinglePass<>(
+        std::bind(&DominoToGroupDominoCodeGenerator::ast_visit_transform,
+                  DominoToGroupDominoCodeGenerator(state_to_group), _1));
+    std::string sketch_program = group_domino_code_generator(string_to_parse);
+    std::string filename = "/tmp/" + src_filename + "_equivalent_" +
+                           std::to_string(num_of_grouped_file) + ".c";
+    std::ofstream myfile;
+    myfile.open(filename.c_str());
+    myfile << sketch_program;
+    myfile.close();
+    num_of_grouped_file++;
+  }
   return 0;
 }
