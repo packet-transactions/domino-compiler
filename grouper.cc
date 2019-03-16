@@ -224,7 +224,7 @@ int main(int argc, const char **argv) {
                                      src_filename.rfind('.') -
                                          src_filename.rfind('/') - 1);
 
-  std::regex exp("state_(\\d+) =");
+  std::regex exp("state_(\\d+)");
   std::vector<int> state_var_nums;
   // sregex_iterator would return all the matches for above regex. The returned
   // smatch contains the entire match, and then corresponding sub-matches are
@@ -253,11 +253,6 @@ int main(int argc, const char **argv) {
         *std::max_element(state_var_nums.begin(), state_var_nums.end());
   }
   total_number = max_state_var_num + 1;
-  /*  auto map_size_generator = SinglePass<>(
-           std::bind(&MapSizeCodeGenerator::map_size,
-                     MapSizeCodeGenerator(), _1));
-    total_number = map_size_generator(string_to_parse);
-    std::cout << total_number << std::endl;*/
 
   std::vector<std::vector<std::vector<int>>> group;
   group_collection(total_number, group_size, group);
