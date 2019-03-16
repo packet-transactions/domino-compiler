@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "domino_to_group_domino_code_gen.h"
-#include "map_size_collection.h"
 #include <csignal>
 
 #include <functional>
@@ -241,7 +240,7 @@ int main(int argc, const char **argv) {
                    MapSizeCodeGenerator(), _1));
   total_number = map_size_generator(string_to_parse);
   std::cout << total_number << std::endl;*/
-  
+
   std::vector<std::vector<std::vector<int>>> group;
   group_collection(total_number, group_size, group);
  // Generate map
@@ -253,7 +252,7 @@ int main(int argc, const char **argv) {
          std::bind(&DominoToGroupDominoCodeGenerator::ast_visit_transform,
                    DominoToGroupDominoCodeGenerator(state_to_group), _1));
      std::string sketch_program =
-     group_domino_code_generator(string_to_parse); 
+     group_domino_code_generator(string_to_parse);
      std::string filename =
          "/tmp/"+ src_filename + "_equivalent_" + std::to_string(num_of_grouped_file) + ".c";
      std::ofstream myfile;
