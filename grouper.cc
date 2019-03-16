@@ -4,6 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <regex>
 #include <set>
 #include <string>
 #include <utility>
@@ -223,16 +224,31 @@ int main(int argc, const char **argv) {
                                      src_filename.rfind('.') -
                                          src_filename.rfind('/') - 1);
 
-  std::size_t found = 0;
-  int max_state_var_num = 0;
-  while (found != std::string::npos) {
-    found = string_to_parse.find("state_", found + 1);
-    if (found != std::string::npos) {
-      found = string_to_parse.find("_", found + 1);
-      if (string_to_parse[found + 1] - '0' > max_state_var_num)
-        max_state_var_num = string_to_parse[found + 1] - '0';
-    }
-  }
+  std::regex exp("state_(\\d+) =");
+  std::vector<int> state_var_nums;
+  // sregex_iterator would return all the matches for above regex. The returned
+  // smatch contains the entire match, and then corresponding sub-matches are
+  // stored as successive elements.
+  // For example, given following string
+  //
+  // state_2
+  // state_0
+  // state_1
+  //
+  // Following code will actually return a list of std::smatch as following.
+  // [[state_2, 2], [state_0, 0], [state_1, 1]]
+  // Then std::transform will insert only the numbers to state_var_nums vector.
+  //
+  // Having int vector state_var_nums is not necessary if we combine following
+  // std::max_element with std::transform using custom comparator, but left as
+  // is as it's easier to understand.
+  std::transform(
+      std::sregex_iterator(string_to_parse.begin(), string_to_parse.end(), exp),
+      std::sregex_iterator(), std::back_inserter(state_var_nums),
+      [](std::smatch match) { return std::stoi(match[1]); });
+
+  int max_state_var_num =
+      *std::max_element(state_var_nums.begin(), state_var_nums.end());
   total_number = max_state_var_num + 1;
   /*  auto map_size_generator = SinglePass<>(
            std::bind(&MapSizeCodeGenerator::map_size,
