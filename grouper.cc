@@ -256,10 +256,11 @@ int main(int argc, const char **argv) {
 
   std::vector<std::vector<std::vector<int>>> group;
   group_collection(total_number, group_size, group);
-  // Generate map
+  // Output the grouped_file into files
   int num_of_grouped_file = 0;
   for (unsigned int i = 0; i != group.size(); i++) {
     std::map<std::string, std::string> state_to_group;
+    // Generate map i.e [state_0-->state_group_0_state_0]
     generate_map(group[i], state_to_group);
     auto group_domino_code_generator = SinglePass<>(
         std::bind(&DominoToGroupDominoCodeGenerator::ast_visit_transform,
