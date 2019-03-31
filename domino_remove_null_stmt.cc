@@ -1,6 +1,4 @@
-#include "chipmunk_remove_null_stmt.h"
 #include <csignal>
-
 #include <functional>
 #include <iostream>
 #include <set>
@@ -9,6 +7,7 @@
 
 #include "third_party/assert_exception.h"
 
+#include "chipmunk_remove_null_stmt.h"
 #include "compiler_pass.h"
 #include "pkt_func_transform.h"
 #include "util.h"
