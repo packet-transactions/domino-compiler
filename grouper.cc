@@ -274,5 +274,7 @@ int main(int argc, const char **argv) {
     myfile.close();
     num_of_grouped_file++;
   }
+  //TODO: output the numble of total equivalent files
+  std::cout << num_of_grouped_file << std::endl;
   return 0;
 }
