@@ -21,8 +21,8 @@ std::string ChipmunkCodeGenerator::ast_visit_transform(
       // record body part first
       std::string body_part =
           ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody());
-      return "|StateAndPacket| program (|StateAndPacket| state_and_packet) {" +
-             body_part + " return state_and_packet;\n}";
+      return "|StateAndPacket| program (|StateAndPacket| state_and_packet) {\n" +
+             body_part + "  return state_and_packet;\n}";
     }
   }
   assert_exception(false);
