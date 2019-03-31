@@ -23,7 +23,8 @@ stamp-h1
 *.Tpo
 domino
 domino_to_chipmunk
-domino_to_Deaddomino
+domino_to_dead_domino
+canonicalizer
 *.a
 *.so
 test-driver
