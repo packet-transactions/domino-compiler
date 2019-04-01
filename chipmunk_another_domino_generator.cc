@@ -1,12 +1,14 @@
+#include "chipmunk_another_domino_generator.h"
+
 #include <algorithm>
 #include <iostream>
 #include <map>
 #include <string>
 
-#include "chipmunk_another_domino_generator.h"
+#include "third_party/assert_exception.h"
+
 #include "clang_utility_functions.h"
 #include "pkt_func_transform.h"
-#include "third_party/assert_exception.h"
 
 using namespace std::placeholders;
 using namespace clang;

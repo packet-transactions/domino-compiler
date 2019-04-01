@@ -7,11 +7,12 @@
 #include <string>
 #include <utility>
 
+#include "third_party/assert_exception.h"
+
 #include "chipmunk_another_domino_generator.h"
 #include "chipmunk_deadcode_generator.h"
 #include "compiler_pass.h"
 #include "pkt_func_transform.h"
-#include "third_party/assert_exception.h"
 #include "util.h"
 
 // For the _1, and _2 in std::bind
