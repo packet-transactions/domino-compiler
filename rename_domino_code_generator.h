@@ -18,6 +18,8 @@ protected:
       const clang::ArraySubscriptExpr *array_subscript_expr) override;
   std::string
   ast_visit_decl_ref_expr(const clang::DeclRefExpr *decl_ref_expr) override;
+  //Print the map content
+  void print_map();
 
   int count_stateful = 0;
   int count_stateless = 0;

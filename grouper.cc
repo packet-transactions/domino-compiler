@@ -253,7 +253,6 @@ int main(int argc, const char **argv) {
         *std::max_element(state_var_nums.begin(), state_var_nums.end());
   }
   total_number = max_state_var_num + 1;
-
   std::vector<std::vector<std::vector<int>>> group;
   group_collection(total_number, group_size, group);
   // Output the grouped_file into files
