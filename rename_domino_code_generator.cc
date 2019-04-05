@@ -26,11 +26,18 @@ std::string RenameDominoCodeGenerator::ast_visit_transform(const clang::Translat
     }else if (isa<VarDecl>(decl) || isa<RecordDecl>(decl)){
          std::string str = clang_decl_printer(decl);
          for (std::map<std::string,std::string>::iterator it = c_to_sk.begin();it != c_to_sk.end();it++){
+//           std::cout << it->first << " = " << it->second << std::endl;
            size_t start_pos = str.find(it->first);
            if (start_pos == std::string::npos){
              continue;
            }else if (str[start_pos-1]==' '){
-              str.replace(start_pos,it->first.length(),it->second);
+              //Pay special attention to array vars
+              if (it->first.find('[') != std::string::npos){
+                unsigned int end_pos = (unsigned int) (str.find(']',start_pos));
+                str.replace(start_pos,end_pos - start_pos + 1,it->second);
+              //Normal replace for none array state_vars
+              }else
+                str.replace(start_pos,it->first.length(),it->second);
            }
          }
            std::cout << str << ";\n";
@@ -90,18 +97,19 @@ std::string RenameDominoCodeGenerator::ast_visit_array_subscript_expr(const clan
   std::string s = clang_stmt_printer(array_subscript_expr);
 
   std::map<std::string,std::string>::iterator it;
-        it = c_to_sk.find(s);
+  std::string name_in_origin_program = s.substr(0,s.find('[')+1);
+        it = c_to_sk.find(name_in_origin_program);
         if (it == c_to_sk.end()){
             std::string name;
   	    if (s.find('[')==std::string::npos){
 		// Should never get here.
 		assert_exception(false);
 	    }else{
-            //stateless
             name = "state_" + std::to_string(count_stateful);
             count_stateful++;
-            c_to_sk[s] = name;
+            c_to_sk[name_in_origin_program] = name;
+            return name;
 	    }
         }
-  return c_to_sk[s];
+  return c_to_sk[name_in_origin_program];
 }

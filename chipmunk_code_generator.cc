@@ -20,7 +20,6 @@ std::string ChipmunkCodeGenerator::ast_visit_transform(
       // record body part first
       std::string body_part =
           ast_visit_stmt(dyn_cast<FunctionDecl>(decl)->getBody());
-      print_map();
       return "|StateAndPacket| program (|StateAndPacket| state_and_packet) {" +
              body_part + " return state_and_packet;\n}";
     }
@@ -41,7 +40,7 @@ std::string ChipmunkCodeGenerator::ast_visit_decl_ref_expr(
       // Should never get here.
       assert_exception(false);
     } else {
-      name = "state_and_packet.state_" + std::to_string(count_stateful);
+      name = "state_and_packet." + s;
       count_stateful++;
       c_to_sk[s] = name;
     }
@@ -59,7 +58,9 @@ std::string ChipmunkCodeGenerator::ast_visit_member_expr(
     std::string name;
     // stateless
     if (s.find('.') != std::string::npos && s.find('[') == std::string::npos) {
-      name = "state_and_packet.pkt_" + std::to_string(count_stateless);
+      // Get the name of stateless var
+      std::string pkt_name = s.substr(s.find('.') + 1);
+      name = "state_and_packet." + pkt_name;
       count_stateless++;
     } else {
       // Should never get here.
@@ -68,62 +69,4 @@ std::string ChipmunkCodeGenerator::ast_visit_member_expr(
     c_to_sk[s] = name;
   }
   return c_to_sk[s];
-}
-
-std::string ChipmunkCodeGenerator::ast_visit_array_subscript_expr(
-    const clang::ArraySubscriptExpr *array_subscript_expr) {
-  assert_exception(array_subscript_expr);
-  std::string s = clang_stmt_printer(array_subscript_expr);
-
-  std::map<std::string, std::string>::iterator it;
-  it = c_to_sk.find(s);
-  if (it == c_to_sk.end()) {
-    std::string name;
-    if (s.find('[') == std::string::npos) {
-      // Should never get here.
-      assert_exception(false);
-    } else {
-      // stateless
-      name = "state_and_packet.state_" + std::to_string(count_stateful);
-      count_stateful++;
-      c_to_sk[s] = name;
-    }
-  }
-  return c_to_sk[s];
-}
-
-void ChipmunkCodeGenerator::print_map() {
-  std::cout << "// Output the rename map:" << std::endl;
-  std::cout << "// stateless variable rename list: \n\n";
-  // output the rename map in order
-  int stateless = 0;
-  while (stateless != count_stateless) {
-    for (std::map<std::string, std::string>::const_iterator it =
-             c_to_sk.begin();
-         it != c_to_sk.end(); ++it) {
-      if (it->second.find("state_and_packet.pkt_" +
-                          std::to_string(stateless)) != std::string::npos) {
-        std::cout << "// " << it->second << " = " << it->first << "\n";
-        stateless++;
-        break;
-      }
-    }
-  }
-  std::cout << std::endl;
-  std::cout << "// stateful variable rename list: \n\n";
-
-  int stateful = 0;
-  while (stateful != count_stateful) {
-    for (std::map<std::string, std::string>::const_iterator it =
-             c_to_sk.begin();
-         it != c_to_sk.end(); ++it) {
-      if (it->second.find("state_and_packet.state_" +
-                          std::to_string(stateful)) != std::string::npos) {
-        std::cout << "// " << it->second << " = " << it->first << "\n";
-        stateful++;
-        break;
-      }
-    }
-  }
-  std::cout << std::endl;
 }

@@ -1,12 +1,12 @@
 #include "domino_to_group_domino_code_gen.h"
 
-#include "clang_utility_functions.h"
-#include "third_party/assert_exception.h"
-
 #include <algorithm>
 #include <iostream>
 #include <map>
 #include <string>
+
+#include "clang_utility_functions.h"
+#include "third_party/assert_exception.h"
 
 using namespace clang;
 
@@ -31,6 +31,16 @@ std::string DominoToGroupDominoCodeGenerator::ast_visit_transform(
              dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString() +
              "){\n" + body_part + "}";
     } else if (isa<VarDecl>(decl) || isa<RecordDecl>(decl)) {
+      /*         if (isa<VarDecl>(decl)){
+                 std::cout << "Get Var Definition:" <<
+         dyn_cast<VarDecl>(decl)->getNameAsString() << std::endl; std::cout <<
+         "Get Var Type:" << dyn_cast<VarDecl>(decl)->getType().getAsString() <<
+         std::endl; std::cout << "Get Var Init:" <<
+         dyn_cast<VarDecl>(decl)->getEvaluatedValue() << std::endl;
+               }
+               else
+                 std::cout << "Get Record Definition:" <<
+         dyn_cast<RecordDecl>(decl)->getNameAsString() << std::endl;*/
       std::string str = clang_decl_printer(decl);
       for (std::map<std::string, std::string>::iterator it = c_to_sk.begin();
            it != c_to_sk.end(); it++) {
