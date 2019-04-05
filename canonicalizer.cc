@@ -1,17 +1,15 @@
 #include <csignal>
-#include "rename_domino_code_generator.h"
-
-#include <utility>
+#include <functional>
 #include <iostream>
 #include <set>
 #include <string>
-#include <functional>
+#include <utility>
 
-#include "third_party/assert_exception.h"
-
-#include "util.h"
-#include "pkt_func_transform.h"
 #include "compiler_pass.h"
+#include "pkt_func_transform.h"
+#include "rename_domino_code_generator.h"
+#include "third_party/assert_exception.h"
+#include "util.h"
 
 // For the _1, and _2 in std::bind
 // (Partial Function Application)
@@ -29,22 +27,25 @@ int main(int argc, const char **argv) {
     if (argc == 2) {
       const auto string_to_parse = file_to_str(std::string(argv[1]));
 
-      auto rename_domino_code_generator = SinglePass<>(std::bind(& RenameDominoCodeGenerator::ast_visit_transform,
-                                                  RenameDominoCodeGenerator(), _1));
+      auto rename_domino_code_generator = SinglePass<>(
+          std::bind(&RenameDominoCodeGenerator::ast_visit_transform,
+                    RenameDominoCodeGenerator(), _1));
 
-      std::cout << "/* \n// Original program: \n" + string_to_parse + " */\n" << std::endl;
-      
-      std::string sketch_program = rename_domino_code_generator(string_to_parse);
+      std::cout << "/* \n// Original program: \n" + string_to_parse + " */\n"
+                << std::endl;
+
+      std::string sketch_program =
+          rename_domino_code_generator(string_to_parse);
       std::cout << sketch_program << std::endl;
-      
+
       return EXIT_SUCCESS;
-    }
-    else {
+    } else {
       print_usage();
       return EXIT_FAILURE;
     }
-  } catch (const std::exception & e) {
-    std::cerr << "Caught exception in main " << std::endl << e.what() << std::endl;
+  } catch (const std::exception &e) {
+    std::cerr << "Caught exception in main " << std::endl
+              << e.what() << std::endl;
     return EXIT_FAILURE;
   }
 }

@@ -31,27 +31,86 @@ std::string DominoToGroupDominoCodeGenerator::ast_visit_transform(
              dyn_cast<FunctionDecl>(decl)->getParamDecl(0)->getNameAsString() +
              "){\n" + body_part + "}";
     } else if (isa<VarDecl>(decl) || isa<RecordDecl>(decl)) {
-      /*         if (isa<VarDecl>(decl)){
-                 std::cout << "Get Var Definition:" <<
-         dyn_cast<VarDecl>(decl)->getNameAsString() << std::endl; std::cout <<
-         "Get Var Type:" << dyn_cast<VarDecl>(decl)->getType().getAsString() <<
-         std::endl; std::cout << "Get Var Init:" <<
-         dyn_cast<VarDecl>(decl)->getEvaluatedValue() << std::endl;
-               }
-               else
-                 std::cout << "Get Record Definition:" <<
-         dyn_cast<RecordDecl>(decl)->getNameAsString() << std::endl;*/
-      std::string str = clang_decl_printer(decl);
-      for (std::map<std::string, std::string>::iterator it = c_to_sk.begin();
-           it != c_to_sk.end(); it++) {
-        size_t start_pos = str.find(it->first);
-        if (start_pos == std::string::npos) {
+      if (isa<VarDecl>(decl)) {
+        // Pay special attention to the definition without initialization
+        if (clang_decl_printer(decl).find('=') == std::string::npos) {
+          std::string
+              stateful_var_name; // stateful_var_name store the name which
+                                 // should appear in the definition part
+          std::map<std::string, std::string>::iterator it;
+          it = c_to_sk.find(dyn_cast<VarDecl>(decl)->getNameAsString());
+          if (it != c_to_sk.end()) {
+            stateful_var_name =
+                c_to_sk[dyn_cast<VarDecl>(decl)->getNameAsString()];
+          } else {
+            stateful_var_name = dyn_cast<VarDecl>(decl)->getNameAsString();
+          }
+          res += "int " + stateful_var_name + ";\n";
           continue;
-        } else if (str[start_pos - 1] == ' ') {
-          str.replace(start_pos, it->first.length(), it->second);
         }
+        // dyn_cast<VarDecl>(decl)->getDefinition() gets the var_name i.e int
+        // count = 0; --> count
+        std::string var_name =
+            clang_value_decl_printer(dyn_cast<VarDecl>(decl)->getDefinition());
+        // dyn_cast<VarDecl>(decl)->getInit() get initial value i.e int count =
+        // 0; --> the initializer is 0
+        std::string init_val =
+            clang_stmt_printer(dyn_cast<VarDecl>(decl)->getInit());
+        // TODO: to see whether the stateful_var is an array or not
+        std::size_t found = init_val.find('{');
+        if (found != std::string::npos) {
+          var_name += '[';
+        }
+        // TODO: to see whether this stateful_vars has appeared in the function
+        // body
+        std::string stateful_var_name; // stateful_var_name store the name which
+                                       // should appear in the definition part
+        std::map<std::string, std::string>::iterator it;
+        it = c_to_sk.find(var_name);
+        if (it != c_to_sk.end()) {
+          stateful_var_name = c_to_sk[var_name];
+        } else {
+          stateful_var_name = var_name;
+        }
+        // Return the result ## need some special help for the array_vars
+        res += "int " + stateful_var_name + " = " + init_val + ";\n";
+      } else if (isa<RecordDecl>(decl)) {
+        // dyn_cast<RecordDecl>(decl)->getNameAsString() get the name of the
+        // struct
+        res +=
+            "struct " + dyn_cast<RecordDecl>(decl)->getNameAsString() + "{\n";
+        for (const auto *field_decl : dyn_cast<DeclContext>(decl)->decls()) {
+          std::string pkt_vars =
+              dyn_cast<FieldDecl>(field_decl)->getNameAsString();
+          // TODO: to see whether this stateless_vars has appeared in the
+          // function body
+          std::string
+              stateless_var_name; // stateful_var_name store the name which
+                                  // should appear in the definition part
+          std::map<std::string, std::string>::iterator it;
+          it = c_to_sk.find(pkt_vars);
+          if (it != c_to_sk.end()) {
+            stateless_var_name = c_to_sk[pkt_vars];
+          } else {
+            stateless_var_name = pkt_vars;
+          }
+          // dyn_cast<FieldDecl>(field_decl)->getNameAsString() get the name of
+          // pkt_vars
+          res += "    int " + stateless_var_name + ";\n";
+        }
+        res += "};\n";
       }
-      res += str + ";\n";
+
+      /*
+               std::string str = clang_decl_printer(decl);
+               for (std::map<std::string,std::string>::iterator it =
+         c_to_sk.begin();it != c_to_sk.end();it++){ size_t start_pos =
+         str.find(it->first); if (start_pos == std::string::npos){ continue;
+                 }else if (str[start_pos-1]==' '){
+                    str.replace(start_pos,it->first.length(),it->second);
+                 }
+               }
+               res += str + ";\n";*/
     } else if ((isa<FunctionDecl>(decl) and
                 (not is_packet_func(dyn_cast<FunctionDecl>(decl))))) {
       res += clang_decl_printer(decl) + "\n";
