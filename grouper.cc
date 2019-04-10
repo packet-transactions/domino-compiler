@@ -261,6 +261,7 @@ int main(int argc, const char **argv) {
     std::map<std::string, std::string> state_to_group;
     // Generate map i.e [state_0-->state_group_0_state_0]
     generate_map(group[i], state_to_group);
+
     auto group_domino_code_generator = SinglePass<>(
         std::bind(&DominoToGroupDominoCodeGenerator::ast_visit_transform,
                   DominoToGroupDominoCodeGenerator(state_to_group), _1));
@@ -273,7 +274,7 @@ int main(int argc, const char **argv) {
     myfile.close();
     num_of_grouped_file++;
   }
-  //TODO: output the numble of total equivalent files
+  // Output the numble of total equivalent files
   std::cout << num_of_grouped_file << std::endl;
   return 0;
 }

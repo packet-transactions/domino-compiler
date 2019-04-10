@@ -56,11 +56,6 @@ std::string DominoToGroupDominoCodeGenerator::ast_visit_transform(
         // 0; --> the initializer is 0
         std::string init_val =
             clang_stmt_printer(dyn_cast<VarDecl>(decl)->getInit());
-        // To see whether the stateful_var is an array or not
-        std::size_t found = init_val.find('{');
-        if (found != std::string::npos) {
-          var_name += '[';
-        }
         // To see whether this stateful_vars has appeared in the function
         // body
         std::string stateful_var_name; // stateful_var_name store the name which
