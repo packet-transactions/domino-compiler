@@ -51,7 +51,7 @@ std::string ChipmunkDeadcodeGenerator::ast_visit_transform(
         std::string redundant_if;
         if (rand == 4)
           redundant_if =
-              "if (0){\n" + it->first + "= 0 -" + it->first + ";\n }";
+              "if (0 == 1){\n" + it->first + "= 0 -" + it->first + ";\n }";
         return res + "void " + dyn_cast<FunctionDecl>(decl)->getNameAsString() +
                "(" +
                dyn_cast<FunctionDecl>(decl)

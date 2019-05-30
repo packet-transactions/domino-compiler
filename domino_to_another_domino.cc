@@ -36,7 +36,7 @@ int main(int argc, const char **argv) {
       domino_file_name =
           domino_file_name.substr(pos_begin + 1, pos_end - pos_begin - 1);
 
-      while (num_of_transformed_file != 101) {
+      while (num_of_transformed_file != 11) {
 
         const auto string_to_parse = file_to_str(std::string(argv[1]));
         ChipmunkAnotherDominoGenerator AnotherDomino;
