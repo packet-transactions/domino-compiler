@@ -7,7 +7,7 @@
 #include <memory>
 #include <sstream>
 #include <iostream>
-#include <experimental/tuple>
+#include <tuple>
 
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
@@ -76,8 +76,8 @@ class SinglePass  : public CompilerPass {
        // Bind first argument alone (http://stackoverflow.com/questions/11902840/binding-member-functions-in-a-variadic-fashion)
        auto partial_fn = [tu_decl, this] (const Args... t_args) { return this->transformer_(tu_decl, t_args...); };
 
-       // Now pack the args_ tuple object into a parameter pack (http://en.cppreference.com/w/cpp/experimental/apply)
-       output_ = std::experimental::apply(partial_fn, args_);
+       // Now pack the args_ tuple object into a parameter pack (http://en.cppreference.com/w/cpp/apply)
+       output_ = std::apply(partial_fn, args_);
      }
 
      /// Get previously stored output
