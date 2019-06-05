@@ -23,7 +23,6 @@ stamp-h1
 *.Tpo
 domino
 domino_to_chipmunk
-domino_to_dead_domino
 canonicalizer
 *.a
 *.so
@@ -40,7 +39,5 @@ graph_dot_constructor
 __pycache__
 *.spec
 compile_commands.json
-domino_remove_null_stmt
-domino_to_another_domino
-domino_to_rename_domino
 grouper
+.vscode/

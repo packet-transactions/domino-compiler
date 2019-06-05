@@ -30,4 +30,4 @@ protected:
   DominoToRenameDomino c_to_sk = DominoToRenameDomino();
 };
 
-#endif // RENAME_DOMINO__CODE_GENERATOR_H_
+#endif // RENAME_DOMINO_CODE_GENERATOR_H_

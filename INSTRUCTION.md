@@ -13,4 +13,4 @@ python3 compile_with_chipmunk.py ~/chipmunk_experiment/domino_programs/avq.c 2
 
 Note: Now all programs in ~/chipmunk_experiment/domino_programs can run with compile_with_chipmunk.py except codel.c dns_ttl_change.c and hula_probe.c
 
-@XiangyuG will fixe the bug later
+@XiangyuG will fix the bug later
