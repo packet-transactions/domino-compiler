@@ -20,7 +20,7 @@
 using std::placeholders::_1;
 
 void print_usage() {
-  std::cerr << "Usage: domino_to_anotherDomino <source_file>" << std::endl;
+  std::cerr << "Usage: mutator <source_file>" << std::endl;
 }
 
 int main(int argc, const char **argv) {
