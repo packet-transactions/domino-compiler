@@ -20,17 +20,6 @@
 // (Partial Function Application)
 using std::placeholders::_1;
 
-std::string file_to_str(const std::string &file_name) {
-  // Taken from:
-  // http://stackoverflow.com/questions/2912520/read-file-contents-into-a-string-in-c
-  std::ifstream ifs(file_name);
-  if (not ifs.good())
-    throw std::logic_error("Cannot read from " + file_name +
-                           ", maybe it doesn't exist?");
-  return std::string((std::istreambuf_iterator<char>(ifs)),
-                     (std::istreambuf_iterator<char>()));
-}
-
 // Generate all permutations
 void Permutations(std::vector<int> origin_list,
                   std::vector<std::vector<int>> &permutation) {
