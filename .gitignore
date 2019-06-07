@@ -23,7 +23,7 @@ stamp-h1
 *.Tpo
 domino
 domino_to_chipmunk
-domino_to_another_domino
+mutator
 canonicalizer
 *.a
 *.so
