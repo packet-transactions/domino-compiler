@@ -20,7 +20,7 @@
 using std::placeholders::_1;
 
 void print_usage() {
-  std::cerr << "Usage: mutator <source_file>" << std::endl;
+  std::cerr << "Usage: mutator <source_file> hello" << std::endl;
 }
 
 int main(int argc, const char **argv) {
@@ -47,7 +47,7 @@ int main(int argc, const char **argv) {
         int count = 0;
         std::string sketch_program =
             chipmunk_another_domino_generator(string_to_parse);
-
+        std::srand(1);
         while (count != 10) {
           count++;
           // random_num is to record which execution to take
