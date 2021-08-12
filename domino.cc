@@ -73,6 +73,8 @@ void populate_passes() {
   all_passes["ssa"]              = [] () { return std::make_unique<DefaultSinglePass>(ssa_transform); };
   all_passes["echo"]             = [] () { return std::make_unique<DefaultSinglePass>(clang_decl_printer); };
   all_passes["gen_used_fields"]   = [] () { return std::make_unique<DefaultSinglePass>(gen_used_field_transform); };
+  all_passes["dce"]=[] () { return std::make_unique<FixedPointPass<DefaultSinglePass, DefaultTransformer>>(dce_transform); };
+
 }
 
 PassFunctor get_pass_functor(const std::string & pass_name, const PassFactory & pass_factory) {
